@@ -1,0 +1,213 @@
+/* ==============================
+   Keranjang.css — Modern Classic
+   ============================== */
+
+.cart-toolbar {
+  --background: #ffffff;
+}
+
+.cart-toolbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+}
+
+.cart-logo-row {
+  display: flex;
+  align-items: center;
+}
+
+.cart-header-logo-only {
+  height: 38px;
+  object-fit: contain;
+}
+
+.safe-badge-banner {
+  background: #EEF5E8;
+  border-bottom: 1px solid rgba(127, 187, 84, 0.2);
+  padding: 9px 16px;
+  font-size: 11px;
+  color: #3d5c35;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.safe-badge-banner ion-icon { color: #7FBB54; font-size: 15px; flex-shrink: 0; }
+
+/* Cart items */
+.cart-items-list {
+  padding: 14px 14px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cart-item-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 12px;
+  border: 1px solid rgba(31, 56, 38, 0.08);
+  box-shadow: 0 2px 8px rgba(31, 56, 38, 0.04);
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.cart-item-img-wrapper {
+  width: 72px;
+  height: 72px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #F8F7F4;
+  flex-shrink: 0;
+  border: 1px solid rgba(31,56,38,0.07);
+}
+
+.cart-item-img-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+
+.cart-item-details { flex-grow: 1; }
+
+.cart-item-name {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1F3826;
+  margin: 0;
+}
+
+.cart-item-supplier { font-size: 10px; color: #9EA8A2; margin: 2px 0 5px; font-weight: 500; }
+
+.cart-item-price {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  color: #1F3826;
+  margin-bottom: 8px;
+}
+
+.cart-item-actions-row { display: flex; justify-content: space-between; align-items: center; }
+
+.cart-qty-selector {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid rgba(31, 56, 38, 0.12);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.cart-qty-btn {
+  background: #F8F7F4;
+  border: none;
+  color: #1F3826;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  outline: none;
+  font-size: 14px;
+}
+
+.cart-qty-val {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #1F3826;
+  padding: 0 10px;
+  min-width: 36px;
+  text-align: center;
+}
+
+.cart-delete-btn {
+  background: rgba(192, 57, 43, 0.07);
+  border: 1px solid rgba(192, 57, 43, 0.15);
+  color: #C0392B;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.18s ease;
+}
+
+.cart-delete-btn:active { background: #C0392B; color: #fff; }
+
+/* Empty state */
+.empty-cart-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 75%;
+  padding: 32px;
+  text-align: center;
+}
+
+.empty-cart-illustration {
+  background: #EEF5E8;
+  color: #7FBB54;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  margin-bottom: 18px;
+  border: 1px solid rgba(127,187,84,0.2);
+}
+
+.empty-cart-container h2 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  color: #1F3826;
+  margin: 0 0 6px;
+}
+
+.empty-cart-container p { font-size: 12px; color: #6B7A6F; margin: 0 0 22px; line-height: 1.6; }
+
+.start-shopping-btn { --border-radius: 10px; font-weight: 700; height: 42px; margin: 0; }
+
+/* Footer */
+.cart-footer {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: #ffffff;
+  border-top: 1px solid rgba(31, 56, 38, 0.09);
+  box-shadow: 0 -4px 16px rgba(31, 56, 38, 0.06);
+  padding: 14px 16px 26px;
+}
+
+.cart-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.summary-label span { font-size: 11px; color: #6B7A6F; font-weight: 500; }
+.summary-label p { font-size: 10px; color: #9EA8A2; margin: 2px 0 0; }
+
+.summary-value {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: #1F3826;
+}
+
+.checkout-btn {
+  --border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  height: 46px;
+  margin: 0;
+}

@@ -1,0 +1,391 @@
+/* ==============================
+   Chat.css — Modern Classic
+   ============================== */
+
+.chat-toolbar {
+  --background: #ffffff;
+}
+
+.chat-toolbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+}
+
+.chat-logo-row {
+  display: flex;
+  align-items: center;
+}
+
+.chat-header-logo-only {
+  height: 38px;
+  object-fit: contain;
+}
+
+/* Active chat header */
+.active-chat-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+}
+
+.chat-back-btn {
+  background: rgba(31, 56, 38, 0.05);
+  border: 1px solid rgba(31, 56, 38, 0.1);
+  color: #1F3826;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.chat-back-btn:active {
+  background: rgba(31, 56, 38, 0.12);
+}
+
+.active-chat-user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chat-avatar-mini {
+  background: linear-gradient(135deg, #7FBB54, #4a8a2f);
+  color: #fff;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-recipient-name {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1F3826;
+  margin: 0;
+}
+
+.chat-sync-status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  color: #6B7A6F;
+  margin-top: 1px;
+}
+
+.wa-green { color: #25D366; font-size: 11px; }
+
+/* Thread list */
+.threads-list-wrapper { padding: 14px; }
+
+.whatsapp-info-banner {
+  background: #EFF8F0;
+  border: 1px solid rgba(37,211,102,0.2);
+  border-left: 3px solid #25D366;
+  color: #1a5c2f;
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 10.5px;
+  margin-bottom: 14px;
+  line-height: 1.4;
+}
+
+.whatsapp-info-banner ion-icon { font-size: 15px; color: #25D366; flex-shrink: 0; margin-top: 1px; }
+
+.chat-threads-list {
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.thread-item-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 12px;
+  border: 1px solid rgba(31, 56, 38, 0.08);
+  box-shadow: 0 2px 8px rgba(31,56,38,0.04);
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  cursor: pointer;
+  transition: border-color 0.18s;
+}
+
+.thread-item-card:active { border-color: #7FBB54; }
+
+.thread-avatar {
+  background: linear-gradient(135deg, #1F3826, #2d5038);
+  color: #fff;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800;
+  font-size: 17px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.wa-badge-corner {
+  position: absolute;
+  bottom: -2px; right: -2px;
+  background: #25D366;
+  color: #fff;
+  width: 15px; height: 15px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px;
+  border: 1.5px solid #fff;
+}
+
+.thread-preview-info { flex-grow: 1; overflow: hidden; }
+
+.thread-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 3px;
+}
+
+.thread-supplier-name {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1F3826;
+  margin: 0;
+}
+
+.thread-time { font-size: 9px; color: #9EA8A2; font-weight: 500; }
+
+.thread-message-row { display: flex; justify-content: space-between; align-items: center; }
+
+.thread-last-msg {
+  font-size: 11px;
+  color: #6B7A6F;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-grow: 1;
+  padding-right: 10px;
+}
+
+.thread-unread-badge {
+  background: #EB9728;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 8px;
+}
+
+/* Conversation */
+.conversation-container { display: flex; flex-direction: column; height: 100%; }
+
+.messages-scroller {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 14px 14px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #F8F7F4;
+}
+
+.sync-disclaimer {
+  align-self: center;
+  background: #EFF8F0;
+  border: 1px dashed rgba(37,211,102,0.3);
+  color: #1a5c2f;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 8px;
+  letter-spacing: 0.2px;
+}
+
+.sync-disclaimer ion-icon { color: #25D366; font-size: 11px; }
+
+.message-bubble-wrapper { display: flex; flex-direction: column; max-width: 76%; }
+.message-bubble-wrapper.sent { align-self: flex-end; }
+.message-bubble-wrapper.received { align-self: flex-start; }
+
+.bubble-sender-name {
+  font-size: 9px;
+  font-weight: 700;
+  color: #6B7A6F;
+  margin-bottom: 3px;
+  margin-left: 8px;
+}
+
+.via-wa { color: #25D366; }
+
+.message-bubble {
+  padding: 9px 13px;
+  border-radius: 14px;
+}
+
+.message-bubble-wrapper.sent .message-bubble {
+  background: #1F3826;
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+
+.message-bubble-wrapper.received .message-bubble {
+  background: #ffffff;
+  color: #1F3826;
+  border-bottom-left-radius: 4px;
+  border: 1px solid rgba(31,56,38,0.08);
+}
+
+.message-text {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  margin: 0;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.message-meta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.message-time { font-size: 8px; opacity: 0.6; }
+.msg-status-icon { font-size: 11px; color: rgba(255,255,255,0.4); }
+.msg-status-icon.read { color: #7FBB54; }
+
+/* Input bar */
+.chat-input-bar {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: #ffffff;
+  border-top: 1px solid rgba(31,56,38,0.09);
+  padding: 10px 14px 18px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.chat-text-input {
+  flex-grow: 1;
+  background: #F8F7F4;
+  border: 1.5px solid rgba(31,56,38,0.1);
+  border-radius: 22px;
+  padding: 9px 16px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12.5px;
+  color: #1F3826;
+  outline: none;
+}
+
+.chat-text-input:focus { border-color: #7FBB54; background: #fff; }
+
+.chat-send-btn {
+  background: #EB9728;
+  color: #fff;
+  border: none;
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(235, 151, 40, 0.28);
+  flex-shrink: 0;
+}
+
+/* AI Pintar Styling additions */
+.chat-avatar-mini.ai-avatar-glow {
+  background: linear-gradient(135deg, #1F3826 0%, #112015 100%);
+  color: #7FBB54;
+  box-shadow: 0 0 8px rgba(127, 187, 84, 0.3);
+}
+
+.chat-sync-status.ai-status-green {
+  color: #7FBB54;
+  font-weight: 700;
+}
+
+.chat-sync-status.ai-status-green ion-icon {
+  color: #7FBB54;
+  font-size: 11px;
+}
+
+.thread-item-card.thread-item-ai {
+  border-color: rgba(127, 187, 84, 0.2);
+  background: linear-gradient(to right, #ffffff, #FAFBF9);
+}
+
+.thread-avatar.ai-list-avatar-glow {
+  background: linear-gradient(135deg, #1F3826 0%, #112015 100%);
+  color: #7FBB54;
+  box-shadow: 0 0 10px rgba(127, 187, 84, 0.25);
+}
+
+.wa-badge-corner.ai-badge-corner {
+  background: #7FBB54;
+  color: #ffffff;
+}
+
+.thread-ai-lbl {
+  background: rgba(127, 187, 84, 0.12);
+  color: #4a8a2f;
+  font-size: 8px;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 4px;
+  margin-left: 6px;
+  letter-spacing: 0.5px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.sync-disclaimer.ai-disclaimer-glow {
+  background: #F0F6F1;
+  border: 1px dashed rgba(127, 187, 84, 0.4);
+  color: #1a5c2f;
+}
+
+.sync-disclaimer.ai-disclaimer-glow ion-icon {
+  color: #7FBB54;
+}
+
+.via-ai-txt {
+  color: #7FBB54;
+  font-weight: 800;
+}
+
+.message-bubble.ai-message-bubble {
+  background: #ffffff;
+  border-left: 3.5px solid #7FBB54 !important;
+  box-shadow: 0 4px 12px rgba(127, 187, 84, 0.05);
+}
