@@ -21,5 +21,5 @@ const startBot = async () => {
 startBot();
 
 app.listen(PORT, () => {
-    console.log(`🤖 ivolate-whatsapp running on http://localhost:${PORT}`);
+    console.log(`🤖 tumbasna-whatsapp running on http://localhost:${PORT}`);
 });

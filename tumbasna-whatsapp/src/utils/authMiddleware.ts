@@ -8,7 +8,7 @@ import { Request, Response, NextFunction } from 'express';
  */
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
     // Ambil dari .env, kalau tidak ada, pakai hardcode (sebagai fallback sesuai permintaan)
-    const secretKey = process.env.IVOLATE_SECRET_KEY || "ivolate-rahasia-banget";
+    const secretKey = process.env.TUMBASNA_SECRET_KEY || "tumbasna-rahasia-banget";
     
     // 1. Cek x-secret-key header
     let providedKey = req.headers['x-secret-key'] as string;

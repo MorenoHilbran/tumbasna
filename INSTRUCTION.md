@@ -1,4 +1,4 @@
-# Ivolate - Matching Platform Demand-Supply Pangan
+# Tumbasna - Matching Platform Demand-Supply Pangan
 
 Platform boilerplate menggunakan **Next.js 14**, **Prisma ORM**, dan **WhatsApp Webhook** (Fonnte/Twilio) terintegrasi dengan **Gemini AI**.
 
@@ -28,7 +28,7 @@ npm install
 Buat file \`.env\` pada root folder (sejajar dengan package.json) dengan isi:
 \`\`\`env
 # URL Database Postgres Anda. Contoh:
-DATABASE_URL="postgresql://postgres:password@localhost:5432/ivolate_db?schema=public"
+DATABASE_URL="postgresql://postgres:password@localhost:5432/tumbasna_db?schema=public"
 
 # Google Gemini API Key untuk logic extraksi teks natural WA ke object
 GEMINI_API_KEY="AIzaSyAXXXX_YOUR_GEMINI_KEY"

@@ -1,8 +1,8 @@
-# Analisis Algoritma & Variabel Matching Engine - Ivolate
+# Analisis Algoritma & Variabel Matching Engine - Tumbasna
 
-Dokumen ini menjelaskan rancangan algoritma, variabel, dan formula matematika yang digunakan untuk menghitung kecocokan (*matching*) antara penawaran pangan dari petani (*Supply*) dan permintaan dari pedagang (*Demand*) di dalam platform **Ivolate**.
+Dokumen ini menjelaskan rancangan algoritma, variabel, dan formula matematika yang digunakan untuk menghitung kecocokan (*matching*) antara penawaran pangan dari petani (*Supply*) dan permintaan dari pedagang (*Demand*) di dalam platform **Tumbasna**.
 
-Sistem Ivolate memiliki dua mekanisme pencocokan:
+Sistem Tumbasna memiliki dua mekanisme pencocokan:
 1. **Simple Auto-Matching** (Digunakan untuk input manual melalui API dashboard).
 2. **Smart Matching Engine (SME)** (Digunakan untuk transaksi dinamis melalui bot WhatsApp).
 
@@ -13,7 +13,7 @@ Sistem Ivolate memiliki dua mekanisme pencocokan:
 Pencocokan ini berjalan secara searah ketika entri baru dibuat melalui formulir dashboard web. Mekanisme ini fokus pada kecocokan harga terbaik secara instan tanpa memperhitungkan faktor geografis.
 
 ### A. Input Permintaan Baru (Demand)
-* **File Rujukan**: [src/app/api/demand/route.ts](file:///C:/LIST%20PROJECT/ivolate/ivolate-dashboard/src/app/api/demand/route.ts#L52-L65)
+* **File Rujukan**: [src/app/api/demand/route.ts](file:///C:/LIST%20PROJECT/tumbasna/tumbasna-dashboard/src/app/api/demand/route.ts#L52-L65)
 * **Kriteria Pencocokan**:
   1. Komoditas sama (*case-insensitive*).
   2. Status pasokan target adalah `ACTIVE`.
@@ -22,7 +22,7 @@ Pencocokan ini berjalan secara searah ketika entri baru dibuat melalui formulir 
 * **Prioritas Urutan**: Mengambil penawaran dengan **harga termurah** (`orderBy: { price: 'asc' }`).
 
 ### B. Input Penawaran Baru (Supply)
-* **File Rujukan**: [src/app/api/supply/route.ts](file:///C:/LIST%20PROJECT/ivolate/ivolate-dashboard/src/app/api/supply/route.ts#L52-L65)
+* **File Rujukan**: [src/app/api/supply/route.ts](file:///C:/LIST%20PROJECT/tumbasna/tumbasna-dashboard/src/app/api/supply/route.ts#L52-L65)
 * **Kriteria Pencocokan**:
   1. Komoditas sama (*case-insensitive*).
   2. Status permintaan target adalah `ACTIVE`.
@@ -34,7 +34,7 @@ Pencocokan ini berjalan secara searah ketika entri baru dibuat melalui formulir 
 
 ## 2. Smart Matching Engine (SME)
 
-Smart Matching Engine (SME) diimplementasikan pada file [src/app/api/webhook/wa/route.ts](file:///C:/LIST%20PROJECT/ivolate/ivolate-dashboard/src/app/api/webhook/wa/route.ts#L108-L217). Algoritma ini berjalan ketika data dimasukkan melalui WhatsApp bot dan dianalisis oleh AI Gemini. Algoritma ini menggunakan filter geolokasi dan perhitungan skor berbobot (*weighted score*).
+Smart Matching Engine (SME) diimplementasikan pada file [src/app/api/webhook/wa/route.ts](file:///C:/LIST%20PROJECT/tumbasna/tumbasna-dashboard/src/app/api/webhook/wa/route.ts#L108-L217). Algoritma ini berjalan ketika data dimasukkan melalui WhatsApp bot dan dianalisis oleh AI Gemini. Algoritma ini menggunakan filter geolokasi dan perhitungan skor berbobot (*weighted score*).
 
 ### Variabel yang Digunakan
 | Variabel | Tipe Data | Deskripsi | Sumber Data |
@@ -133,7 +133,7 @@ flowchart TD
 
 ## 4. Perubahan Status Entri dan Match
 
-Alur hidup transaksi setelah pencocokan diatur di dalam [src/lib/transactions.ts](file:///C:/LIST%20PROJECT/ivolate/ivolate-dashboard/src/lib/transactions.ts):
+Alur hidup transaksi setelah pencocokan diatur di dalam [src/lib/transactions.ts](file:///C:/LIST%20PROJECT/tumbasna/tumbasna-dashboard/src/lib/transactions.ts):
 
 * **Tahap PENDING**: Entri dicocokkan, dibuatkan kode `TRX-XXXX`, status entri diganti ke `MATCHED` (agar disembunyikan dari daftar pasar umum/GIS), dan sistem mengirimkan penawaran ke pembeli.
 * **Perintah `AMBIL TRX-XXXX`**: Pembeli menyetujui. Status transaksi `Match` berubah menjadi `MATCHED`. Sistem menukar kontak WhatsApp antara penjual dan pembeli agar mereka dapat bertransaksi langsung secara mandiri.

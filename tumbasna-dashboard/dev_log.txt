@@ -1,5 +1,5 @@
 
-> ivolate@0.1.0 dev
+> tumbasna@0.1.0 dev
 > next dev
 
 ⨯ Failed to load next.config.mjs, see more info here https://nextjs.org/docs/messages/next-config-error

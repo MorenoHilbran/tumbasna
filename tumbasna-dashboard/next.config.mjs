@@ -11,7 +11,7 @@ const nextConfig = {
         return [
             {
                 source: '/api/auth/:path*',
-                destination: 'http://ivolate_whatsapp_bot:3002/api/auth/:path*', // Proxy to WhatsApp Bot container
+                destination: 'http://tumbasna_whatsapp_bot:3002/api/auth/:path*', // Proxy to WhatsApp Bot container
             },
         ];
     },

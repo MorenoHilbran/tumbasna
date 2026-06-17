@@ -11,7 +11,7 @@ const router = Router();
 
 // Health check endpoint
 router.get('/health', (_req: Request, res: Response) => {
-    res.json({ status: 'ok', service: 'ivolate-whatsapp' });
+    res.json({ status: 'ok', service: 'tumbasna-whatsapp' });
 });
 
 // ─── AUTH ENDPOINTS ───────────────────────────────────────

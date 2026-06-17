@@ -1,6 +1,6 @@
-# Arsitektur & Alur Kerja Ivolate WhatsApp Bot
+# Arsitektur & Alur Kerja Tumbasna WhatsApp Bot
 
-Dokumen ini menjelaskan struktur folder (Clean Architecture) terbaru dari `ivolate-whatsapp` beserta urutan perjalanan (Flow) pemrosesan obrolan pesan WhatsApp hingga masuk ke Database.
+Dokumen ini menjelaskan struktur folder (Clean Architecture) terbaru dari `tumbasna-whatsapp` beserta urutan perjalanan (Flow) pemrosesan obrolan pesan WhatsApp hingga masuk ke Database.
 
 ## 📂 Struktur Direktori Terbaru
 

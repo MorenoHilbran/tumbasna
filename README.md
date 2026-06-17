@@ -33,7 +33,7 @@ Berdasarkan analisis kondisi riil di lapangan, terdapat **tiga fokus masalah uta
 
 ## 2. Visi & Solusi: Aplikasi Tumbasna
 
-Aplikasi **Tumbasna** hadir sebagai hasil transformasi dan pengembangan lebih lanjut dari platform pencocokan pangan (sebelumnya bernama *Ivolate*). Tumbasna dirombak menjadi sebuah **Ekosistem Digital UMKM & Manajemen Rantai Pasok Cerdas** yang dirancang khusus untuk mengatasi hambatan literasi digital melalui pendekatan **Conversational Commerce**.
+Aplikasi **Tumbasna** hadir sebagai hasil transformasi dan pengembangan lebih lanjut dari platform pencocokan pangan (sebelumnya bernama *Tumbasna*). Tumbasna dirombak menjadi sebuah **Ekosistem Digital UMKM & Manajemen Rantai Pasok Cerdas** yang dirancang khusus untuk mengatasi hambatan literasi digital melalui pendekatan **Conversational Commerce**.
 
 ### 🌟 Pendekatan Utama Tumbasna:
 Dengan memanfaatkan **WhatsApp Webhook** yang terintegrasi dengan **Google Gemini AI**, pelaku UMKM tidak perlu mempelajari aplikasi baru yang rumit. Cukup dengan mengirimkan pesan teks biasa (seperti *"Stok kripik singkong masuk 50 bungkus"* atau *"Butuh pasokan gula pasir 100 kg dari supplier terdekat"*), sistem kecerdasan buatan akan memproses, mencatat, dan menghubungkannya secara otomatis ke dalam sistem rantai pasok terintegrasi.
@@ -108,7 +108,7 @@ Untuk mengimplementasikan perubahan ke aplikasi Tumbasna, proyek dibagi menjadi 
 
 | Fase | Fokus Kegiatan | Output Utama |
 | :--- | :--- | :--- |
-| **Fase 1** | Migrasi Core & Pembaruan WhatsApp-AI | Rebranding repositori Ivolate ke Tumbasna, optimasi prompt Gemini AI untuk kategori komoditas UMKM yang lebih luas. |
+| **Fase 1** | Migrasi Core & Pembaruan WhatsApp-AI | Rebranding repositori Tumbasna ke Tumbasna, optimasi prompt Gemini AI untuk kategori komoditas UMKM yang lebih luas. |
 | **Fase 2** | Manajemen Stok & Katalog Online | Pembuatan modul inventaris berbasis WhatsApp dan fitur pembuatan halaman toko online (E-Catalog) instan bagi UMKM. |
 | **Fase 3** | Integrasi Rantai Pasok B2B | Fitur matchmaking otomatis antara permintaan bahan baku UMKM dengan penawaran suplier menggunakan algoritma berbasis lokasi terdekat. |
 | **Fase 4** | Agregator Logistik & Analytics | Kerjasama API logistik pihak ketiga untuk optimasi pengiriman dan rilis dashboard analitik bisnis bagi UMKM. |
@@ -128,7 +128,7 @@ Transformasi aplikasi Tumbasna diproyeksikan memberikan dampak nyata pada ekosis
 
 ## 8. Panduan Memulai (Instalasi & Pengujian)
 
-Aplikasi Tumbasna terdiri dari dua subsistem utama: `ivolate-dashboard` (Dashboard monitoring & API database) dan `ivolate-whatsapp` (Gateway chat & AI agent).
+Aplikasi Tumbasna terdiri dari dua subsistem utama: `tumbasna-dashboard` (Dashboard monitoring & API database) dan `tumbasna-whatsapp` (Gateway chat & AI agent).
 
 ### A. Prasyarat Sistem
 *   Node.js v18+ atau v20+
@@ -139,7 +139,7 @@ Aplikasi Tumbasna terdiri dari dua subsistem utama: `ivolate-dashboard` (Dashboa
 ### B. Langkah Instalasi Dashboard
 1.  Masuk ke direktori dashboard:
     ```bash
-    cd ivolate-dashboard
+    cd tumbasna-dashboard
     ```
 2.  Instal seluruh dependensi:
     ```bash
@@ -163,7 +163,7 @@ Aplikasi Tumbasna terdiri dari dua subsistem utama: `ivolate-dashboard` (Dashboa
 ### C. Langkah Instalasi Bot WhatsApp
 1.  Masuk ke direktori whatsapp:
     ```bash
-    cd ../ivolate-whatsapp
+    cd ../tumbasna-whatsapp
     ```
 2.  Instal dependensi dan jalankan server bot:
     ```bash

@@ -1,5 +1,5 @@
 export const SYSTEM_PROMPT = `
-Kamu adalah asisten logistik Ivolate. Tugas Anda adalah mengubah pesan WhatsApp berikut menjadi JSON terstruktur untuk sistem Supply-Demand-Match.
+Kamu adalah asisten logistik Tumbasna. Tugas Anda adalah mengubah pesan WhatsApp berikut menjadi JSON terstruktur untuk sistem Supply-Demand-Match.
 
 === INSTRUKSI KHUSUS (Handling Test Cases) ===
 

@@ -1,5 +1,5 @@
 /**
- * Ivolate — Database Seeder
+ * Tumbasna — Database Seeder
  * Simulasi data realistis petani, pedagang, dan pencocokan komoditas pangan
  * di berbagai wilayah Indonesia.
  *
@@ -139,7 +139,7 @@ function daysAgo(n: number): Date {
 // ─── Seed ────────────────────────────────────────────────────────────────────
 
 async function main() {
-    console.log('🌱  Ivolate Seeder — mulai...\n');
+    console.log('🌱  Tumbasna Seeder — mulai...\n');
 
     // ── 0. Wipe existing data ─────────────────────────────────────────────────
     console.log('🗑️   Membersihkan data lama...');

@@ -41,7 +41,7 @@ export async function extractMessageData(message: string): Promise<ParsedData> {
         const response = await ai.models.generateContent({
             model: "gemini-3-flash-preview", 
             contents: `
-Kamu adalah asisten logistik Ivolate. Tugas Anda adalah mengubah pesan WhatsApp berikut menjadi JSON terstruktur untuk sistem Supply-Demand-Match.
+Kamu adalah asisten logistik Tumbasna. Tugas Anda adalah mengubah pesan WhatsApp berikut menjadi JSON terstruktur untuk sistem Supply-Demand-Match.
 
 === PESAN INPUT ===
 "${message}"

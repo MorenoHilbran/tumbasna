@@ -15,8 +15,8 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASSWORD }}
           script: |
-            cd ~/projects/ivolate
+            cd ~/projects/tumbasna
             git pull origin main
-            docker stop ivolate_app 2>/dev/null || true
-            docker rm ivolate_app 2>/dev/null || true
-            docker compose --env-file ./ivolate-dashboard/.env up --build -d
+            docker stop tumbasna_app 2>/dev/null || true
+            docker rm tumbasna_app 2>/dev/null || true
+            docker compose --env-file ./tumbasna-dashboard/.env up --build -d
