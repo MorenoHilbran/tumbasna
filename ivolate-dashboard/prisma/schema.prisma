@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "sqlite"
+  url       = env("DATABASE_URL")
+}
+
+model User {
+  id             String         @id @default(uuid())
+  phoneNumber    String         @unique
+  name           String?
+  role           String         @default("PETANI")
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  productEntries ProductEntry[]
+}
+
+model ProductEntry {
+  id              String    @id @default(uuid())
+  userId          String
+  type            String
+  commodity       String
+  qty             Float
+  price           Float
+  location        String
+  lat             Float?
+  lng             Float?
+  status          String    @default("ACTIVE")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  matchesAsDemand Match[]   @relation("DemandMatch")
+  matchesAsSupply Match[]   @relation("SupplyMatch")
+  user            User      @relation(fields: [userId], references: [id])
+}
+
+model Match {
+  id            String       @id @default(uuid())
+  code          String?      @unique
+  supplyEntryId String
+  demandEntryId String
+  status        String       @default("PENDING")
+  notifiedAt    DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  demandEntry   ProductEntry @relation("DemandMatch", fields: [demandEntryId], references: [id])
+  supplyEntry   ProductEntry @relation("SupplyMatch", fields: [supplyEntryId], references: [id])
+}
+
+model ChatSession {
+  phoneNumber   String   @id
+  history       String   @default("[]")
+  isWhitelisted Boolean @default(false)
+  updatedAt     DateTime @updatedAt
+}

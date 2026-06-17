@@ -1,0 +1,31 @@
+services:
+  dashboard:
+    build:
+      context: ./ivolate-dashboard
+      dockerfile: Dockerfile
+      args:
+        DATABASE_URL: ${DATABASE_URL}
+        DIRECT_URL: ${DIRECT_URL}
+    container_name: ivolate_dashboard
+    restart: unless-stopped
+    env_file:
+      - ./ivolate-dashboard/.env
+    ports:
+      - "3000:3000"
+
+  whatsapp-bot:
+    build:
+      context: ./ivolate-whatsapp
+      dockerfile: Dockerfile
+    container_name: ivolate_whatsapp_bot
+    restart: unless-stopped
+    env_file:
+      - ./ivolate-whatsapp/.env
+    ports:
+      - "3002:3002"
+    volumes:
+      - ./ivolate-whatsapp/session:/app/session
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - dashboard

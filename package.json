@@ -1,0 +1,13 @@
+{
+  "name": "ivolate-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "install:dashboard": "npm install --prefix ivolate-dashboard",
+    "install:whatsapp": "npm install --prefix ivolate-whatsapp",
+    "install-all": "npm run install:dashboard && npm run install:whatsapp",
+    "dev:dashboard": "npm run dev --prefix ivolate-dashboard",
+    "dev:whatsapp": "npm run dev --prefix ivolate-whatsapp",
+    "dev": "npx concurrently --kill-others \"npm run dev:dashboard\" \"npm run dev:whatsapp\""
+  }
+}

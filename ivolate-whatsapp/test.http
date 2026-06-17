@@ -1,0 +1,28 @@
+### Test Health Check
+GET http://localhost:3002/health
+Accept: application/json
+
+###
+
+### Test Simulate Incoming WhatsApp Message 
+### (Kita buat endpoint khusus untuk testing dummy message)
+POST http://localhost:3002/test/simulate-message
+Content-Type: application/json
+
+{
+    "sender": "6281234567890@s.whatsapp.net",
+    "pushName": "Petani Banyumas",
+    "text": "jual cabai 300kg harga 25000 banyumas"
+}
+
+###
+
+### Test Simulate Another Incoming Message
+POST http://localhost:3002/test/simulate-message
+Content-Type: application/json
+
+{
+    "sender": "6289876543210@s.whatsapp.net",
+    "pushName": "Pedagang Jakarta",
+    "text": "beli beras 500kg harga 12000 jakarta"
+}

@@ -1,0 +1,7 @@
+{
+  "name": "tumbasna-mobile",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react-vite"
+}
