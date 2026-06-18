@@ -1,0 +1,506 @@
+/* ==============================
+   LoginRegister.css — Mockup-Perfect Style Sheet
+   ============================== */
+
+.auth-content {
+  --background: #FBF9F4;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Header Navbar simple style */
+.auth-header-bar {
+  background: #FBF9F4;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  border-bottom: 1px solid rgba(31, 56, 38, 0.03);
+}
+
+.auth-header-back-btn {
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  color: #1F3826;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  outline: none;
+  cursor: pointer;
+}
+
+.auth-header-logo-centered {
+  width: 105px;
+  height: auto;
+  object-fit: contain;
+}
+
+.auth-header-title-centered {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  color: #1F3826;
+}
+
+.auth-header-placeholder {
+  width: 36px;
+}
+
+/* ==============================
+   LOGIN FORM & SCREEN
+   ============================== */
+
+.login-screen-form {
+  padding: 24px 20px;
+}
+
+.login-welcome-section {
+  margin-top: 30px;
+  margin-bottom: 32px;
+}
+
+.login-welcome-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1F3826;
+  margin: 0 0 10px;
+  line-height: 1.25;
+}
+
+.login-welcome-subtitle {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  color: #6B7A6F;
+  line-height: 1.6;
+  margin: 0;
+  font-weight: 500;
+}
+
+.login-field-group {
+  margin-bottom: 20px;
+}
+
+.login-field-label {
+  display: block;
+  font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 9px;
+  font-weight: 800;
+  color: #6B7A6F;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.login-input-row {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border: 1.5px solid #E6ECE8;
+  border-radius: 8px;
+  height: 52px;
+  padding: 0 16px;
+  transition: border-color 0.2s ease;
+}
+
+.login-input-row:focus-within {
+  border-color: #7FBB54;
+}
+
+.login-phone-prefix {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #1F3826;
+  margin-right: 12px;
+}
+
+.login-phone-divider {
+  width: 1px;
+  height: 20px;
+  background: #E6ECE8;
+  margin-right: 12px;
+}
+
+.login-input-field {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14.5px;
+  color: #1F3826;
+  font-weight: 600;
+  padding: 0;
+}
+
+.login-input-field::placeholder {
+  color: #9EA8A2;
+  font-weight: 500;
+}
+
+.login-input-field.no-prefix {
+  width: 100%;
+}
+
+.login-field-icon {
+  color: #9EA8A2;
+  font-size: 18px;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.login-field-icon.toggle-pwd {
+  cursor: pointer;
+}
+
+.forgot-password-link {
+  text-align: right;
+  margin: -10px 0 20px;
+}
+
+.forgot-password-link a {
+  font-size: 11.5px;
+  color: #7FBB54;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.login-submit-btn-dark {
+  width: 100%;
+  background: #1C2B21;
+  color: #ffffff;
+  border: none;
+  height: 52px;
+  border-radius: 8px;
+  font-family: 'SF Mono', monospace;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: transform 0.1s ease;
+  outline: none;
+}
+
+.login-submit-btn-dark:active {
+  transform: scale(0.98);
+}
+
+.login-alternative-separator {
+  display: flex;
+  align-items: center;
+  margin: 28px 0;
+}
+
+.sep-line {
+  flex: 1;
+  height: 1px;
+  background: #E6ECE8;
+}
+
+.sep-text {
+  font-family: 'SF Mono', monospace;
+  font-size: 9px;
+  font-weight: 800;
+  color: #9EA8A2;
+  letter-spacing: 1.5px;
+  margin: 0 16px;
+}
+
+.login-google-btn {
+  width: 100%;
+  background: #ffffff;
+  border: 1.5px solid #E6ECE8;
+  height: 52px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-family: 'SF Mono', monospace;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #1F3826;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  outline: none;
+}
+
+.login-google-btn:active {
+  background: #F8F7F4;
+}
+
+.google-btn-logo {
+  width: 18px;
+  height: 18px;
+}
+
+.login-register-redirect {
+  text-align: center;
+  font-size: 12px;
+  color: #6B7A6F;
+  margin-top: 32px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 600;
+}
+
+.register-highlight-btn {
+  color: #C05C2E;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.login-help-center-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 36px;
+}
+
+.login-help-btn-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid #E6ECE8;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-family: 'SF Mono', monospace;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #8C9990;
+  cursor: pointer;
+  outline: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+/* ==============================
+   REGISTRATION SCREEN & CARD
+   ============================== */
+
+.register-screen-container {
+  padding: 20px 16px 40px;
+}
+
+.register-card-float {
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(31, 56, 38, 0.04);
+  border: 1px solid rgba(31, 56, 38, 0.05);
+  padding: 24px 20px;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.register-card-logo-row {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.register-card-logo {
+  width: 110px;
+  height: auto;
+  object-fit: contain;
+}
+
+.register-card-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 19px;
+  font-weight: 800;
+  color: #1F3826;
+  text-align: center;
+  margin: 0 0 24px;
+  letter-spacing: -0.3px;
+}
+
+.register-card-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.reg-input-group {
+  margin-bottom: 16px;
+}
+
+.reg-field-label {
+  display: block;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: #5A6A61;
+  margin-bottom: 6px;
+}
+
+.reg-input-wrapper {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border: 1.5px solid #E6ECE8;
+  border-radius: 8px;
+  height: 46px;
+  padding: 0 14px;
+  transition: border-color 0.2s ease;
+}
+
+.reg-input-wrapper:focus-within {
+  border-color: #7FBB54;
+}
+
+.reg-input-wrapper input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13.5px;
+  color: #1F3826;
+  font-weight: 600;
+  padding: 0;
+}
+
+.reg-input-wrapper input::placeholder {
+  color: #9EA8A2;
+  font-weight: 500;
+}
+
+.reg-input-icon {
+  color: #9EA8A2;
+  font-size: 16px;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.reg-input-wrapper-phone {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border: 1.5px solid #E6ECE8;
+  border-radius: 8px;
+  height: 46px;
+  padding: 0 14px;
+  transition: border-color 0.2s ease;
+}
+
+.reg-input-wrapper-phone:focus-within {
+  border-color: #7FBB54;
+}
+
+.reg-input-wrapper-phone .phone-prefix {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #1F3826;
+}
+
+.reg-input-wrapper-phone .phone-prefix-divider {
+  width: 1px;
+  height: 18px;
+  background: #E6ECE8;
+  margin: 0 10px;
+}
+
+.reg-input-wrapper-phone input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13.5px;
+  color: #1F3826;
+  font-weight: 600;
+  padding: 0;
+}
+
+.reg-select-wrapper {
+  background: #ffffff;
+  border: 1.5px solid #E6ECE8;
+  border-radius: 8px;
+  height: 46px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+}
+
+.reg-native-select {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13.5px;
+  color: #1F3826;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.reg-input-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1.8fr;
+  gap: 12px;
+}
+
+.agri-shield-notice-simple {
+  font-size: 9px;
+  color: #6B7A6F;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  line-height: 1.4;
+  margin: 8px 0 16px;
+  font-weight: 500;
+}
+
+.agri-shield-notice-simple ion-icon {
+  font-size: 14px;
+  color: #7FBB54;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.register-submit-btn-orange {
+  width: 100%;
+  background: #C05C2E;
+  color: #ffffff;
+  border: none;
+  height: 48px;
+  border-radius: 8px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+  outline: none;
+  box-shadow: 0 4px 12px rgba(192, 92, 46, 0.2);
+}
+
+.register-submit-btn-orange:active {
+  transform: scale(0.98);
+}
+
+.register-redirect-back {
+  text-align: center;
+  font-size: 12px;
+  color: #6B7A6F;
+  margin-top: 18px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 600;
+}
+
+.login-highlight-btn {
+  color: #1F3826;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.custom-toast {
+  --background: #1F3826;
+  --color: #ffffff;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
