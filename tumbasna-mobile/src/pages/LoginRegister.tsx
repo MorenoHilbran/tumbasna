@@ -27,13 +27,23 @@ import {
 import { useApp } from '../context/AppContext';
 import './LoginRegister.css';
 
-const LoginRegister: React.FC = () => {
+interface LoginRegisterProps {
+  initialIsLogin?: boolean;
+  onBackToWelcome?: () => void;
+}
+
+const LoginRegister: React.FC<LoginRegisterProps> = ({ initialIsLogin = true, onBackToWelcome }) => {
   const { login, register } = useApp();
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState(initialIsLogin);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
+
+  // Sync isLogin if initialIsLogin prop changes
+  React.useEffect(() => {
+    setIsLogin(initialIsLogin);
+  }, [initialIsLogin]);
 
   // Form Fields
   const [phoneOrEmail, setPhoneOrEmail] = useState('');
@@ -108,6 +118,8 @@ const LoginRegister: React.FC = () => {
           onClick={() => {
             if (!isLogin) {
               setIsLogin(true);
+            } else if (onBackToWelcome) {
+              onBackToWelcome();
             } else {
               setToastMessage('Silakan masuk atau daftar terlebih dahulu.');
               setShowToast(true);

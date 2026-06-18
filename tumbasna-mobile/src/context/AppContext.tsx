@@ -263,6 +263,8 @@ const INITIAL_CHATS: ChatThread[] = [
 ];
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
+
   const [user, setUser] = useState<User | null>(() => {
     const saved = localStorage.getItem('tumbasna_user');
     if (saved) return JSON.parse(saved);
@@ -416,6 +418,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem('tumbasna_chats', JSON.stringify(chats));
   }, [chats]);
+
+  // Fetch products from Dashboard API
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch('http://localhost:3000/api/products');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data && json.data.length > 0) {
+            setProducts(json.data);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch products from API, using fallback data', err);
+      }
+    };
+    fetchProducts();
+  }, []);
 
   // Auth Operations
   const login = async (phoneOrEmail: string): Promise<boolean> => {
@@ -695,7 +715,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     <AppContext.Provider
       value={{
         user,
-        products: INITIAL_PRODUCTS,
+        products,
         cart,
         orders,
         chats,

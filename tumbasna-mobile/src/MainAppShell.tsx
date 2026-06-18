@@ -22,6 +22,7 @@ import DetailProduk from './pages/DetailProduk';
 import DetailPesanan from './pages/DetailPesanan';
 import PembayaranQris from './pages/PembayaranQris';
 import LoginRegister from './pages/LoginRegister';
+import Welcome from './pages/Welcome';
 
 import './MainAppShell.css';
 
@@ -48,17 +49,38 @@ const MainAppShell: React.FC = () => {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [selectedChatPartner, setSelectedChatPartner] = useState<string | null>(null);
 
-  // Reset tab to beranda on user login or logout
+  // Auth Onboarding Navigation State
+  const [showWelcome, setShowWelcome] = useState(true);
+  const [initialLoginMode, setInitialLoginMode] = useState<'login' | 'register'>('login');
+
+  // Reset tab to beranda on user login or reset onboarding on logout
   useEffect(() => {
     if (user) {
       setActiveTab('beranda');
       setViewState('tabs');
+    } else {
+      setShowWelcome(true);
     }
-  }, [user?.id]);
+  }, [user?.email]);
 
-  // If user is not logged in, force LoginRegister full page
+  // If user is not logged in, show Welcome page or LoginRegister page
   if (!user) {
-    return <LoginRegister />;
+    if (showWelcome) {
+      return (
+        <Welcome 
+          onGetStarted={(mode) => {
+            setInitialLoginMode(mode);
+            setShowWelcome(false);
+          }} 
+        />
+      );
+    }
+    return (
+      <LoginRegister 
+        initialIsLogin={initialLoginMode === 'login'} 
+        onBackToWelcome={() => setShowWelcome(true)} 
+      />
+    );
   }
 
   // Render the current sub-page or tab content

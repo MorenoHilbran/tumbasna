@@ -1,0 +1,306 @@
+/* Welcome Onboarding Screen — Symmetrical Premium Typography-Only Layout */
+
+.welcome-content {
+  --background: var(--c-paper);
+}
+
+/* Flex Container filling viewport precisely */
+.welcome-layout-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  position: relative;
+  background: var(--c-paper);
+}
+
+/* 1. Header (Centered Logo with Balanced side buttons) */
+.welcome-header {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: env(safe-area-inset-top, 16px) 24px 0 24px;
+  height: 50px;
+  z-index: 10;
+}
+
+.welcome-back-btn {
+  width: 50px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background: transparent;
+  border: none;
+  color: var(--c-forest);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  outline: none;
+}
+
+.welcome-back-btn:active {
+  opacity: 0.6;
+}
+
+.welcome-header-placeholder {
+  width: 50px;
+}
+
+.welcome-logo {
+  height: 22px;
+  width: auto;
+  object-fit: contain;
+}
+
+.welcome-skip-btn {
+  width: 50px;
+  background: transparent;
+  border: none;
+  color: var(--c-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  text-align: right;
+  padding: 0;
+  outline: none;
+}
+
+.welcome-skip-btn:active {
+  opacity: 0.6;
+}
+
+/* Background Soft Glow */
+.welcome-glow-bg-unified {
+  position: absolute;
+  top: -10%;
+  left: -10%;
+  width: 120%;
+  height: 40%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(127, 187, 84, 0.05) 0%, rgba(248, 247, 244, 0) 70%);
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 2. Slider Area (Dynamic Middle Area) */
+.welcome-slider-body {
+  flex: 1;
+  display: flex;
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  z-index: 5;
+}
+
+.welcome-slide-item {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Center typography vertically in the slide space */
+  align-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.97);
+  transition: opacity 0.35s ease-out, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0 32px;
+  box-sizing: border-box;
+}
+
+.welcome-slide-item.active {
+  opacity: 1;
+  pointer-events: auto;
+  transform: scale(1);
+}
+
+/* Background SVGs Styling & Floating Animations */
+.bg-svg-floating {
+  position: absolute;
+  color: var(--c-forest);
+  opacity: 0.035;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.bg-svg-top-left {
+  top: 14%;
+  left: 8%;
+  width: 76px;
+  height: 76px;
+  animation: float-drift-1 9s ease-in-out infinite;
+}
+
+.bg-svg-bottom-right {
+  bottom: 24%;
+  right: 8%;
+  width: 88px;
+  height: 88px;
+  animation: float-drift-2 10s ease-in-out infinite;
+}
+
+@keyframes float-drift-1 {
+  0% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(4deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+}
+
+@keyframes float-drift-2 {
+  0% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(8px) rotate(-3deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+}
+
+/* Slide Text Wrapper */
+.welcome-text-wrapper {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-sizing: border-box;
+  z-index: 10; /* Make sure text remains on top of background SVGs */
+}
+
+.slide-eyebrow {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: var(--c-leaf);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+}
+
+.welcome-slide-title {
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.35;
+  color: var(--c-forest);
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
+}
+
+.welcome-slide-title .title-accent {
+  font-size: 28px;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+}
+
+.welcome-slide-desc {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--c-muted);
+  margin: 0;
+}
+
+/* 3. Footer Area (Aligned and symmetrical) */
+.welcome-footer {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 10px 24px 24px 24px;
+  z-index: 10;
+  box-sizing: border-box;
+}
+
+/* Indicators */
+.welcome-indicators {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.welcome-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(31, 56, 38, 0.1);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.welcome-dot.active {
+  width: 18px;
+  border-radius: 4px;
+  background: var(--c-forest);
+}
+
+/* Navigation & Action Buttons (Full-width & Centered) */
+.welcome-btn-primary {
+  width: 100%;
+  max-width: 280px;
+  background: var(--c-forest);
+  border: none;
+  color: #ffffff;
+  height: 48px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(31, 56, 38, 0.1);
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.welcome-btn-primary:active {
+  transform: scale(0.98);
+  opacity: 0.95;
+}
+
+.welcome-action-buttons {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  animation: fadeInUp 0.35s ease forwards;
+}
+
+.welcome-btn-secondary {
+  background: transparent;
+  border: none;
+  color: var(--c-muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 12px;
+  outline: none;
+}
+
+.welcome-btn-secondary:active {
+  opacity: 0.6;
+}
+
+.welcome-nav-buttons {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
