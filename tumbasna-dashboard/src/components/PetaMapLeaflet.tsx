@@ -49,6 +49,9 @@ export default function PetaMapLeaflet({ wilayahData, selected, onSelect }: Peta
         <MapContainer
             center={center}
             zoom={9}
+            maxBounds={[[-12.0, 94.0], [8.0, 142.5]]}
+            maxBoundsViscosity={1.0}
+            minZoom={5}
             style={{ height: '100%', width: '100%', zIndex: 0 }}
             scrollWheelZoom={true}
             zoomControl={true}

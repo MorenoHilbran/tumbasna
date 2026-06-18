@@ -108,12 +108,12 @@ export default function DashboardUI({ points, supplyCount, demandCount, recentMa
             <div className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
                 <div className="max-w-[1600px] mx-auto px-6 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
                             <Activity className="text-white w-5 h-5" />
                         </div>
                         <div>
                             <h1 className="text-xl font-bold tracking-tight text-slate-900 leading-none">
-                                {t.title} <span className="text-blue-600">{t.subtitle}</span>
+                                {t.title} <span className="text-emerald-600">{t.subtitle}</span>
                             </h1>
                             <p className="text-xs font-bold text-slate-400 mt-0.5">{t.desc}</p>
                         </div>
@@ -121,13 +121,13 @@ export default function DashboardUI({ points, supplyCount, demandCount, recentMa
                     <div className="flex items-center gap-3">
                         <button
                             onClick={toggleLang}
-                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition-all shadow-sm"
+                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-emerald-600 transition-all shadow-sm"
                         >
-                            <Languages className="w-3.5 h-3.5 text-blue-500" />
+                            <Languages className="w-3.5 h-3.5 text-emerald-500" />
                             {lang === "id" ? "ID \u2192 EN" : "EN \u2192 ID"}
                         </button>
-                        <div className="hidden md:flex items-center gap-2.5 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-100 text-xs font-bold text-blue-600">
-                            <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
+                        <div className="hidden md:flex items-center gap-2.5 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-100 text-xs font-bold text-emerald-600">
+                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
                             {t.syncText}
                         </div>
                         <span className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">
@@ -153,7 +153,7 @@ export default function DashboardUI({ points, supplyCount, demandCount, recentMa
                                     <PackageCheck className="w-5 h-5" />
                                 </div>
                                 <div className="relative group/tooltip">
-                                    <Info className="w-3.5 h-3.5 text-slate-300 hover:text-blue-500 transition-colors cursor-help" />
+                                    <Info className="w-3.5 h-3.5 text-slate-300 hover:text-emerald-500 transition-colors cursor-help" />
                                      <div className="absolute top-6 right-0 w-48 opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-300 bg-slate-900 text-white text-[10px] font-bold leading-relaxed p-3 rounded-xl shadow-xl z-[100] pointer-events-none border border-slate-800">
                                          {t.c1Hover}
                                      </div>
@@ -171,7 +171,7 @@ export default function DashboardUI({ points, supplyCount, demandCount, recentMa
                                     <AlertTriangle className="w-5 h-5" />
                                 </div>
                                 <div className="relative group/tooltip">
-                                    <Info className="w-3.5 h-3.5 text-slate-300 hover:text-blue-500 transition-colors cursor-help" />
+                                    <Info className="w-3.5 h-3.5 text-slate-300 hover:text-emerald-500 transition-colors cursor-help" />
                                     <div className="absolute top-6 right-0 w-48 opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-300 bg-slate-900 text-white text-[9px] font-bold leading-relaxed p-3 rounded-xl shadow-xl z-[100] pointer-events-none border border-slate-800">
                                         {t.c2Hover}
                                     </div>
@@ -185,11 +185,11 @@ export default function DashboardUI({ points, supplyCount, demandCount, recentMa
                     <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative group hover:shadow-md transition-all duration-300">
                         <div className="relative z-10 flex flex-col h-full">
                             <div className="flex items-center justify-between mb-3">
-                                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100 group-hover:bg-blue-600 group-hover:text-white transition-all duration-500">
+                                <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-500">
                                     <TrendingUp className="w-5 h-5" />
                                 </div>
                                 <div className="relative group/tooltip">
-                                    <Info className="w-3.5 h-3.5 text-slate-300 hover:text-blue-500 transition-colors cursor-help" />
+                                    <Info className="w-3.5 h-3.5 text-slate-300 hover:text-emerald-500 transition-colors cursor-help" />
                                     <div className="absolute top-6 right-0 w-48 opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-300 bg-slate-900 text-white text-[9px] font-bold leading-relaxed p-3 rounded-xl shadow-xl z-[100] pointer-events-none border border-slate-800">
                                         {t.c3Hover}
                                     </div>
@@ -207,7 +207,7 @@ export default function DashboardUI({ points, supplyCount, demandCount, recentMa
                                     <Truck className="w-5 h-5" />
                                 </div>
                                 <div className="relative group/tooltip">
-                                    <Info className="w-3.5 h-3.5 text-slate-300 hover:text-blue-500 transition-colors cursor-help" />
+                                    <Info className="w-3.5 h-3.5 text-slate-300 hover:text-emerald-500 transition-colors cursor-help" />
                                     <div className="absolute top-6 right-0 w-48 opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-300 bg-slate-900 text-white text-[9px] font-bold leading-relaxed p-3 rounded-xl shadow-xl z-[100] pointer-events-none border border-slate-800">
                                         {t.c4Hover}
                                     </div>
@@ -226,7 +226,7 @@ export default function DashboardUI({ points, supplyCount, demandCount, recentMa
                             <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-white">
                                 <div>
                                     <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                                        <MapPin className="w-5 h-5 text-blue-600" />
+                                        <MapPin className="w-5 h-5 text-emerald-600" />
                                         {t.mapTitle}
                                     </h2>
                                     <p className="text-xs text-slate-500 mt-1 font-medium">{t.mapDesc}</p>
@@ -251,7 +251,7 @@ export default function DashboardUI({ points, supplyCount, demandCount, recentMa
                         <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 flex-1 flex flex-col overflow-hidden max-h-[740px]">
                             <div className="px-6 py-5 border-b border-slate-100 bg-white sticky top-0 z-10">
                                 <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                                    <Activity className="w-5 h-5 text-blue-600" />
+                                    <Activity className="w-5 h-5 text-emerald-600" />
                                     {t.logTitle}
                                 </h2>
                                 <p className="text-xs text-slate-500 mt-1 font-medium">{t.logDesc}</p>
@@ -268,10 +268,10 @@ export default function DashboardUI({ points, supplyCount, demandCount, recentMa
                                 ) : (
                                     <ul className="space-y-4">
                                         {recentMatches.map((match) => (
-                                            <li key={match.id} className="p-4 rounded-xl border border-slate-200/60 bg-white hover:border-blue-200 hover:shadow-md transition-all duration-300 group">
+                                            <li key={match.id} className="p-4 rounded-xl border border-slate-200/60 bg-white hover:border-emerald-200 hover:shadow-md transition-all duration-300 group">
                                                 <div className="flex justify-between items-start mb-4">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100/50 group-hover:scale-105 transition-transform">
+                                                        <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100/50 group-hover:scale-105 transition-transform">
                                                             <PackageCheck className="w-5 h-5" />
                                                         </div>
                                                          <div>
@@ -284,13 +284,13 @@ export default function DashboardUI({ points, supplyCount, demandCount, recentMa
                                                                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100/50">
                                                                      {match.supplyEntry.qty} kg
                                                                  </span>
-                                                                 <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100/50">
+                                                                 <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100/50">
                                                                      Rp {(match.supplyEntry.price || match.demandEntry.price).toLocaleString('id-ID')}
                                                                  </span>
                                                              </div>
                                                          </div>
                                                     </div>
-                                                     <span className="px-2 py-0.5 text-[10px] font-bold rounded-lg border bg-blue-50 text-blue-700 border-blue-200">
+                                                     <span className="px-2 py-0.5 text-[10px] font-bold rounded-lg border bg-emerald-50 text-emerald-700 border-emerald-200">
                                                          {match.status}
                                                      </span>
                                                 </div>
@@ -319,7 +319,7 @@ export default function DashboardUI({ points, supplyCount, demandCount, recentMa
 
                                                  <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-[10px] font-bold text-slate-400">
                                                      <span className="flex items-center gap-1.5 text-emerald-600 px-2 py-0.5 rounded-lg bg-emerald-50/30 font-bold"><TrendingUp className="w-3 h-3" /> {t.logSol}</span>
-                                                     <span className="text-blue-600 flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-blue-50/30 font-bold">{t.logBackhaul} <Truck className="w-3 h-3" /></span>
+                                                     <span className="text-emerald-600 flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-emerald-50/30 font-bold">{t.logBackhaul} <Truck className="w-3 h-3" /></span>
                                                  </div>
                                             </li>
                                         ))}

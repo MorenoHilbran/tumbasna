@@ -85,7 +85,7 @@ export default function DisparitasHarga({
             );
         } else if (ratio < 0.95) {
             return (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-500/15 text-teal-400 border border-teal-500/30">
                     <TrendingDown className="w-3 h-3" /> {pct}% Di Bawah
                 </span>
             );
@@ -104,7 +104,7 @@ export default function DisparitasHarga({
             <div className="flex items-center gap-2">
                 <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
                     <div
-                        className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full"
+                        className="h-full bg-gradient-to-r from-teal-500 to-emerald-500 rounded-full"
                         style={{ width: `${pct}%` }}
                     />
                 </div>
@@ -120,16 +120,16 @@ export default function DisparitasHarga({
             {/* Header */}
             <div className="mb-6">
                 <div className="flex items-center gap-2.5 mb-2">
-                    <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
                         <LineChart className="w-4 h-4 text-white" />
                     </div>
-                    <span className="text-xs font-bold text-blue-600/60">
+                    <span className="text-xs font-bold text-emerald-600/60">
                         Bank Indonesia · Analitik Harga
                     </span>
                 </div>
                 <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
                     Disparitas Harga{' '}
-                    <span className="text-blue-600">
+                    <span className="text-emerald-600">
                         Antar Wilayah
                     </span>
                 </h1>
@@ -141,7 +141,7 @@ export default function DisparitasHarga({
             {/* KPI Strip */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 {[
-                    { label: 'Terpantau', value: regionData.length, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100', tooltip: 'Jumlah provinsi/wilayah yang aktif mengirimkan data harga harian.' },
+                    { label: 'Terpantau', value: regionData.length, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100', tooltip: 'Jumlah provinsi/wilayah yang aktif mengirimkan data harga harian.' },
                     { label: 'Kritis', value: highDisparityCount, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-100', tooltip: 'Jumlah wilayah dengan selisih harga supply-demand di atas 30%.' },
                     { label: 'Supply Avg', value: nationalSupplyAvg > 0 ? `Rp ${nationalSupplyAvg.toLocaleString('id-ID')}` : '—', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100', tooltip: 'Rata-rata harga beli di tingkat petani secara nasional.' },
                     { label: 'Market Spread', value: `${spreadPercent}%`, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100', tooltip: 'Persentase margin rata-rata antara harga petani dan harga pasar.' },
@@ -152,7 +152,7 @@ export default function DisparitasHarga({
                                 {k.label}
                             </div>
                             <div className="relative group/tooltip">
-                                <Info className="w-3.5 h-3.5 text-slate-300 hover:text-blue-500 transition-colors cursor-help" />
+                                <Info className="w-3.5 h-3.5 text-slate-300 hover:text-emerald-500 transition-colors cursor-help" />
                                 <div className="absolute top-6 right-0 w-48 opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-300 bg-slate-900 text-white text-[10px] font-bold leading-relaxed p-3 rounded-xl shadow-xl z-[100] pointer-events-none border border-slate-800">
                                     {k.tooltip}
                                 </div>
@@ -170,8 +170,8 @@ export default function DisparitasHarga({
                         key={c}
                         onClick={() => setSelectedCommodity(c)}
                         className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all duration-300 border capitalize tracking-widest ${selectedCommodity === c
-                                ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                                : 'bg-white text-slate-400 border-slate-200 hover:border-blue-400 hover:text-blue-600'
+                                ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                                : 'bg-white text-slate-400 border-slate-200 hover:border-emerald-400 hover:text-emerald-600'
                             }`}
                     >
                         {c === 'all' ? 'SEMUA' : c}
@@ -189,7 +189,7 @@ export default function DisparitasHarga({
                                 <p className="text-[11px] text-slate-500 mt-0.5 font-medium">Data real-time</p>
                             </div>
                             <div className="relative group/tooltip mt-1">
-                                <Info className="w-3.5 h-3.5 text-slate-300 hover:text-blue-500 transition-colors cursor-help" />
+                                <Info className="w-3.5 h-3.5 text-slate-300 hover:text-emerald-500 transition-colors cursor-help" />
                                 <div className="absolute top-6 left-0 w-56 opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-300 bg-slate-900 text-white text-[10px] font-bold leading-relaxed p-3 rounded-xl shadow-xl z-[100] pointer-events-none border border-slate-800">
                                     Membandingkan rata-rata harga di tingkat petani (Pasokan) vs harga di pasar/pedagang (Permintaan) per provinsi.
                                 </div>
@@ -221,10 +221,10 @@ export default function DisparitasHarga({
                                 </thead>
                                 <tbody className="divide-y divide-slate-50">
                                     {sorted.map((r) => (
-                                        <tr key={r.region} className="hover:bg-blue-50/20 transition-colors group">
+                                        <tr key={r.region} className="hover:bg-emerald-50/20 transition-colors group">
                                             <td className="px-6 py-4">
                                                 <p className="font-bold text-slate-900 text-sm tracking-tight">{r.region}</p>
-                                                <div className="text-[11px] text-blue-600 font-bold tracking-tight mt-0.5 opacity-60 w-full overflow-hidden">
+                                                <div className="text-[11px] text-emerald-600 font-bold tracking-tight mt-0.5 opacity-60 w-full overflow-hidden">
                                                     <div className="running-text-container">
                                                         <span className="running-text-content">
                                                             {r.commodities.join(', ')}
@@ -273,7 +273,7 @@ export default function DisparitasHarga({
                                 <p className="text-[11px] text-slate-500 font-medium">Supply per komoditas nasional</p>
                             </div>
                             <div className="relative group/tooltip mt-1">
-                                <Info className="w-3.5 h-3.5 text-slate-300 hover:text-blue-500 transition-colors cursor-help" />
+                                <Info className="w-3.5 h-3.5 text-slate-300 hover:text-emerald-500 transition-colors cursor-help" />
                                 <div className="absolute top-6 right-0 w-56 opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-300 bg-slate-900 text-white text-[10px] font-bold leading-relaxed p-3 rounded-xl shadow-xl z-[100] pointer-events-none border border-slate-800">
                                     Menampilkan 5 komoditas teratas dengan penyebaran harga tertinggi di seluruh Indonesia.
                                 </div>
@@ -294,7 +294,7 @@ export default function DisparitasHarga({
                                     <div key={row.commodity} className="group">
                                         <div className="flex items-center justify-between mb-2">
                                             <span className="text-xs font-bold text-slate-900 capitalize tracking-tight">{row.commodity}</span>
-                                            <span className="text-[8px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 uppercase tracking-widest">{row.regions.length} REGION</span>
+                                            <span className="text-[8px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 uppercase tracking-widest">{row.regions.length} REGION</span>
                                         </div>
                                         <div className="space-y-2.5">
                                             {row.regions.slice(0, 2).map(reg => (
@@ -305,7 +305,7 @@ export default function DisparitasHarga({
                                                     </div>
                                                     <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
                                                         <div
-                                                            className="h-full bg-blue-600 rounded-full transition-all duration-1000"
+                                                            className="h-full bg-emerald-600 rounded-full transition-all duration-1000"
                                                             style={{ width: `${(reg.avgPrice / maxPrice) * 100}%` }}
                                                         />
                                                     </div>

@@ -42,7 +42,15 @@ export default function MapComponent({ points }: MapComponentProps) {
 
     return (
         <div className="w-full h-full min-h-[400px] z-0 relative rounded-lg overflow-hidden border">
-            <MapContainer key={mapKey} center={defaultCenter} zoom={8} className="h-full w-full">
+            <MapContainer 
+                key={mapKey} 
+                center={defaultCenter} 
+                zoom={8} 
+                maxBounds={[[-12.0, 94.0], [8.0, 142.5]]}
+                maxBoundsViscosity={1.0}
+                minZoom={5}
+                className="h-full w-full"
+            >
                 <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

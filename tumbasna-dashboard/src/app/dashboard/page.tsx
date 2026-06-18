@@ -16,6 +16,8 @@ import {
     AlertCircle,
     Truck,
     MapPin,
+    ArrowRight,
+    Calendar,
 } from 'lucide-react';
 
 // ─── Mock Data ────────────────────────────────────────────────
@@ -27,8 +29,8 @@ const kpiData = [
         change: '+8.2%',
         trend: 'up',
         icon: ShoppingCart,
-        color: '#697EE8',
-        bg: 'rgba(105,126,232,0.08)',
+        color: '#059669', // Emerald-600 (Premium Green)
+        bg: 'bg-emerald-50/70',
         period: 'vs bulan lalu',
     },
     {
@@ -38,8 +40,8 @@ const kpiData = [
         change: '+12.5%',
         trend: 'up',
         icon: Wallet,
-        color: '#7FBB54',
-        bg: 'rgba(127,187,84,0.08)',
+        color: '#059669',
+        bg: 'bg-emerald-50/70',
         period: 'vs bulan lalu',
     },
     {
@@ -49,8 +51,8 @@ const kpiData = [
         change: '+4.1%',
         trend: 'up',
         icon: Users,
-        color: '#EB9728',
-        bg: 'rgba(235,151,40,0.08)',
+        color: '#D97706', // Amber
+        bg: 'bg-amber-50/70',
         period: 'vs bulan lalu',
     },
     {
@@ -60,8 +62,8 @@ const kpiData = [
         change: '-1.3%',
         trend: 'down',
         icon: Users,
-        color: '#1F3826',
-        bg: 'rgba(31,56,38,0.06)',
+        color: '#475569', // Slate
+        bg: 'bg-slate-100/70',
         period: 'vs bulan lalu',
     },
     {
@@ -71,8 +73,8 @@ const kpiData = [
         change: '+3',
         trend: 'up',
         icon: Package,
-        color: '#7FBB54',
-        bg: 'rgba(127,187,84,0.08)',
+        color: '#059669',
+        bg: 'bg-emerald-50/70',
         period: 'produk baru',
     },
 ];
@@ -88,12 +90,12 @@ const dailyTransactions = [
 ];
 
 const topCommodities = [
-    { name: 'Beras Premium', value: 2840, pct: 92, color: '#7FBB54' },
-    { name: 'Cabai Merah', value: 2210, pct: 71, color: '#EB9728' },
-    { name: 'Bawang Putih', value: 1890, pct: 61, color: '#697EE8' },
-    { name: 'Jagung Pipil', value: 1540, pct: 50, color: '#7FBB54' },
-    { name: 'Kedelai', value: 1230, pct: 40, color: '#EB9728' },
-    { name: 'Gula Pasir', value: 980, pct: 32, color: '#697EE8' },
+    { name: 'Beras Premium', value: 2840, pct: 92, color: '#10B981' }, // Emerald
+    { name: 'Cabai Merah', value: 2210, pct: 71, color: '#F59E0B' }, // Amber
+    { name: 'Bawang Putih', value: 1890, pct: 61, color: '#059669' }, // Emerald-600
+    { name: 'Jagung Pipil', value: 1540, pct: 50, color: '#06B6D4' }, // Cyan
+    { name: 'Kedelai', value: 1230, pct: 40, color: '#8B5CF6' }, // Purple
+    { name: 'Gula Pasir', value: 980, pct: 32, color: '#6366F1' }, // Indigo
 ];
 
 const recentActivities = [
@@ -101,7 +103,8 @@ const recentActivities = [
         id: 'TRX-8821',
         type: 'transaksi',
         title: 'Transaksi Beras Premium',
-        sub: 'Buyer: Pasar Manis — Supplier: UD Tani Jaya',
+        from: 'UD Tani Jaya',
+        to: 'Pasar Manis',
         time: '2 menit lalu',
         status: 'selesai',
         amount: 'Rp 4.200.000',
@@ -110,7 +113,8 @@ const recentActivities = [
         id: 'TRX-8820',
         type: 'transaksi',
         title: 'Transaksi Cabai Merah',
-        sub: 'Buyer: RM Sederhana — Supplier: Kebun Hijau',
+        from: 'Kebun Hijau',
+        to: 'RM Sederhana',
         time: '15 menit lalu',
         status: 'proses',
         amount: 'Rp 860.000',
@@ -118,17 +122,19 @@ const recentActivities = [
     {
         id: 'LOG-441',
         type: 'logistik',
-        title: 'Pengiriman Berangkat',
-        sub: 'Rute: Banyumas → Cilacap — 3 ton jagung',
+        title: 'Pengiriman Jagung Pipil',
+        from: 'Gudang Banyumas',
+        to: 'Hub Cilacap',
         time: '32 menit lalu',
         status: 'jalan',
-        amount: null,
+        amount: '3.0 ton',
     },
     {
         id: 'TRX-8819',
         type: 'transaksi',
         title: 'Transaksi Bawang Putih',
-        sub: 'Buyer: Swalayan Maju — Supplier: CV Agro',
+        from: 'CV Agro Mandiri',
+        to: 'Swalayan Maju',
         time: '1 jam lalu',
         status: 'selesai',
         amount: 'Rp 2.100.000',
@@ -137,7 +143,8 @@ const recentActivities = [
         id: 'TRX-8818',
         type: 'transaksi',
         title: 'Transaksi Gula Pasir',
-        sub: 'Buyer: Toko Barokah — Supplier: PT Sweet',
+        from: 'PT Sweet Sugar',
+        to: 'Toko Barokah',
         time: '1.5 jam lalu',
         status: 'batal',
         amount: 'Rp 1.500.000',
@@ -145,10 +152,10 @@ const recentActivities = [
 ];
 
 const growthStats = [
-    { label: 'Transaksi Harian', value: '423', suffix: 'tx/hari', change: '+8%', color: '#697EE8' },
-    { label: 'Nilai Rata-rata', value: 'Rp 327K', suffix: '/transaksi', change: '+5.2%', color: '#7FBB54' },
-    { label: 'Supplier Aktif', value: '87%', suffix: 'dari total', change: '+2%', color: '#EB9728' },
-    { label: 'Rate Selesai', value: '94.2%', suffix: 'berhasil', change: '+1.1%', color: '#1F3826' },
+    { label: 'Transaksi Harian', value: '423', suffix: 'tx/hari', change: '+8%', color: '#059669' },
+    { label: 'Nilai Rata-rata', value: 'Rp 327K', suffix: '/transaksi', change: '+5.2%', color: '#10B981' },
+    { label: 'Supplier Aktif', value: '87%', suffix: 'dari total', change: '+2%', color: '#F59E0B' },
+    { label: 'Rate Selesai', value: '94.2%', suffix: 'berhasil', change: '+1.1%', color: '#0F172A' },
 ];
 
 // ─── Chart Bar Component ──────────────────────────────────────
@@ -157,34 +164,34 @@ function BarChart() {
     const [hovered, setHovered] = useState<number | null>(null);
 
     return (
-        <div className="flex items-end gap-2 h-44 px-2">
+        <div className="flex items-end gap-3 h-48 px-2">
             {dailyTransactions.map((d, i) => {
                 const heightPct = (d.value / max) * 100;
                 const isHov = hovered === i;
                 return (
                     <div
                         key={d.day}
-                        className="flex-1 flex flex-col items-center gap-1.5 cursor-pointer group"
+                        className="flex-1 flex flex-col items-center gap-2 cursor-pointer group"
                         onMouseEnter={() => setHovered(i)}
                         onMouseLeave={() => setHovered(null)}
                     >
-                        {isHov && (
-                            <div className="text-[10px] font-bold px-2 py-1 rounded-lg" style={{ background: '#1F3826', color: '#7FBB54', fontFamily: 'Poppins, sans-serif' }}>
-                                {d.value}
-                            </div>
-                        )}
+                        <div className="h-6 relative w-full flex justify-center">
+                            {isHov && (
+                                <div className="absolute bottom-0 text-[10px] font-bold px-2 py-0.5 rounded bg-slate-900 text-white shadow-sm whitespace-nowrap z-10">
+                                    {d.value} tx
+                                </div>
+                            )}
+                        </div>
                         <div
-                            className="w-full rounded-t-lg transition-all duration-300"
+                            className="w-full rounded-t transition-all duration-200"
                             style={{
                                 height: `${heightPct}%`,
-                                background: isHov
-                                    ? 'linear-gradient(180deg, #7FBB54 0%, #5E9C36 100%)'
-                                    : 'linear-gradient(180deg, #697EE8 0%, #4C5DD4 100%)',
-                                opacity: isHov ? 1 : 0.75,
-                                minHeight: '6px',
+                                backgroundColor: isHov ? '#047857' : '#059669', // Emerald-700 / Emerald-600
+                                opacity: isHov ? 1 : 0.85,
+                                minHeight: '8px',
                             }}
                         />
-                        <span className="text-[10px] font-medium" style={{ color: '#8DA88F', fontFamily: 'Poppins, sans-serif' }}>{d.day}</span>
+                        <span className="text-[10px] font-semibold text-slate-400 group-hover:text-slate-700 transition-colors uppercase tracking-wider">{d.day}</span>
                     </div>
                 );
             })}
@@ -195,37 +202,58 @@ function BarChart() {
 // ─── Status Badge ─────────────────────────────────────────────
 function StatusBadge({ status }: { status: string }) {
     const map: Record<string, { bg: string; color: string; label: string }> = {
-        selesai: { bg: 'rgba(127,187,84,0.12)', color: '#5E9C36', label: 'Selesai' },
-        proses: { bg: 'rgba(105,126,232,0.12)', color: '#4C5DD4', label: 'Proses' },
-        jalan: { bg: 'rgba(235,151,40,0.12)', color: '#C47D10', label: 'Jalan' },
-        batal: { bg: 'rgba(239,68,68,0.10)', color: '#DC2626', label: 'Dibatalkan' },
+        selesai: { bg: 'bg-emerald-50 text-emerald-600 border-emerald-100/50', label: 'Selesai' },
+        proses: { bg: 'bg-emerald-50/50 text-emerald-700 border-emerald-100/30', label: 'Proses' },
+        jalan: { bg: 'bg-amber-50 text-amber-600 border-amber-100/50', label: 'Jalan' },
+        batal: { bg: 'bg-rose-50 text-rose-600 border-rose-100/50', label: 'Batal' },
     };
     const s = map[status] ?? map.proses;
     return (
         <span
-            className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-            style={{ background: s.bg, color: s.color, fontFamily: 'Poppins, sans-serif' }}
+            className={`inline-flex items-center text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${s.bg}`}
         >
             {s.label}
         </span>
     );
 }
 
+// ─── Route Visualizer Component (Reference Aesthetic) ─────────
+function RouteVisualizer({ from, to }: { from: string; to: string }) {
+    return (
+        <div className="flex flex-col gap-2 my-3 pl-1.5 border-l border-dashed border-slate-200 relative">
+            <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 ring-4 ring-emerald-50 flex-shrink-0 -ml-[9px] z-10" />
+                <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Dari</p>
+                    <p className="text-xs font-semibold text-slate-700 mt-0.5">{from}</p>
+                </div>
+            </div>
+            <div className="flex items-center gap-2 mt-1">
+                <span className="w-2 h-2 rounded-full bg-rose-500 ring-4 ring-rose-50 flex-shrink-0 -ml-[9px] z-10" />
+                <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Ke</p>
+                    <p className="text-xs font-semibold text-slate-700 mt-0.5">{to}</p>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 // ─── Main Dashboard Page ──────────────────────────────────────
 export default function DashboardPage() {
     return (
-        <div className="p-6 space-y-6" style={{ fontFamily: 'Poppins, sans-serif' }}>
+        <div className="p-8 space-y-8 bg-[#F8FAFC]">
 
             {/* Page Header */}
-            <div className="flex items-start justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold" style={{ color: '#1F3826' }}>Dashboard</h1>
-                    <p className="text-sm mt-0.5" style={{ color: '#8DA88F' }}>
+                    <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Dashboard</h1>
+                    <p className="text-sm text-slate-400 mt-0.5">
                         Ringkasan performa platform monitoring komoditas pangan
                     </p>
                 </div>
-                <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold" style={{ background: 'white', color: '#1F3826', border: '1px solid #DDE5D8' }}>
-                    <Clock className="w-3.5 h-3.5" style={{ color: '#EB9728' }} />
+                <div className="flex items-center gap-2.5 px-4 py-2 bg-white rounded-xl text-xs font-bold text-slate-600 border border-slate-200/60 shadow-sm self-start md:self-auto">
+                    <Calendar className="w-4 h-4 text-emerald-600" />
                     Sabtu, 6 Juni 2026 — 18:00 WIB
                 </div>
             </div>
@@ -237,180 +265,197 @@ export default function DashboardPage() {
                     return (
                         <div
                             key={kpi.id}
-                            className="bg-white rounded-2xl p-4 border card-hover"
-                            style={{ borderColor: '#DDE5D8', boxShadow: '0 2px 12px rgba(31,56,38,0.06)' }}
+                            className="bg-white rounded-2xl p-5 border border-slate-200/60 shadow-sm transition-all hover:shadow-md hover:border-slate-300/80 group"
                         >
-                            <div className="flex items-center justify-between mb-3">
-                                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: kpi.bg }}>
+                            <div className="flex items-center justify-between mb-4">
+                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${kpi.bg}`}>
                                     <Icon className="w-4 h-4" style={{ color: kpi.color }} />
                                 </div>
-                                <div className="flex items-center gap-1 text-[11px] font-semibold"
-                                    style={{ color: kpi.trend === 'up' ? '#5E9C36' : '#DC2626' }}>
+                                <div className={`flex items-center gap-0.5 text-[10px] font-bold ${
+                                    kpi.trend === 'up' ? 'text-emerald-600' : 'text-rose-600'
+                                }`}>
                                     {kpi.trend === 'up'
-                                        ? <TrendingUp className="w-3 h-3" />
-                                        : <TrendingDown className="w-3 h-3" />}
+                                        ? <TrendingUp className="w-3.5 h-3.5" />
+                                        : <TrendingDown className="w-3.5 h-3.5" />}
                                     {kpi.change}
                                 </div>
                             </div>
-                            <p className="text-[11px] font-medium mb-1" style={{ color: '#8DA88F' }}>{kpi.label}</p>
-                            <p className="text-xl font-bold" style={{ color: '#1F3826' }}>{kpi.value}</p>
-                            <p className="text-[10px] mt-1" style={{ color: '#aaa' }}>{kpi.period}</p>
+                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{kpi.label}</p>
+                            <p className="text-2xl font-bold text-slate-900 mt-1 tracking-tight">{kpi.value}</p>
+                            <p className="text-[10px] text-slate-400 mt-1 font-medium">{kpi.period}</p>
                         </div>
                     );
                 })}
             </div>
 
             {/* Charts Row */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
                 {/* Daily Transactions Chart */}
-                <div className="xl:col-span-2 bg-white rounded-2xl p-5 border" style={{ borderColor: '#DDE5D8', boxShadow: '0 2px 12px rgba(31,56,38,0.06)' }}>
-                    <div className="flex items-center justify-between mb-5">
+                <div className="xl:col-span-2 bg-white rounded-2xl p-6 border border-slate-200/60 shadow-sm">
+                    <div className="flex items-center justify-between mb-6">
                         <div>
-                            <h2 className="text-base font-bold" style={{ color: '#1F3826' }}>Grafik Transaksi Harian</h2>
-                            <p className="text-xs mt-0.5" style={{ color: '#8DA88F' }}>Volume transaksi 7 hari terakhir</p>
+                            <h2 className="text-base font-bold text-slate-900 tracking-tight">Grafik Transaksi Harian</h2>
+                            <p className="text-xs text-slate-400 mt-0.5">Volume transaksi 7 hari terakhir</p>
                         </div>
-                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold" style={{ background: '#EDF2EA', color: '#1F3826' }}>
-                            <BarChart3 className="w-3.5 h-3.5" style={{ color: '#7FBB54' }} />
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-50 border border-slate-200/50 text-slate-600">
+                            <BarChart3 className="w-4 h-4 text-emerald-600" />
                             Minggu Ini
                         </div>
                     </div>
-                    <BarChart />
-                    <div className="mt-4 pt-4 border-t flex items-center justify-between" style={{ borderColor: '#DDE5D8' }}>
+                    
+                    <div className="mt-8">
+                        <BarChart />
+                    </div>
+
+                    <div className="mt-6 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-1.5">
-                                <div className="w-3 h-3 rounded-sm" style={{ background: 'linear-gradient(180deg, #697EE8 0%, #4C5DD4 100%)' }} />
-                                <span className="text-[11px] font-medium" style={{ color: '#8DA88F' }}>Volume Transaksi</span>
+                            <div className="flex items-center gap-2">
+                                <div className="w-2.5 h-2.5 rounded-sm bg-emerald-500" />
+                                <span className="text-xs font-semibold text-slate-500">Volume Transaksi</span>
                             </div>
-                            <div className="flex items-center gap-1.5">
-                                <div className="w-3 h-3 rounded-sm" style={{ background: 'linear-gradient(180deg, #7FBB54 0%, #5E9C36 100%)' }} />
-                                <span className="text-[11px] font-medium" style={{ color: '#8DA88F' }}>Hover untuk detail</span>
+                            <div className="flex items-center gap-2">
+                                <div className="w-2.5 h-2.5 rounded-sm bg-slate-200" />
+                                <span className="text-xs font-semibold text-slate-400">Rata-rata Harian</span>
                             </div>
                         </div>
-                        <span className="text-xs font-bold" style={{ color: '#1F3826' }}>Total: 2.846 transaksi</span>
+                        <span className="text-xs font-bold text-slate-800">Total: 2.846 transaksi</span>
                     </div>
                 </div>
 
                 {/* Top Commodities */}
-                <div className="bg-white rounded-2xl p-5 border" style={{ borderColor: '#DDE5D8', boxShadow: '0 2px 12px rgba(31,56,38,0.06)' }}>
-                    <div className="flex items-center justify-between mb-5">
-                        <div>
-                            <h2 className="text-base font-bold" style={{ color: '#1F3826' }}>Komoditas Terlaris</h2>
-                            <p className="text-xs mt-0.5" style={{ color: '#8DA88F' }}>Berdasarkan volume transaksi</p>
-                        </div>
-                        <ArrowUpRight className="w-4 h-4" style={{ color: '#7FBB54' }} />
-                    </div>
-                    <div className="space-y-3">
-                        {topCommodities.map((c, i) => (
-                            <div key={c.name} className="space-y-1">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-[11px] font-bold w-4" style={{ color: '#8DA88F' }}>#{i + 1}</span>
-                                        <span className="text-xs font-semibold" style={{ color: '#1F3826' }}>{c.name}</span>
-                                    </div>
-                                    <span className="text-[11px] font-bold" style={{ color: c.color }}>{c.value.toLocaleString('id')} kg</span>
-                                </div>
-                                <div className="h-1.5 rounded-full" style={{ background: '#EDF2EA' }}>
-                                    <div
-                                        className="h-full rounded-full transition-all duration-700"
-                                        style={{ width: `${c.pct}%`, background: c.color }}
-                                    />
-                                </div>
+                <div className="bg-white rounded-2xl p-6 border border-slate-200/60 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div className="flex items-center justify-between mb-5">
+                            <div>
+                                <h2 className="text-base font-bold text-slate-900 tracking-tight">Komoditas Terlaris</h2>
+                                <p className="text-xs text-slate-400 mt-0.5">Berdasarkan volume transaksi</p>
                             </div>
-                        ))}
+                            <ArrowUpRight className="w-4 h-4 text-slate-400" />
+                        </div>
+                        <div className="space-y-4">
+                            {topCommodities.map((c, i) => (
+                                <div key={c.name} className="space-y-1.5">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[10px] font-bold w-4 text-slate-400">#{i + 1}</span>
+                                            <span className="text-xs font-bold text-slate-700">{c.name}</span>
+                                        </div>
+                                        <span className="text-xs font-bold text-slate-800">{c.value.toLocaleString('id-ID')} kg</span>
+                                    </div>
+                                    <div className="h-1.5 rounded-full bg-slate-100">
+                                        <div
+                                            className="h-full rounded-full transition-all duration-500"
+                                            style={{ width: `${c.pct}%`, backgroundColor: c.color }}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>
 
             {/* Growth Stats + Recent Activity */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
                 {/* Growth Stats */}
-                <div className="bg-white rounded-2xl p-5 border" style={{ borderColor: '#DDE5D8', boxShadow: '0 2px 12px rgba(31,56,38,0.06)' }}>
-                    <h2 className="text-base font-bold mb-1" style={{ color: '#1F3826' }}>Statistik Pertumbuhan</h2>
-                    <p className="text-xs mb-5" style={{ color: '#8DA88F' }}>Performa platform bulan ini</p>
+                <div className="bg-white rounded-2xl p-6 border border-slate-200/60 shadow-sm">
+                    <h2 className="text-base font-bold text-slate-900 tracking-tight">Statistik Pertumbuhan</h2>
+                    <p className="text-xs text-slate-400 mt-0.5 mb-5">Performa platform bulan ini</p>
                     <div className="grid grid-cols-2 gap-3">
                         {growthStats.map((stat) => (
-                            <div key={stat.label} className="rounded-xl p-3" style={{ background: '#F4F7F2' }}>
-                                <p className="text-[10px] font-medium mb-1" style={{ color: '#8DA88F' }}>{stat.label}</p>
-                                <p className="text-lg font-bold" style={{ color: stat.color }}>{stat.value}</p>
-                                <p className="text-[10px] mt-0.5" style={{ color: '#aaa' }}>{stat.suffix}</p>
-                                <div className="flex items-center gap-1 mt-2">
-                                    <TrendingUp className="w-2.5 h-2.5" style={{ color: '#7FBB54' }} />
-                                    <span className="text-[10px] font-bold" style={{ color: '#7FBB54' }}>{stat.change}</span>
+                            <div key={stat.label} className="rounded-xl p-4 bg-slate-50 border border-slate-100 flex flex-col justify-between">
+                                <div>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{stat.label}</p>
+                                    <p className="text-lg font-extrabold mt-1.5 leading-none" style={{ color: stat.color }}>{stat.value}</p>
+                                    <p className="text-[9px] text-slate-400 mt-1 font-medium">{stat.suffix}</p>
+                                </div>
+                                <div className="flex items-center gap-1 mt-4">
+                                    <TrendingUp className="w-3 h-3 text-emerald-600" />
+                                    <span className="text-[10px] font-bold text-emerald-600">{stat.change}</span>
                                 </div>
                             </div>
                         ))}
                     </div>
                 </div>
 
-                {/* Recent Activity Feed */}
-                <div className="xl:col-span-2 bg-white rounded-2xl p-5 border" style={{ borderColor: '#DDE5D8', boxShadow: '0 2px 12px rgba(31,56,38,0.06)' }}>
-                    <div className="flex items-center justify-between mb-5">
+                {/* Recent Activity Feed (Clean Minimalist Reference Design) */}
+                <div className="xl:col-span-2 bg-white rounded-2xl p-6 border border-slate-200/60 shadow-sm">
+                    <div className="flex items-center justify-between mb-6">
                         <div>
-                            <h2 className="text-base font-bold" style={{ color: '#1F3826' }}>Aktivitas Terbaru</h2>
-                            <p className="text-xs mt-0.5" style={{ color: '#8DA88F' }}>Real-time log transaksi & logistik</p>
+                            <h2 className="text-base font-bold text-slate-900 tracking-tight">Aktivitas Terbaru</h2>
+                            <p className="text-xs text-slate-400 mt-0.5">Real-time log transaksi & logistik</p>
                         </div>
-                        <div className="flex items-center gap-1.5 text-[11px] font-semibold" style={{ color: '#697EE8' }}>
-                            <Activity className="w-3.5 h-3.5" />
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600">
+                            <Activity className="w-4 h-4" />
                             Live
                         </div>
                     </div>
-                    <div className="space-y-3">
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {recentActivities.map((act) => (
                             <div
                                 key={act.id}
-                                className="flex items-start gap-3 p-3 rounded-xl transition-all duration-200 hover:shadow-sm"
-                                style={{ background: '#F4F7F2' }}
+                                className="bg-white border border-slate-200/70 rounded-2xl p-4 transition-all hover:border-slate-300 hover:shadow-sm flex flex-col justify-between"
                             >
-                                <div
-                                    className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
-                                    style={{
-                                        background: act.type === 'logistik' ? 'rgba(235,151,40,0.12)' : 'rgba(105,126,232,0.10)',
-                                    }}
-                                >
-                                    {act.type === 'logistik'
-                                        ? <Truck className="w-4 h-4" style={{ color: '#EB9728' }} />
-                                        : <ShoppingCart className="w-4 h-4" style={{ color: '#697EE8' }} />}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                        <p className="text-xs font-semibold" style={{ color: '#1F3826' }}>{act.title}</p>
+                                <div>
+                                    <div className="flex items-center justify-between gap-3 mb-3">
+                                        <div className="flex items-center gap-2">
+                                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${
+                                                act.type === 'logistik' ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'
+                                            }`}>
+                                                {act.type === 'logistik'
+                                                    ? <Truck className="w-3.5 h-3.5" />
+                                                    : <ShoppingCart className="w-3.5 h-3.5" />}
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-bold text-slate-800">{act.title}</p>
+                                                <span className="text-[9px] font-mono text-slate-400 font-semibold">{act.id}</span>
+                                            </div>
+                                        </div>
                                         <StatusBadge status={act.status} />
                                     </div>
-                                    <p className="text-[11px] mt-0.5 truncate" style={{ color: '#8DA88F' }}>{act.sub}</p>
-                                    <div className="flex items-center gap-3 mt-1.5">
-                                        <span className="text-[10px]" style={{ color: '#aaa' }}>{act.id}</span>
-                                        <span className="text-[10px]" style={{ color: '#aaa' }}>{act.time}</span>
-                                    </div>
+
+                                    {/* Route visualizer matching reference style */}
+                                    <RouteVisualizer from={act.from} to={act.to} />
                                 </div>
-                                {act.amount && (
-                                    <p className="text-xs font-bold flex-shrink-0" style={{ color: '#1F3826' }}>{act.amount}</p>
-                                )}
+
+                                <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[10px]">
+                                    <span className="font-semibold text-slate-400">{act.time}</span>
+                                    {act.amount && (
+                                        <span className="font-extrabold text-slate-800 text-xs">{act.amount}</span>
+                                    )}
+                                </div>
                             </div>
                         ))}
                     </div>
                 </div>
             </div>
 
-            {/* Bottom Info Strip */}
-            <div className="rounded-2xl p-4 flex flex-wrap items-center gap-6" style={{ background: '#1F3826' }}>
-                {[
-                    { icon: MapPin, label: 'Wilayah Aktif', value: '5 Kabupaten', color: '#7FBB54' },
-                    { icon: Package, label: 'Stok Melimpah', value: '3 Wilayah', color: '#7FBB54' },
-                    { icon: AlertCircle, label: 'Stok Menipis', value: '2 Wilayah', color: '#EB9728' },
-                    { icon: CheckCircle2, label: 'Transaksi Hari Ini', value: '423 Selesai', color: '#697EE8' },
-                ].map((item) => (
-                    <div key={item.label} className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.08)' }}>
-                            <item.icon className="w-4 h-4" style={{ color: item.color }} />
+            {/* Bottom Info Strip - Minimalist Anchored Bar */}
+            <div className="rounded-2xl p-5 flex flex-wrap items-center justify-between gap-6 bg-slate-900 border border-slate-800">
+                <div className="flex flex-wrap items-center gap-8">
+                    {[
+                        { icon: MapPin, label: 'Wilayah Aktif', value: '5 Kabupaten', color: '#10B981' },
+                        { icon: Package, label: 'Stok Melimpah', value: '3 Wilayah', color: '#10B981' },
+                        { icon: AlertCircle, label: 'Stok Menipis', value: '2 Wilayah', color: '#F59E0B' },
+                        { icon: CheckCircle2, label: 'Transaksi Hari Ini', value: '423 Selesai', color: '#059669' },
+                    ].map((item) => (
+                        <div key={item.label} className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-slate-800/80">
+                                <item.icon className="w-4 h-4" style={{ color: item.color }} />
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">{item.label}</p>
+                                <p className="text-xs font-extrabold text-white mt-1 leading-none">{item.value}</p>
+                            </div>
                         </div>
-                        <div>
-                            <p className="text-[10px] font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>{item.label}</p>
-                            <p className="text-sm font-bold" style={{ color: 'white' }}>{item.value}</p>
-                        </div>
-                    </div>
-                ))}
+                    ))}
+                </div>
+                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest hidden lg:block">
+                    Tumbasna Core System v1.4
+                </div>
             </div>
         </div>
     );

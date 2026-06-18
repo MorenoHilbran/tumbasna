@@ -10,7 +10,7 @@ const LandingPage = () => {
   const [activeStepTab, setActiveStepTab] = React.useState<'supplier' | 'buyer'>('supplier');
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-100 font-sans selection:bg-cyan-500/30 antialiased overflow-x-hidden" style={{ fontFamily: '"Mona Sans", "Helvetica Neue", Helvetica, Arial, sans-serif' }}>
+    <div className="min-h-screen bg-[#020617] text-slate-100 font-sans selection:bg-emerald-500/30 antialiased overflow-x-hidden" style={{ fontFamily: '"Mona Sans", "Helvetica Neue", Helvetica, Arial, sans-serif' }}>
       
       {/* Premium Navigation */}
       <nav className="fixed top-0 w-full z-50 bg-[#020617]/40 backdrop-blur-2xl border-b border-white/5">
@@ -20,17 +20,17 @@ const LandingPage = () => {
           </div>
           
           <div className="hidden md:flex items-center gap-10 text-[12px] font-black text-slate-400 uppercase tracking-[0.2em] italic">
-            <a href="#" className="hover:text-cyan-400 transition-colors">Beranda</a>
-            <a href="#fitur" className="hover:text-cyan-400 transition-colors">Fitur</a>
-            <a href="#cara-kerja" className="hover:text-cyan-400 transition-colors">Cara Pakai</a>
-            <a href="#faq" className="hover:text-cyan-400 transition-colors">FAQ</a>
+            <a href="#" className="hover:text-emerald-400 transition-colors">Beranda</a>
+            <a href="#fitur" className="hover:text-emerald-400 transition-colors">Fitur</a>
+            <a href="#cara-kerja" className="hover:text-emerald-400 transition-colors">Cara Pakai</a>
+            <a href="#faq" className="hover:text-emerald-400 transition-colors">FAQ</a>
           </div>
 
           <a
             href={waLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="group flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-6 py-2.5 rounded-full text-[14px] font-bold shadow-xl shadow-cyan-500/20 hover:scale-105 transition-all active:scale-95"
+            className="group flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-green-600 text-white px-6 py-2.5 rounded-full text-[14px] font-bold shadow-xl shadow-emerald-500/20 hover:scale-105 transition-all active:scale-95"
           >
             Hubungkan WA <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </a>
@@ -40,8 +40,8 @@ const LandingPage = () => {
       {/* Hero Section */}
       <section className="relative pt-48 pb-32 px-6 flex flex-col items-center">
         {/* Glow Effects */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-cyan-600/10 blur-[120px] rounded-full -z-10"></div>
-        <div className="absolute top-40 right-[-10%] w-[500px] h-[500px] bg-blue-600/5 blur-[100px] rounded-full -z-10 animate-pulse"></div>
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-emerald-600/10 blur-[120px] rounded-full -z-10"></div>
+        <div className="absolute top-40 right-[-10%] w-[500px] h-[500px] bg-emerald-600/5 blur-[100px] rounded-full -z-10 animate-pulse"></div>
 
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <motion.div
@@ -50,13 +50,13 @@ const LandingPage = () => {
             transition={{ duration: 0.8 }}
           >
             <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/5 backdrop-blur-md rounded-full mb-8 border border-white/10 shadow-2xl">
-              <span className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></span>
-              <p className="text-[12px] font-bold text-cyan-400 tracking-[0.2em] uppercase">Masa Depan Perdagangan Hasil Bumi</p>
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <p className="text-[12px] font-bold text-emerald-400 tracking-[0.2em] uppercase">Masa Depan Perdagangan Hasil Bumi</p>
             </div>
             
             <h1 className="text-5xl md:text-7xl lg:text-[72px] font-extrabold text-white leading-[1.05] mb-8 tracking-tighter italic">
               Hubungkan Hasil Bumi <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500">Ke Pembeli Terbaik</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-500 to-green-500">Ke Pembeli Terbaik</span>
             </h1>
             
             <p className="text-lg md:text-xl text-slate-400 mb-12 max-w-2xl mx-auto leading-relaxed font-light">
@@ -86,7 +86,7 @@ const LandingPage = () => {
           transition={{ delay: 0.3, duration: 1 }}
           className="mt-24 w-full max-w-6xl mx-auto p-4 rounded-[40px] bg-gradient-to-b from-white/10 to-transparent border border-white/10 backdrop-blur-sm relative group overflow-hidden"
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-transparent to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-transparent to-green-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
           <div className="bg-[#0b1120] rounded-[32px] overflow-hidden border border-white/5 shadow-2xl">
              <div className="h-10 border-b border-white/5 px-6 flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full bg-red-500/50"></div>
@@ -98,33 +98,33 @@ const LandingPage = () => {
                 <div className="col-span-12 md:col-span-4 space-y-6">
                    <div className="h-40 bg-white/5 rounded-3xl p-6 border border-white/5">
                       <p className="text-slate-500 text-xs font-bold mb-1">TOTAL DEMAND</p>
-                      <h4 className="text-3xl font-bold text-white mb-4">41,510 <span className="text-cyan-500 text-sm">TON</span></h4>
+                      <h4 className="text-3xl font-bold text-white mb-4">41,510 <span className="text-emerald-500 text-sm">TON</span></h4>
                       <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
-                         <div className="bg-cyan-500 h-full w-[65%] shadow-[0_0_10px_rgba(6,182,212,0.5)]"></div>
+                         <div className="bg-emerald-500 h-full w-[65%] shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
                       </div>
                    </div>
                    <div className="h-40 bg-white/5 rounded-3xl p-6 border border-white/5">
                       <p className="text-slate-500 text-xs font-bold mb-1">HARGA RATA-RATA</p>
-                      <h4 className="text-3xl font-bold text-white mb-4">Rp 12.344 <span className="text-blue-500 text-sm">/KG</span></h4>
+                      <h4 className="text-3xl font-bold text-white mb-4">Rp 12.344 <span className="text-emerald-500 text-sm">/KG</span></h4>
                       <div className="flex items-end gap-1 h-12">
                          {[40, 70, 45, 90, 65, 80, 50, 75].map((h, i) => (
-                           <div key={i} className="flex-1 bg-blue-500/30 rounded-t-sm" style={{ height: `${h}%` }}></div>
+                           <div key={i} className="flex-1 bg-emerald-500/30 rounded-t-sm" style={{ height: `${h}%` }}></div>
                          ))}
                       </div>
                    </div>
                 </div>
-                <div className="col-span-12 md:col-span-8 bg-white/5 rounded-3xl p-8 border border-white/5 relative overflow-hidden">
-                   <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 blur-3xl"></div>
+                 <div className="col-span-12 md:col-span-8 bg-white/5 rounded-3xl p-8 border border-white/5 relative overflow-hidden">
+                   <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-3xl"></div>
                    <div className="flex justify-between items-center mb-8">
                       <h5 className="text-lg font-bold">Tren Pasar Real-Time</h5>
                       <div className="flex gap-2">
                          <div className="px-3 py-1 bg-white/5 rounded-lg text-[10px] text-slate-400">Week</div>
-                         <div className="px-3 py-1 bg-cyan-500/10 border border-cyan-500/20 rounded-lg text-[10px] text-cyan-400">Month</div>
+                         <div className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-[10px] text-emerald-400">Month</div>
                       </div>
                    </div>
                    <div className="h-64 flex items-end gap-4">
                       {[60, 40, 75, 45, 90, 65, 100, 80, 55, 70, 40, 85].map((h, i) => (
-                        <div key={i} className="flex-1 bg-gradient-to-t from-cyan-500/5 to-cyan-500/40 rounded-t-lg group-hover:from-cyan-500/20 transition-all duration-500" style={{ height: `${h}%` }}></div>
+                        <div key={i} className="flex-1 bg-gradient-to-t from-emerald-500/5 to-emerald-500/40 rounded-t-lg group-hover:from-emerald-500/20 transition-all duration-500" style={{ height: `${h}%` }}></div>
                       ))}
                    </div>
                 </div>
@@ -135,24 +135,24 @@ const LandingPage = () => {
 
       {/* How to Use (Cara Pakai) - Dynamic Transition */}
       <section id="cara-kerja" className="py-40 px-6 relative overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-cyan-500/5 blur-[120px] rounded-full -z-10"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-emerald-500/5 blur-[120px] rounded-full -z-10"></div>
         
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-20 italic">
-             <p className="text-cyan-400 text-xs font-black tracking-widest mb-4 uppercase">User Guide</p>
+             <p className="text-emerald-400 text-xs font-black tracking-widest mb-4 uppercase">User Guide</p>
              <h2 className="text-4xl md:text-6xl font-black mb-8 tracking-tighter">Panduan Penggunaan</h2>
              
              {/* Mode Selector */}
              <div className="flex justify-center gap-4 bg-white/5 p-2 rounded-[24px] w-fit mx-auto border border-white/5 mb-20 shadow-2xl">
                 <button 
                   onClick={() => setActiveStepTab('supplier')}
-                  className={`px-10 py-4 rounded-[18px] text-xs font-black tracking-widest transition-all ${activeStepTab === 'supplier' ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-xl shadow-cyan-500/20' : 'text-slate-500 hover:text-white'}`}
+                  className={`px-10 py-4 rounded-[18px] text-xs font-black tracking-widest transition-all ${activeStepTab === 'supplier' ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-xl shadow-emerald-500/20' : 'text-slate-500 hover:text-white'}`}
                 >
                   SEBAGAI SUPPLIER
                 </button>
                 <button 
                   onClick={() => setActiveStepTab('buyer')}
-                  className={`px-10 py-4 rounded-[18px] text-xs font-black tracking-widest transition-all ${activeStepTab === 'buyer' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xl shadow-blue-500/20' : 'text-slate-500 hover:text-white'}`}
+                  className={`px-10 py-4 rounded-[18px] text-xs font-black tracking-widest transition-all ${activeStepTab === 'buyer' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-xl shadow-emerald-500/20' : 'text-slate-500 hover:text-white'}`}
                 >
                   SEBAGAI BUYER
                 </button>
@@ -176,9 +176,9 @@ const LandingPage = () => {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: i * 0.1 }}
-                className="p-10 rounded-[48px] bg-white/5 border border-white/5 hover:bg-white/[0.08] hover:border-cyan-500/20 transition-all group"
+                className="p-10 rounded-[48px] bg-white/5 border border-white/5 hover:bg-white/[0.08] hover:border-emerald-500/20 transition-all group"
               >
-                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${activeStepTab === 'supplier' ? 'from-cyan-500/20 to-blue-500/20 text-cyan-400' : 'from-blue-500/20 to-indigo-500/20 text-blue-400'} flex items-center justify-center mb-8 border border-white/5 group-hover:scale-110 transition-transform`}>
+                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${activeStepTab === 'supplier' ? 'from-emerald-500/20 to-green-500/20 text-emerald-400' : 'from-emerald-500/20 to-teal-500/20 text-emerald-400'} flex items-center justify-center mb-8 border border-white/5 group-hover:scale-110 transition-transform`}>
                   {step.icon}
                 </div>
                 <h4 className="text-xl font-bold mb-4">{step.title}</h4>
@@ -193,7 +193,7 @@ const LandingPage = () => {
       <section id="faq" className="py-40 px-6 relative border-t border-white/5 bg-white/[0.01]">
          <div className="max-w-4xl mx-auto">
             <div className="text-center mb-24 italic">
-               <p className="text-blue-400 text-xs font-black tracking-widest mb-4 uppercase">Support Center</p>
+               <p className="text-emerald-400 text-xs font-black tracking-widest mb-4 uppercase">Support Center</p>
                <h2 className="text-4xl md:text-5xl font-black mb-8 italic italic tracking-tighter">Bantuan & Pertanyaan</h2>
             </div>
 
@@ -209,10 +209,10 @@ const LandingPage = () => {
                  <motion.div 
                    key={i} 
                    whileHover={{ y: -5 }}
-                   className="p-10 rounded-[40px] bg-white/5 border border-white/5 hover:border-blue-500/30 transition-all shadow-2xl"
+                   className="p-10 rounded-[40px] bg-white/5 border border-white/5 hover:border-emerald-500/30 transition-all shadow-2xl"
                  >
-                    <h5 className="text-lg font-extrabold mb-4 flex items-center gap-3 text-cyan-400">
-                       <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.8)]"></span>
+                    <h5 className="text-lg font-extrabold mb-4 flex items-center gap-3 text-emerald-400">
+                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
                        {item.q}
                     </h5>
                     <p className="text-slate-400 text-sm leading-relaxed font-light italic opacity-80">{item.a}</p>
@@ -233,7 +233,7 @@ const LandingPage = () => {
             <p className="text-xl text-slate-400 mb-16 font-light max-w-xl mx-auto italic">
                Bergabunglah dengan ekosistem digital hasil bumi terbesar di Indonesia. Cepat, Berbasis AI, dan 100% via WhatsApp.
             </p>
-            <a href={waLink} className="inline-flex items-center gap-6 bg-gradient-to-r from-cyan-500 to-blue-600 px-16 py-7 rounded-[32px] text-2xl font-black text-white shadow-[0_0_60px_-15px_rgba(6,182,212,0.5)] hover:scale-105 transition-all active:scale-95 group">
+            <a href={waLink} className="inline-flex items-center gap-6 bg-gradient-to-r from-emerald-500 to-green-600 px-16 py-7 rounded-[32px] text-2xl font-black text-white shadow-[0_0_60px_-15px_rgba(16,185,129,0.5)] hover:scale-105 transition-all active:scale-95 group">
                Get Started Now
                <ArrowRight className="w-8 h-8 group-hover:translate-x-2 transition-transform" />
             </a>
@@ -252,7 +252,7 @@ const LandingPage = () => {
                </p>
             </div>
             <div className="space-y-8">
-               <h5 className="text-sm font-bold uppercase tracking-widest text-cyan-400 italic">Platform</h5>
+               <h5 className="text-sm font-bold uppercase tracking-widest text-emerald-400 italic">Platform</h5>
                <ul className="space-y-4 text-slate-400">
                   <li><a href="#" className="hover:text-white transition-colors italic">Features</a></li>
                   <li><a href="#" className="hover:text-white transition-colors italic">How it works</a></li>
@@ -260,7 +260,7 @@ const LandingPage = () => {
                </ul>
             </div>
             <div className="space-y-8">
-               <h5 className="text-sm font-bold uppercase tracking-widest text-cyan-400 italic">Company</h5>
+               <h5 className="text-sm font-bold uppercase tracking-widest text-emerald-400 italic">Company</h5>
                <ul className="space-y-4 text-slate-400">
                   <li><a href="#" className="hover:text-white transition-colors italic">About Us</a></li>
                   <li><a href="#" className="hover:text-white transition-colors italic">Privacy Policy</a></li>

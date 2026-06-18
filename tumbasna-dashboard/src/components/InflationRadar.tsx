@@ -121,8 +121,8 @@ function LineChart({
             <defs>
                 {/* Historical area gradient */}
                 <linearGradient id="histGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.25" />
-                    <stop offset="100%" stopColor="#06b6d4" stopOpacity="0" />
+                    <stop offset="0%" stopColor="#10b981" stopOpacity="0.25" />
+                    <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
                 </linearGradient>
                 {/* Prediction area gradient */}
                 <linearGradient id="predGrad" x1="0" y1="0" x2="0" y2="1">
@@ -178,7 +178,7 @@ function LineChart({
             <polyline
                 points={histPoints.join(' ')}
                 fill="none"
-                stroke="#06b6d4"
+                stroke="#10b981"
                 strokeWidth="2"
                 strokeLinejoin="round"
                 strokeLinecap="round"
@@ -212,8 +212,8 @@ function LineChart({
                 const y = H - ((historical[today] - minVal) / (maxVal - minVal)) * H;
                 return (
                     <>
-                        <circle cx={x} cy={y} r="5" fill="#0f172a" stroke="#06b6d4" strokeWidth="2" />
-                        <circle cx={x} cy={y} r="3" fill="#06b6d4" />
+                        <circle cx={x} cy={y} r="5" fill="#0f172a" stroke="#10b981" strokeWidth="2" />
+                        <circle cx={x} cy={y} r="3" fill="#10b981" />
                     </>
                 );
             })()}
@@ -277,16 +277,16 @@ export default function InflationRadar({ data }: Props) {
             {/* ── Header ── */}
             <div className="mb-6">
                 <div className="flex items-center gap-2.5 mb-2">
-                    <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
                         <Activity className="w-4 h-4 text-white" />
                     </div>
-                    <span className="text-xs font-bold text-blue-600/60">
+                    <span className="text-xs font-bold text-emerald-600/60">
                         Bank Indonesia · Sistem Peringatan Dini
                     </span>
                 </div>
                 <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
                     Radar Inflasi&nbsp;
-                    <span className="text-blue-600">
+                    <span className="text-emerald-600">
                         AI Predictive
                     </span>
                 </h1>
@@ -300,7 +300,7 @@ export default function InflationRadar({ data }: Props) {
                 {[
                     { label: 'Wilayah Kritis', value: criticalCount, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-100', tooltip: 'Wilayah yang memiliki rasio defisit pangan > 80% (Demand vs Supply).' },
                     { label: 'Wilayah Waspada', value: warningCount, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100', tooltip: 'Wilayah yang menunjukkan tren penurunan pasokan > 20% dlm 7 hari.' },
-                    { label: 'Komoditas Dipantau', value: commodities.length, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100', tooltip: 'Jumlah jenis bahan pokok yang masuk dalam sistem monitoring AI.' },
+                    { label: 'Komoditas Dipantau', value: commodities.length, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100', tooltip: 'Jumlah jenis bahan pokok yang masuk dalam sistem monitoring AI.' },
                 ].map(kpi => (
                     <div
                         key={kpi.label}
@@ -311,7 +311,7 @@ export default function InflationRadar({ data }: Props) {
                                 {kpi.label}
                             </div>
                             <div className="relative group/tooltip">
-                                <Info className="w-3.5 h-3.5 text-slate-300 hover:text-blue-500 transition-colors cursor-help" />
+                                <Info className="w-3.5 h-3.5 text-slate-300 hover:text-emerald-500 transition-colors cursor-help" />
                                 <div className="absolute top-6 right-0 w-48 opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-300 bg-slate-900 text-white text-[10px] font-bold leading-relaxed p-3 rounded-xl shadow-xl z-[100] pointer-events-none border border-slate-800">
                                     {kpi.tooltip}
                                 </div>
@@ -335,7 +335,7 @@ export default function InflationRadar({ data }: Props) {
                                 <p className="text-[13px] text-slate-500 mt-0.5 font-medium">30 hari historis + 14 hari proyeksi (kg)</p>
                             </div>
                             <div className="relative group/tooltip mt-1.5">
-                                <Info className="w-3.5 h-3.5 text-slate-300 hover:text-blue-500 transition-colors cursor-help" />
+                                <Info className="w-3.5 h-3.5 text-slate-300 hover:text-emerald-500 transition-colors cursor-help" />
                                 <div className="absolute top-6 left-0 w-56 opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-300 bg-slate-900 text-white text-[10px] font-bold leading-relaxed p-3 rounded-xl shadow-xl z-[100] pointer-events-none border border-slate-800">
                                     Dihitung menggunakan regresi linear dari data pasokan harian petani untuk mendeteksi potensi kelangkaan barang.
                                 </div>
@@ -349,7 +349,7 @@ export default function InflationRadar({ data }: Props) {
                                     key={c}
                                     onClick={() => setSelected(c)}
                                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 ${selected === c
-                                        ? 'bg-white text-blue-600 shadow-sm border border-slate-200'
+                                        ? 'bg-white text-emerald-600 shadow-sm border border-slate-200'
                                         : 'bg-transparent text-slate-400 hover:text-slate-600'
                                         }`}
                                 >
@@ -362,8 +362,8 @@ export default function InflationRadar({ data }: Props) {
                     {/* Legend */}
                     <div className="flex items-center gap-4 mb-4">
                         <div className="flex items-center gap-1.5">
-                            <div className="w-3 h-3 rounded-full bg-blue-500/20 flex items-center justify-center">
-                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                            <div className="w-3 h-3 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                             </div>
                             <span className="text-[11px] font-bold text-slate-400">Pasokan Historis</span>
                         </div>
@@ -428,7 +428,7 @@ export default function InflationRadar({ data }: Props) {
                             const lightCfg = {
                                 critical: { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-100', dot: 'bg-red-500' },
                                 warning: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-100', dot: 'bg-amber-500' },
-                                watch: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-100', dot: 'bg-blue-500' },
+                                watch: { bg: 'bg-teal-50', text: 'text-teal-700', border: 'border-teal-100', dot: 'bg-teal-500' },
                             }[region.level];
 
                             return (
@@ -462,7 +462,7 @@ export default function InflationRadar({ data }: Props) {
 
                                         <div className="flex items-center gap-3 mt-2.5">
                                             <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400">
-                                                <Calendar className="w-3 h-3 text-blue-500" />
+                                                <Calendar className="w-3 h-3 text-emerald-500" />
                                                 {region.date}
                                             </div>
                                             <div className="flex items-center gap-1 text-[9px] font-bold bg-white/80 px-2 py-0.5 rounded-full border border-slate-100">

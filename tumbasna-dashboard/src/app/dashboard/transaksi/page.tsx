@@ -1,15 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Search,
     Filter,
     Calendar,
     Download,
-    ArrowUpRight,
+    Eye,
     ChevronLeft,
     ChevronRight,
-    Eye,
     CheckCircle2,
     Clock,
     XCircle,
@@ -39,28 +38,82 @@ const transaksiData = [
 // ─── Status Badge ─────────────────────────────────────────────
 function StatusBadge({ status }: { status: string }) {
     const map: Record<string, { bg: string; color: string; label: string; Icon: any }> = {
-        selesai: { bg: 'rgba(127,187,84,0.12)', color: '#5E9C36', label: 'Selesai', Icon: CheckCircle2 },
-        proses: { bg: 'rgba(105,126,232,0.12)', color: '#4C5DD4', label: 'Diproses', Icon: Loader2 },
-        menunggu: { bg: 'rgba(235,151,40,0.12)', color: '#C47D10', label: 'Menunggu', Icon: Clock },
-        batal: { bg: 'rgba(239,68,68,0.10)', color: '#DC2626', label: 'Dibatalkan', Icon: XCircle },
+        selesai: { bg: 'bg-emerald-50 text-emerald-600 border-emerald-100/50', label: 'Selesai', Icon: CheckCircle2 },
+        proses: { bg: 'bg-teal-50 text-teal-600 border-teal-100/50', label: 'Diproses', Icon: Loader2 },
+        menunggu: { bg: 'bg-amber-50 text-amber-600 border-amber-100/50', label: 'Menunggu', Icon: Clock },
+        batal: { bg: 'bg-rose-50 text-rose-600 border-rose-100/50', label: 'Batal', Icon: XCircle },
     };
     const s = map[status] ?? map.menunggu;
+    const Icon = s.Icon;
     return (
-        <span className="flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: s.bg, color: s.color, fontFamily: 'Poppins, sans-serif' }}>
-            <s.Icon className="w-2.5 h-2.5" />
+        <span className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${s.bg}`}>
+            <Icon className={`w-3 h-3 ${status === 'proses' ? 'animate-spin' : ''}`} />
             {s.label}
         </span>
     );
 }
 
-// ─── Main Transaksi Page ──────────────────────────────────────
+const locationCoords: Record<string, [number, number]> = {
+    'Banyumas': [-7.5151, 109.2941],
+    'Cilacap': [-7.7150, 108.9767],
+    'Purbalingga': [-7.3884, 109.3641],
+    'Banjarnegara': [-7.3884, 109.6939],
+    'Kebumen': [-7.6701, 109.6524]
+};
+
 export default function TransaksiPage() {
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('Semua');
     const [wilayahFilter, setWilayahFilter] = useState('Semua');
     const [currentPage, setCurrentPage] = useState(1);
-    const [selectedTrx, setSelectedTrx] = useState<typeof transaksiData[0] | null>(null);
+    const [selectedTrx, setSelectedTrx] = useState<typeof transaksiData[0] | null>(transaksiData[0]);
+    const [shippingOptions, setShippingOptions] = useState<any[]>([]);
+    const [selectedShipping, setSelectedShipping] = useState<any | null>(null);
+    const [shippingLoading, setShippingLoading] = useState(false);
     const perPage = 8;
+
+    useEffect(() => {
+        if (!selectedTrx) return;
+        
+        let originKey = 'Cilacap';
+        if (selectedTrx.supplier.includes('Agro') || selectedTrx.supplier.includes('Sweet')) {
+            originKey = 'Purbalingga';
+        } else if (selectedTrx.supplier.includes('Tani') || selectedTrx.supplier.includes('Tani Jaya')) {
+            originKey = 'Kebumen';
+        } else if (selectedTrx.supplier.includes('Petani Lokal') || selectedTrx.supplier.includes('Kedelai')) {
+            originKey = 'Banjarnegara';
+        }
+        
+        const origin = locationCoords[originKey] || [-7.7150, 108.9767];
+        const dest = locationCoords[selectedTrx.wilayah] || [-7.5151, 109.2941];
+        
+        const qtyNum = parseInt(selectedTrx.qty) || 100;
+        const weightGram = qtyNum * 1000;
+        
+        setShippingLoading(true);
+        fetch('/api/logistik/ongkir', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                originLat: origin[0],
+                originLng: origin[1],
+                destinationLat: dest[0],
+                destinationLng: dest[1],
+                weightGram
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success && data.options) {
+                setShippingOptions(data.options);
+                const recommended = data.options.find((o: any) => o.isRecommended) || data.options[0];
+                setSelectedShipping(recommended);
+            }
+        })
+        .catch(err => console.error('Gagal mengambil ongkir:', err))
+        .finally(() => setShippingLoading(false));
+
+    }, [selectedTrx]);
 
     const filtered = transaksiData.filter(t =>
         (t.id.toLowerCase().includes(search.toLowerCase()) ||
@@ -76,38 +129,38 @@ export default function TransaksiPage() {
     const totalNilai = transaksiData.filter(t => t.status === 'selesai').reduce((a, t) => a + t.nilai, 0);
 
     return (
-        <div className="p-6 space-y-5" style={{ fontFamily: 'Poppins, sans-serif' }}>
+        <div className="p-8 space-y-8 bg-[#F8FAFC]">
 
             {/* Page Header */}
-            <div className="flex items-start justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold" style={{ color: '#1F3826' }}>Monitoring Transaksi</h1>
-                    <p className="text-sm mt-0.5" style={{ color: '#8DA88F' }}>
+                    <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Monitoring Transaksi</h1>
+                    <p className="text-sm text-slate-400 mt-0.5">
                         Seluruh aktivitas transaksi platform secara real-time
                     </p>
                 </div>
-                <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white" style={{ background: '#1F3826' }}>
-                    <Download className="w-4 h-4" />
-                    Export
+                <button className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition-all font-bold text-xs rounded-xl shadow-sm self-start md:self-auto">
+                    <Download className="w-4 h-4 text-emerald-600" />
+                    Export Transaksi
                 </button>
             </div>
 
             {/* KPI Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                    { label: 'Total Transaksi', value: transaksiData.length, icon: ShoppingCart, color: '#697EE8', bg: 'rgba(105,126,232,0.08)', suffix: '' },
-                    { label: 'Nilai Selesai', value: `Rp ${(totalNilai / 1000000).toFixed(1)}M`, icon: Wallet, color: '#7FBB54', bg: 'rgba(127,187,84,0.08)', suffix: '' },
-                    { label: 'Transaksi Selesai', value: transaksiData.filter(t => t.status === 'selesai').length, icon: CheckCircle2, color: '#5E9C36', bg: 'rgba(127,187,84,0.08)', suffix: '' },
-                    { label: 'Transaksi Batal', value: transaksiData.filter(t => t.status === 'batal').length, icon: XCircle, color: '#DC2626', bg: 'rgba(239,68,68,0.08)', suffix: '' },
+                    { label: 'Total Transaksi', value: transaksiData.length, icon: ShoppingCart, color: 'text-emerald-600', bg: 'bg-emerald-50/70' },
+                    { label: 'Nilai Selesai', value: `Rp ${(totalNilai / 1000000).toFixed(1)} jt`, icon: Wallet, color: 'text-emerald-600', bg: 'bg-emerald-50/70' },
+                    { label: 'Transaksi Selesai', value: transaksiData.filter(t => t.status === 'selesai').length, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50/70' },
+                    { label: 'Transaksi Batal', value: transaksiData.filter(t => t.status === 'batal').length, icon: XCircle, color: 'text-rose-600', bg: 'bg-rose-50/70' },
                 ].map(s => (
-                    <div key={s.label} className="bg-white rounded-2xl p-4 border card-hover" style={{ borderColor: '#DDE5D8', boxShadow: '0 2px 12px rgba(31,56,38,0.06)' }}>
-                        <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: s.bg }}>
-                                <s.icon className="w-4 h-4" style={{ color: s.color }} />
+                    <div key={s.label} className="bg-white rounded-2xl p-5 border border-slate-200/60 shadow-sm transition-all hover:shadow-md">
+                        <div className="flex items-center gap-4">
+                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${s.bg} ${s.color}`}>
+                                <s.icon className="w-4 h-4" />
                             </div>
                             <div>
-                                <p className="text-[11px] font-medium" style={{ color: '#8DA88F' }}>{s.label}</p>
-                                <p className="text-lg font-bold" style={{ color: '#1F3826' }}>{s.value}</p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">{s.label}</p>
+                                <p className="text-2xl font-extrabold text-slate-800 mt-1.5 leading-none">{s.value}</p>
                             </div>
                         </div>
                     </div>
@@ -115,129 +168,142 @@ export default function TransaksiPage() {
             </div>
 
             {/* Filters */}
-            <div className="bg-white rounded-2xl p-4 border" style={{ borderColor: '#DDE5D8', boxShadow: '0 2px 12px rgba(31,56,38,0.06)' }}>
-                <div className="flex flex-wrap items-center gap-3">
+            <div className="bg-white rounded-2xl p-5 border border-slate-200/60 shadow-sm">
+                <div className="flex flex-wrap items-center justify-between gap-4">
                     {/* Search */}
-                    <div className="flex items-center gap-2 flex-1 min-w-[200px] px-3 py-2 rounded-xl" style={{ background: '#F4F7F2', border: '1px solid #DDE5D8' }}>
-                        <Search className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#8DA88F' }} />
+                    <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-slate-200/80 hover:border-slate-300 w-full sm:w-80 transition-all">
+                        <Search className="w-4 h-4 text-slate-400 flex-shrink-0" />
                         <input
                             value={search}
                             onChange={e => setSearch(e.target.value)}
                             placeholder="Cari ID, buyer, supplier, produk..."
-                            className="flex-1 text-xs bg-transparent outline-none"
-                            style={{ color: '#1F3826', fontFamily: 'Poppins, sans-serif' }}
+                            className="flex-1 text-xs bg-transparent outline-none text-slate-700 placeholder-slate-400 font-semibold"
                         />
                     </div>
 
-                    {/* Status Filter */}
-                    <div className="flex items-center gap-1.5">
-                        <Filter className="w-3.5 h-3.5" style={{ color: '#8DA88F' }} />
-                        {['Semua', 'selesai', 'proses', 'menunggu', 'batal'].map(s => (
-                            <button
-                                key={s}
-                                onClick={() => setStatusFilter(s)}
-                                className="px-3 py-1.5 rounded-lg text-[11px] font-semibold capitalize transition-all"
-                                style={{
-                                    background: statusFilter === s ? '#1F3826' : '#F4F7F2',
-                                    color: statusFilter === s ? 'white' : '#8DA88F',
-                                    fontFamily: 'Poppins, sans-serif',
-                                }}
-                            >
-                                {s === 'Semua' ? 'Semua' : s.charAt(0).toUpperCase() + s.slice(1)}
-                            </button>
-                        ))}
-                    </div>
+                    <div className="flex flex-wrap items-center gap-4">
+                        {/* Status Filter */}
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1 flex items-center gap-1">
+                                <Filter className="w-3.5 h-3.5 text-emerald-500" />
+                                Status:
+                            </span>
+                            <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200/40">
+                                {['Semua', 'selesai', 'proses', 'menunggu', 'batal'].map(s => {
+                                    const isAct = statusFilter === s;
+                                    return (
+                                        <button
+                                            key={s}
+                                            onClick={() => setStatusFilter(s)}
+                                            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all capitalize ${
+                                                isAct 
+                                                    ? 'bg-white text-slate-800 shadow-sm' 
+                                                    : 'text-slate-400 hover:text-slate-700'
+                                            }`}
+                                        >
+                                            {s === 'Semua' ? 'Semua' : s}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
 
-                    {/* Wilayah Filter */}
-                    <select
-                        value={wilayahFilter}
-                        onChange={e => setWilayahFilter(e.target.value)}
-                        className="px-3 py-2 rounded-xl text-xs font-medium outline-none"
-                        style={{ background: '#F4F7F2', color: '#1F3826', border: '1px solid #DDE5D8', fontFamily: 'Poppins, sans-serif' }}
-                    >
-                        {['Semua', 'Banyumas', 'Cilacap', 'Purbalingga', 'Banjarnegara', 'Kebumen'].map(w => (
-                            <option key={w} value={w}>{w === 'Semua' ? 'Semua Wilayah' : w}</option>
-                        ))}
-                    </select>
+                        {/* Wilayah Filter */}
+                        <div className="flex items-center gap-1.5">
+                            <select
+                                value={wilayahFilter}
+                                onChange={e => setWilayahFilter(e.target.value)}
+                                className="px-3.5 py-2 bg-white border border-slate-200 hover:border-slate-300 rounded-xl text-xs font-bold text-slate-700 outline-none transition-all cursor-pointer"
+                            >
+                                {['Semua', 'Banyumas', 'Cilacap', 'Purbalingga', 'Banjarnegara', 'Kebumen'].map(w => (
+                                    <option key={w} value={w}>{w === 'Semua' ? 'Semua Wilayah' : w}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             {/* Table + Detail */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
                 {/* Table */}
-                <div className="xl:col-span-2 bg-white rounded-2xl border overflow-hidden" style={{ borderColor: '#DDE5D8', boxShadow: '0 2px 12px rgba(31,56,38,0.06)' }}>
-                    <div className="px-4 py-3 border-b flex items-center justify-between" style={{ borderColor: '#DDE5D8' }}>
-                        <p className="text-sm font-bold" style={{ color: '#1F3826' }}>Daftar Transaksi</p>
-                        <p className="text-xs" style={{ color: '#8DA88F' }}>{filtered.length} transaksi ditemukan</p>
-                    </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead>
-                                <tr style={{ background: '#F4F7F2' }}>
-                                    {['ID Transaksi', 'Buyer', 'Supplier', 'Produk', 'Nilai', 'Status', 'Tanggal', ''].map(h => (
-                                        <th key={h} className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#8DA88F', fontFamily: 'Poppins, sans-serif' }}>
-                                            {h}
-                                        </th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {paginated.map((t, i) => (
-                                    <tr
-                                        key={t.id}
-                                        className="border-t cursor-pointer transition-all"
-                                        style={{
-                                            borderColor: '#DDE5D8',
-                                            background: selectedTrx?.id === t.id ? 'rgba(127,187,84,0.06)' : i % 2 === 0 ? 'white' : '#FAFBF9',
-                                        }}
-                                        onClick={() => setSelectedTrx(t)}
-                                    >
-                                        <td className="px-4 py-3">
-                                            <span className="text-xs font-bold" style={{ color: '#697EE8', fontFamily: 'Poppins, sans-serif' }}>{t.id}</span>
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <p className="text-xs font-semibold" style={{ color: '#1F3826' }}>{t.buyer}</p>
-                                            <p className="text-[10px]" style={{ color: '#8DA88F' }}>{t.wilayah}</p>
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <p className="text-xs" style={{ color: '#1F3826' }}>{t.supplier}</p>
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <p className="text-xs font-semibold" style={{ color: '#1F3826' }}>{t.produk}</p>
-                                            <p className="text-[10px]" style={{ color: '#8DA88F' }}>{t.qty}</p>
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <p className="text-xs font-bold" style={{ color: '#1F3826' }}>Rp {t.nilai.toLocaleString('id')}</p>
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <StatusBadge status={t.status} />
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <p className="text-[11px]" style={{ color: '#8DA88F' }}>{t.tanggal}</p>
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <button className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:scale-110" style={{ background: 'rgba(105,126,232,0.10)' }}>
-                                                <Eye className="w-3.5 h-3.5" style={{ color: '#697EE8' }} />
-                                            </button>
-                                        </td>
+                <div className="xl:col-span-2 bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden flex flex-col justify-between">
+                    <div>
+                        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                            <h2 className="text-sm font-extrabold text-slate-800 tracking-tight">Daftar Transaksi</h2>
+                            <p className="text-xs text-slate-400 font-semibold">{filtered.length} transaksi ditemukan</p>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead>
+                                    <tr className="border-b border-slate-100 bg-slate-50/50">
+                                        {['ID Transaksi', 'Buyer', 'Supplier', 'Produk', 'Nilai', 'Status', 'Tanggal', ''].map(h => (
+                                            <th key={h} className="px-5 py-3.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                                {h}
+                                            </th>
+                                        ))}
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {paginated.map((t) => {
+                                        const isSelected = selectedTrx?.id === t.id;
+                                        return (
+                                            <tr
+                                                key={t.id}
+                                                className={`cursor-pointer transition-all duration-150 ${
+                                                    isSelected 
+                                                        ? 'bg-emerald-50/20 border-l-2 border-l-emerald-600' 
+                                                        : 'hover:bg-slate-50/50 border-l-2 border-l-transparent'
+                                                }`}
+                                                onClick={() => setSelectedTrx(t)}
+                                            >
+                                                <td className="px-5 py-3">
+                                                    <span className="text-xs font-bold text-emerald-600 font-mono">{t.id}</span>
+                                                </td>
+                                                <td className="px-5 py-3">
+                                                    <p className="text-xs font-bold text-slate-800">{t.buyer}</p>
+                                                    <p className="text-[10px] text-slate-400 font-semibold">{t.wilayah}</p>
+                                                </td>
+                                                <td className="px-5 py-3">
+                                                    <p className="text-xs font-semibold text-slate-700">{t.supplier}</p>
+                                                </td>
+                                                <td className="px-5 py-3">
+                                                    <p className="text-xs font-bold text-slate-850">{t.produk}</p>
+                                                    <p className="text-[10px] text-slate-400 font-semibold">{t.qty}</p>
+                                                </td>
+                                                <td className="px-5 py-3">
+                                                    <p className="text-xs font-extrabold text-slate-800">Rp {t.nilai.toLocaleString('id-ID')}</p>
+                                                </td>
+                                                <td className="px-5 py-3">
+                                                    <StatusBadge status={t.status} />
+                                                </td>
+                                                <td className="px-5 py-3">
+                                                    <p className="text-[11px] text-slate-400 font-bold">{t.tanggal}</p>
+                                                </td>
+                                                <td className="px-5 py-3">
+                                                    <button className="w-7 h-7 rounded-lg flex items-center justify-center bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:scale-105 transition-all">
+                                                        <Eye className="w-3.5 h-3.5" />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
                     {/* Pagination */}
-                    <div className="px-4 py-3 border-t flex items-center justify-between" style={{ borderColor: '#DDE5D8' }}>
-                        <p className="text-[11px]" style={{ color: '#8DA88F' }}>
-                            Halaman {currentPage} dari {totalPages}
+                    <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            Halaman {currentPage} dari {totalPages || 1}
                         </p>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1.5">
                             <button
                                 disabled={currentPage === 1}
                                 onClick={() => setCurrentPage(p => p - 1)}
-                                className="w-7 h-7 rounded-lg flex items-center justify-center disabled:opacity-40"
-                                style={{ background: '#F4F7F2', color: '#1F3826' }}
+                                className="w-8 h-8 rounded-lg flex items-center justify-center bg-slate-50 border border-slate-200/50 text-slate-600 hover:bg-slate-100 disabled:opacity-40 transition-colors"
                             >
                                 <ChevronLeft className="w-4 h-4" />
                             </button>
@@ -245,21 +311,19 @@ export default function TransaksiPage() {
                                 <button
                                     key={p}
                                     onClick={() => setCurrentPage(p)}
-                                    className="w-7 h-7 rounded-lg text-[11px] font-bold"
-                                    style={{
-                                        background: currentPage === p ? '#1F3826' : '#F4F7F2',
-                                        color: currentPage === p ? 'white' : '#8DA88F',
-                                        fontFamily: 'Poppins, sans-serif',
-                                    }}
+                                    className={`w-8 h-8 rounded-lg text-[10px] font-bold transition-all border ${
+                                        currentPage === p 
+                                            ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm' 
+                                            : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
+                                    }`}
                                 >
                                     {p}
                                 </button>
                             ))}
                             <button
-                                disabled={currentPage === totalPages}
+                                disabled={currentPage === totalPages || totalPages === 0}
                                 onClick={() => setCurrentPage(p => p + 1)}
-                                className="w-7 h-7 rounded-lg flex items-center justify-center disabled:opacity-40"
-                                style={{ background: '#F4F7F2', color: '#1F3826' }}
+                                className="w-8 h-8 rounded-lg flex items-center justify-center bg-slate-50 border border-slate-200/50 text-slate-600 hover:bg-slate-100 disabled:opacity-40 transition-colors"
                             >
                                 <ChevronRight className="w-4 h-4" />
                             </button>
@@ -268,68 +332,135 @@ export default function TransaksiPage() {
                 </div>
 
                 {/* Detail Panel */}
-                <div className="bg-white rounded-2xl p-5 border" style={{ borderColor: '#DDE5D8', boxShadow: '0 2px 12px rgba(31,56,38,0.06)' }}>
+                <div className="bg-white rounded-2xl p-6 border border-slate-200/60 shadow-sm flex flex-col justify-between">
                     {selectedTrx ? (
-                        <div style={{ fontFamily: 'Poppins, sans-serif' }}>
-                            <div className="flex items-center justify-between mb-4">
-                                <div>
-                                    <p className="text-xs font-semibold" style={{ color: '#697EE8' }}>{selectedTrx.id}</p>
-                                    <h2 className="text-base font-bold mt-0.5" style={{ color: '#1F3826' }}>Detail Transaksi</h2>
-                                </div>
-                                <StatusBadge status={selectedTrx.status} />
-                            </div>
-
-                            {/* Nilai besar */}
-                            <div className="rounded-2xl p-4 mb-4" style={{ background: 'linear-gradient(135deg, #1F3826 0%, #2D5038 100%)' }}>
-                                <p className="text-xs font-medium mb-1" style={{ color: 'rgba(127,187,84,0.8)' }}>Nilai Transaksi</p>
-                                <p className="text-2xl font-bold text-white">Rp {selectedTrx.nilai.toLocaleString('id')}</p>
-                                <div className="flex items-center gap-2 mt-2">
-                                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full" style={{ background: 'rgba(127,187,84,0.2)', color: '#7FBB54' }}>
-                                        via {selectedTrx.metode}
-                                    </span>
-                                    <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.5)' }}>{selectedTrx.tanggal}</span>
-                                </div>
-                            </div>
-
-                            {/* Info grid */}
-                            <div className="space-y-3 mb-4">
-                                {[
-                                    { label: 'Buyer', value: selectedTrx.buyer, sub: selectedTrx.wilayah },
-                                    { label: 'Supplier', value: selectedTrx.supplier, sub: null },
-                                    { label: 'Produk', value: selectedTrx.produk, sub: selectedTrx.qty },
-                                ].map(item => (
-                                    <div key={item.label} className="flex items-start gap-3 p-3 rounded-xl" style={{ background: '#F4F7F2' }}>
-                                        <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'white' }}>
-                                            <Users className="w-3.5 h-3.5" style={{ color: '#7FBB54' }} />
-                                        </div>
-                                        <div>
-                                            <p className="text-[10px] font-medium" style={{ color: '#8DA88F' }}>{item.label}</p>
-                                            <p className="text-xs font-semibold" style={{ color: '#1F3826' }}>{item.value}</p>
-                                            {item.sub && <p className="text-[10px]" style={{ color: '#8DA88F' }}>{item.sub}</p>}
-                                        </div>
+                        <div className="flex flex-col h-full justify-between">
+                            <div>
+                                <div className="flex items-center justify-between mb-5">
+                                    <div>
+                                        <p className="text-[10px] font-bold text-emerald-600 font-mono tracking-wide">{selectedTrx.id}</p>
+                                        <h2 className="text-base font-extrabold text-slate-900 tracking-tight mt-0.5">Detail Transaksi</h2>
                                     </div>
-                                ))}
+                                    <StatusBadge status={selectedTrx.status} />
+                                </div>
+
+                                {/* Nilai besar */}
+                                <div className="rounded-2xl p-5 mb-5 bg-slate-900 border border-slate-800 text-white space-y-3">
+                                    <div className="flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                        <span>Harga Barang</span>
+                                        <span className="text-white font-extrabold">Rp {selectedTrx.nilai.toLocaleString('id-ID')}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                        <span>Ongkos Kirim</span>
+                                        <span className="text-white font-extrabold">
+                                            {selectedShipping ? `Rp ${selectedShipping.cost.toLocaleString('id-ID')}` : 'Rp 0'}
+                                        </span>
+                                    </div>
+                                    <div className="h-px bg-slate-800/80 my-2" />
+                                    <div>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Total Tagihan</p>
+                                        <p className="text-2xl font-extrabold text-white mt-1.5 leading-none">
+                                            Rp {(selectedTrx.nilai + (selectedShipping ? selectedShipping.cost : 0)).toLocaleString('id-ID')}
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center gap-2 mt-4 pt-3 border-t border-slate-800/80">
+                                        <span className="text-[9px] font-bold px-2.5 py-0.5 rounded-full bg-slate-800 text-emerald-400 border border-slate-700/50">
+                                            via {selectedTrx.metode}
+                                        </span>
+                                        <span className="text-[10px] text-slate-400 font-bold ml-auto">{selectedTrx.tanggal}</span>
+                                    </div>
+                                </div>
+
+                                {/* Info grid */}
+                                <div className="space-y-3 mb-5">
+                                    {[
+                                        { label: 'Buyer', value: selectedTrx.buyer, sub: selectedTrx.wilayah },
+                                        { label: 'Supplier', value: selectedTrx.supplier, sub: null },
+                                        { label: 'Produk', value: selectedTrx.produk, sub: selectedTrx.qty },
+                                    ].map(item => (
+                                        <div key={item.label} className="flex items-start gap-3.5 p-3.5 rounded-xl bg-slate-50 border border-slate-100">
+                                            <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-white border border-slate-200/30 text-emerald-500 shadow-sm">
+                                                <Users className="w-4 h-4" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{item.label}</p>
+                                                <p className="text-xs font-bold text-slate-800 mt-1">{item.value}</p>
+                                                {item.sub && <p className="text-[10px] text-slate-450 mt-0.5 font-semibold">{item.sub}</p>}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Opsi Pengiriman & Rekomendasi Ongkir */}
+                                <div className="mt-5 pt-4 border-t border-slate-100">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Pilihan Pengiriman & Ongkir</p>
+                                    {shippingLoading ? (
+                                        <div className="flex items-center justify-center py-6 gap-2">
+                                            <Loader2 className="w-4 h-4 text-emerald-600 animate-spin" />
+                                            <span className="text-xs text-slate-400 font-bold">Menganalisis rute terhemat...</span>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-2">
+                                            {shippingOptions.map((opt: any) => {
+                                                const isSel = selectedShipping?.id === opt.id;
+                                                return (
+                                                    <div
+                                                        key={opt.id}
+                                                        onClick={() => setSelectedShipping(opt)}
+                                                        className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
+                                                            isSel
+                                                                ? 'border-emerald-600 bg-emerald-50/20'
+                                                                : 'border-slate-200/60 bg-white hover:border-slate-300'
+                                                        }`}
+                                                    >
+                                                        <div className="flex items-center justify-between">
+                                                            <div>
+                                                                <span className="text-xs font-bold text-slate-800">{opt.name}</span>
+                                                                <span className="text-[9px] text-slate-400 font-bold ml-2">({opt.eta})</span>
+                                                            </div>
+                                                            <span className="text-xs font-extrabold text-slate-900">
+                                                                Rp {opt.cost.toLocaleString('id-ID')}
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-[10px] text-slate-450 mt-1 font-medium leading-tight">{opt.description}</p>
+                                                        {opt.isRecommended && (
+                                                            <div className="mt-2 text-[9px] font-bold text-emerald-700 bg-emerald-100/70 border border-emerald-200/50 px-2.5 py-1 rounded-lg">
+                                                                {opt.recommendationReason}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
                             {/* Timeline */}
-                            <div>
-                                <p className="text-xs font-semibold mb-3" style={{ color: '#1F3826' }}>Timeline Transaksi</p>
-                                <div className="relative pl-4 space-y-4" style={{ borderLeft: '2px solid #DDE5D8' }}>
+                            <div className="pt-4 border-t border-slate-100">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Timeline Transaksi</p>
+                                <div className="relative pl-4 space-y-4 border-l border-dashed border-slate-200">
                                     {[
                                         { time: '08:12', label: 'Order Dibuat', done: true },
                                         { time: '08:15', label: 'Konfirmasi Supplier', done: true },
-                                        { time: '09:30', label: 'Pembayaran QRIS', done: selectedTrx.status !== 'menunggu' },
+                                        { time: '09:30', label: 'Pembayaran Diterima', done: selectedTrx.status !== 'menunggu' },
                                         { time: '10:00', label: 'Proses Pengiriman', done: selectedTrx.status === 'selesai' },
                                         { time: '14:00', label: 'Transaksi Selesai', done: selectedTrx.status === 'selesai' },
                                     ].map((step, i) => (
                                         <div key={i} className="flex items-start gap-3 relative">
                                             <div
-                                                className="absolute -left-[21px] w-3 h-3 rounded-full border-2 border-white"
-                                                style={{ background: step.done ? '#7FBB54' : '#DDE5D8', top: '3px' }}
+                                                className={`absolute -left-[21px] w-2.5 h-2.5 rounded-full border-2 border-white ring-4 ${
+                                                    step.done 
+                                                        ? 'bg-emerald-500 ring-emerald-50' 
+                                                        : 'bg-slate-200 ring-transparent'
+                                                }`}
+                                                style={{ top: '3px' }}
                                             />
                                             <div>
-                                                <p className="text-[10px]" style={{ color: '#8DA88F' }}>{step.time}</p>
-                                                <p className="text-xs font-semibold" style={{ color: step.done ? '#1F3826' : '#8DA88F' }}>{step.label}</p>
+                                                <p className="text-[10px] font-bold text-slate-400 leading-none">{step.time}</p>
+                                                <p className={`text-xs font-bold mt-1 leading-none ${
+                                                    step.done ? 'text-slate-800' : 'text-slate-450'
+                                                }`}>{step.label}</p>
                                             </div>
                                         </div>
                                     ))}
@@ -337,12 +468,12 @@ export default function TransaksiPage() {
                             </div>
                         </div>
                     ) : (
-                        <div className="h-full flex flex-col items-center justify-center text-center" style={{ minHeight: '300px' }}>
-                            <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3" style={{ background: '#EDF2EA' }}>
-                                <ShoppingCart className="w-6 h-6" style={{ color: '#7FBB54' }} />
+                        <div className="h-full flex flex-col items-center justify-center text-center py-12">
+                            <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3 bg-slate-50 border border-slate-100 text-slate-400 shadow-inner">
+                                <ShoppingCart className="w-6 h-6" />
                             </div>
-                            <p className="text-sm font-semibold" style={{ color: '#1F3826' }}>Pilih Transaksi</p>
-                            <p className="text-xs mt-1" style={{ color: '#8DA88F' }}>Klik baris transaksi untuk melihat detail</p>
+                            <p className="text-sm font-bold text-slate-700">Pilih Transaksi</p>
+                            <p className="text-xs text-slate-400 mt-1 max-w-[200px] mx-auto font-medium">Klik salah satu baris transaksi untuk melihat detail lengkap</p>
                         </div>
                     )}
                 </div>

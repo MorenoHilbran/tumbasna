@@ -13,6 +13,7 @@ import {
     AlertTriangle,
     CheckCircle2,
     Activity,
+    X,
 } from 'lucide-react';
 
 // ─── Wilayah Data ─────────────────────────────────────────────
@@ -98,72 +99,79 @@ const wilayahData = [
 const LeafletPetaMap = dynamic(() => import('@/components/PetaMapLeaflet'), {
     ssr: false,
     loading: () => (
-        <div className="w-full h-full min-h-[420px] flex flex-col items-center justify-center rounded-2xl"
-            style={{ background: '#EDF2EA' }}>
-            <Activity className="w-8 h-8 animate-spin mb-3" style={{ color: '#7FBB54' }} />
-            <p className="text-xs font-semibold" style={{ color: '#8DA88F' }}>Memuat peta...</p>
+        <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 border-r border-slate-200/65">
+            <Activity className="w-6 h-6 animate-spin mb-3 text-emerald-600" />
+            <p className="text-xs font-semibold text-slate-400">Memuat peta interaktif...</p>
         </div>
     ),
 });
 
 // ─── Detail Panel ─────────────────────────────────────────────
-function DetailPanel({ w }: { w: typeof wilayahData[0] }) {
+function DetailPanel({ w, onClose }: { w: typeof wilayahData[0]; onClose: () => void }) {
+    const isMelimpah = w.status === 'melimpah';
     return (
-        <div className="flex flex-col h-full" style={{ fontFamily: 'Poppins, sans-serif' }}>
+        <div className="flex flex-col h-full bg-white text-slate-800">
             {/* Header */}
-            <div className="p-5 rounded-2xl mb-4" style={{ background: w.status === 'melimpah' ? 'rgba(127,187,84,0.10)' : 'rgba(239,68,68,0.08)' }}>
-                <div className="flex items-center gap-2 mb-2">
-                    <div
-                        className="w-2.5 h-2.5 rounded-full"
-                        style={{ background: w.status === 'melimpah' ? '#7FBB54' : '#EF4444' }}
-                    />
-                    <span className="text-xs font-semibold capitalize"
-                        style={{ color: w.status === 'melimpah' ? '#5E9C36' : '#DC2626' }}>
-                        Stok {w.status}
-                    </span>
+            <div className={`p-4 rounded-xl mb-4 border ${
+                isMelimpah ? 'bg-emerald-50/70 border-emerald-100/50' : 'bg-rose-50/70 border-rose-100/50'
+            }`}>
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${isMelimpah ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                        <span className={`text-[10px] font-bold uppercase tracking-widest ${
+                            isMelimpah ? 'text-emerald-600' : 'text-rose-600'
+                        }`}>
+                            Stok {w.status}
+                        </span>
+                    </div>
+                    <button 
+                        onClick={onClose}
+                        className="text-slate-400 hover:text-slate-600 transition-colors p-0.5 rounded-lg hover:bg-white/50"
+                    >
+                        <X className="w-4 h-4" />
+                    </button>
                 </div>
-                <h2 className="text-xl font-bold" style={{ color: '#1F3826' }}>{w.name}</h2>
-                <p className="text-xs mt-1" style={{ color: '#8DA88F' }}>Luas wilayah: {w.luas.toLocaleString('id')} km²</p>
+                <h2 className="text-lg font-extrabold text-slate-900 mt-2 tracking-tight">{w.name}</h2>
+                <p className="text-[10px] text-slate-400 mt-1 font-semibold uppercase tracking-wider">Luas wilayah: {w.luas.toLocaleString('id-ID')} km²</p>
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="grid grid-cols-2 gap-2.5 mb-4">
                 {[
-                    { label: 'Supplier', value: w.supplier, icon: Users, color: '#EB9728' },
-                    { label: 'Buyer', value: w.buyer, icon: Users, color: '#697EE8' },
-                    { label: 'Total Stok', value: w.stok, icon: Package, color: '#7FBB54' },
-                    { label: 'Harga Rata-rata', value: w.hargaRataRata, icon: BarChart3, color: '#1F3826' },
+                    { label: 'Supplier', value: w.supplier, icon: Users, color: '#F59E0B', bg: 'bg-amber-50 text-amber-600' },
+                    { label: 'Buyer', value: w.buyer, icon: Users, color: '#10B981', bg: 'bg-emerald-50 text-emerald-600' },
+                    { label: 'Total Stok', value: w.stok, icon: Package, color: '#10B981', bg: 'bg-emerald-50 text-emerald-600' },
+                    { label: 'Harga Rata-rata', value: w.hargaRataRata, icon: BarChart3, color: '#0F172A', bg: 'bg-slate-100 text-slate-700' },
                 ].map((s) => (
-                    <div key={s.label} className="rounded-xl p-3" style={{ background: '#F4F7F2' }}>
+                    <div key={s.label} className="rounded-xl p-3 bg-slate-50 border border-slate-100/80">
                         <div className="flex items-center gap-1.5 mb-1.5">
                             <s.icon className="w-3.5 h-3.5" style={{ color: s.color }} />
-                            <span className="text-[10px] font-medium" style={{ color: '#8DA88F' }}>{s.label}</span>
+                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{s.label}</span>
                         </div>
-                        <p className="text-sm font-bold" style={{ color: '#1F3826' }}>{s.value}</p>
+                        <p className="text-xs font-extrabold text-slate-800">{s.value}</p>
                     </div>
                 ))}
             </div>
 
             {/* Transaksi */}
-            <div className="rounded-xl p-3 mb-4 flex items-center justify-between" style={{ background: '#F4F7F2' }}>
+            <div className="rounded-xl p-3 mb-4 flex items-center justify-between bg-slate-50 border border-slate-100/80">
                 <div>
-                    <p className="text-[10px] font-medium" style={{ color: '#8DA88F' }}>Transaksi Bulan Ini</p>
-                    <p className="text-xl font-bold mt-0.5" style={{ color: '#1F3826' }}>{w.transaksi}</p>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">Transaksi Bulan Ini</p>
+                    <p className="text-lg font-extrabold text-slate-800 mt-1.5 leading-none">{w.transaksi}</p>
                 </div>
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(105,126,232,0.10)' }}>
-                    <TrendingUp className="w-5 h-5" style={{ color: '#697EE8' }} />
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-emerald-50 text-emerald-600">
+                    <TrendingUp className="w-4.5 h-4.5" />
                 </div>
             </div>
 
             {/* Komoditas */}
             <div>
-                <p className="text-xs font-semibold mb-2" style={{ color: '#1F3826' }}>Komoditas Tersedia</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Komoditas Tersedia</p>
                 <div className="flex flex-wrap gap-1.5">
                     {w.komoditas.map((k) => (
                         <span
                             key={k}
-                            className="text-[11px] font-medium px-2.5 py-1 rounded-full"
-                            style={{ background: 'rgba(127,187,84,0.10)', color: '#3A7A28', border: '1px solid rgba(127,187,84,0.25)' }}
+                            className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-200/40 text-slate-600"
                         >
                             {k}
                         </span>
@@ -183,131 +191,90 @@ export default function PetaPage() {
     const menipisCount = wilayahData.filter(w => w.status === 'menipis').length;
 
     return (
-        <div className="p-6 space-y-5" style={{ fontFamily: 'Poppins, sans-serif' }}>
+        <div className="relative w-full h-[calc(100vh-57px)] lg:h-[calc(100vh-73px)] overflow-hidden bg-slate-50">
 
-            {/* Page Header */}
-            <div className="flex items-start justify-between">
+            {/* Real Leaflet Map - Full Bleed Background */}
+            <div className="absolute inset-0 z-0">
+                <LeafletPetaMap
+                    wilayahData={wilayahData}
+                    selected={selected}
+                    onSelect={setSelected}
+                />
+            </div>
+
+            {/* FLOATING: Page Title & Legend (Top Left Overlay) */}
+            <div className="absolute top-4 left-4 z-10 w-80 bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/80 shadow-md p-4 hidden md:block">
                 <div>
-                    <h1 className="text-2xl font-bold" style={{ color: '#1F3826' }}>Peta Komoditas</h1>
-                    <p className="text-sm mt-0.5" style={{ color: '#8DA88F' }}>
-                        Sebaran stok komoditas wilayah Barlingmascakeb
-                    </p>
+                    <h1 className="text-sm font-extrabold text-slate-900 tracking-tight">Peta Komoditas</h1>
+                    <p className="text-[10px] text-slate-400 font-semibold mt-0.5 uppercase tracking-wider">Sebaran wilayah Barlingmascakeb</p>
                 </div>
-                <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold" style={{ background: 'rgba(127,187,84,0.10)', color: '#5E9C36', border: '1px solid rgba(127,187,84,0.25)' }}>
-                        <CheckCircle2 className="w-3.5 h-3.5" />
+
+                <div className="flex items-center gap-2.5 mt-3 pt-3 border-t border-slate-100">
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100/50">
+                        <CheckCircle2 className="w-3 h-3" />
                         {melimpahCount} Melimpah
                     </div>
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold" style={{ background: 'rgba(239,68,68,0.08)', color: '#DC2626', border: '1px solid rgba(239,68,68,0.2)' }}>
-                        <AlertTriangle className="w-3.5 h-3.5" />
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-50 text-rose-600 border border-rose-100/50">
+                        <AlertTriangle className="w-3 h-3" />
                         {menipisCount} Menipis
                     </div>
                 </div>
-            </div>
 
-            {/* Legend */}
-            <div className="flex items-center gap-5 px-4 py-3 rounded-xl" style={{ background: 'white', border: '1px solid #DDE5D8' }}>
-                <div className="flex items-center gap-2">
-                    <Layers className="w-4 h-4" style={{ color: '#8DA88F' }} />
-                    <span className="text-xs font-semibold" style={{ color: '#1F3826' }}>Legenda Peta</span>
-                </div>
-                <div className="flex items-center gap-4">
+                {/* Legends */}
+                <div className="mt-4 pt-3 border-t border-slate-100 space-y-2">
                     <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 rounded-full" style={{ background: 'rgba(127,187,84,0.7)', border: '2px solid #7FBB54' }} />
-                        <span className="text-xs font-medium" style={{ color: '#8DA88F' }}>Stok Melimpah</span>
+                        <Layers className="w-3.5 h-3.5 text-slate-400" />
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Legenda</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 rounded-full" style={{ background: 'rgba(239,68,68,0.5)', border: '2px solid #EF4444' }} />
-                        <span className="text-xs font-medium" style={{ color: '#8DA88F' }}>Stok Menipis</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 ml-2">
-                        <Info className="w-3.5 h-3.5" style={{ color: '#EB9728' }} />
-                        <span className="text-xs" style={{ color: '#8DA88F' }}>Klik marker untuk detail</span>
-                    </div>
-                </div>
-            </div>
-
-            {/* Map + Detail */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
-
-                {/* Leaflet Map */}
-                <div
-                    className="xl:col-span-2 rounded-2xl overflow-hidden"
-                    style={{ background: 'white', border: '1px solid #DDE5D8', boxShadow: '0 2px 12px rgba(31,56,38,0.06)' }}
-                >
-                    <div className="px-5 py-4 border-b flex items-center justify-between" style={{ borderColor: '#DDE5D8' }}>
-                        <div>
-                            <h2 className="text-sm font-bold" style={{ color: '#1F3826' }}>Peta Interaktif Wilayah</h2>
-                            <p className="text-xs mt-0.5" style={{ color: '#8DA88F' }}>Banyumas · Purbalingga · Banjarnegara · Cilacap · Kebumen</p>
+                    <div className="flex items-center justify-between text-[10px] font-semibold text-slate-600 pt-0.5">
+                        <div className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white ring-1 ring-emerald-500/30" />
+                            <span>Stok Melimpah</span>
                         </div>
-                        <MapPin className="w-4 h-4" style={{ color: '#7FBB54' }} />
+                        <div className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded-full bg-rose-500 border-2 border-white ring-1 ring-rose-500/30" />
+                            <span>Stok Menipis</span>
+                        </div>
                     </div>
+                </div>
+            </div>
 
-                    {/* Real Leaflet Map */}
-                    <div style={{ height: '420px' }}>
-                        <LeafletPetaMap
-                            wilayahData={wilayahData}
-                            selected={selected}
-                            onSelect={setSelected}
-                        />
-                    </div>
+            {/* FLOATING: Detail Panel (Top Right Overlay) */}
+            {selectedData && (
+                <div className="absolute top-4 right-4 z-10 w-90 md:w-96 max-h-[calc(100%-150px)] overflow-y-auto bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/80 shadow-lg p-5">
+                    <DetailPanel w={selectedData} onClose={() => setSelected(null)} />
+                </div>
+            )}
 
-                    {/* Quick stats footer */}
-                    <div className="px-5 py-4 border-t grid grid-cols-5 gap-4" style={{ borderColor: '#DDE5D8' }}>
-                        {wilayahData.map((w) => (
+            {/* FLOATING: Quick Region Selector (Bottom Overlay) */}
+            <div className="absolute bottom-6 left-4 right-4 md:left-4 md:right-auto z-10 bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/80 shadow-md p-3 overflow-x-auto flex items-center gap-2 max-w-full md:max-w-[calc(100%-416px)] scrollbar-thin">
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-2 whitespace-nowrap flex items-center gap-1">
+                    <MapPin className="w-3.5 h-3.5 text-emerald-500" />
+                    Pilih Wilayah:
+                </span>
+                
+                <div className="flex items-center gap-1.5">
+                    {wilayahData.map((w) => {
+                        const isSel = selected === w.id;
+                        return (
                             <button
                                 key={w.id}
                                 onClick={() => setSelected(w.id)}
-                                className="text-center rounded-xl py-2 px-1 transition-all duration-200"
-                                style={{
-                                    background: selected === w.id ? (w.status === 'melimpah' ? 'rgba(127,187,84,0.10)' : 'rgba(239,68,68,0.08)') : 'transparent',
-                                    border: selected === w.id ? `1px solid ${w.status === 'melimpah' ? 'rgba(127,187,84,0.3)' : 'rgba(239,68,68,0.25)'}` : '1px solid transparent',
-                                }}
+                                className={`flex items-center gap-2 py-1.5 px-3 rounded-xl transition-all duration-150 border whitespace-nowrap ${
+                                    isSel
+                                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                                        : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                                }`}
                             >
-                                <div className="w-2 h-2 rounded-full mx-auto mb-1"
-                                    style={{ background: w.status === 'melimpah' ? '#7FBB54' : '#EF4444' }} />
-                                <p className="text-[10px] font-bold" style={{ color: '#1F3826' }}>{w.name}</p>
-                                <p className="text-[9px] mt-0.5" style={{ color: '#8DA88F' }}>{w.stok}</p>
+                                <span className={`w-1.5 h-1.5 rounded-full ${
+                                    w.status === 'melimpah' ? (isSel ? 'bg-white' : 'bg-emerald-500') : (isSel ? 'bg-white' : 'bg-rose-500')
+                                }`} />
+                                <span className="text-xs font-bold">{w.name}</span>
+                                <span className={`text-[9px] font-medium opacity-70 ${isSel ? 'text-white' : 'text-slate-400'}`}>{w.stok}</span>
                             </button>
-                        ))}
-                    </div>
+                        );
+                    })}
                 </div>
-
-                {/* Detail Panel */}
-                <div
-                    className="rounded-2xl p-5"
-                    style={{ background: 'white', border: '1px solid #DDE5D8', boxShadow: '0 2px 12px rgba(31,56,38,0.06)' }}
-                >
-                    {selectedData ? (
-                        <DetailPanel w={selectedData} />
-                    ) : (
-                        <div className="h-full flex flex-col items-center justify-center text-center">
-                            <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3" style={{ background: '#EDF2EA' }}>
-                                <MapPin className="w-6 h-6" style={{ color: '#7FBB54' }} />
-                            </div>
-                            <p className="text-sm font-semibold" style={{ color: '#1F3826' }}>Pilih Wilayah</p>
-                            <p className="text-xs mt-1" style={{ color: '#8DA88F' }}>Klik salah satu marker di peta untuk melihat detail</p>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Summary Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {[
-                    { label: 'Total Supplier', value: wilayahData.reduce((a, w) => a + w.supplier, 0), icon: Users, color: '#EB9728', bg: 'rgba(235,151,40,0.08)' },
-                    { label: 'Total Buyer', value: wilayahData.reduce((a, w) => a + w.buyer, 0), icon: Users, color: '#697EE8', bg: 'rgba(105,126,232,0.08)' },
-                    { label: 'Total Transaksi', value: wilayahData.reduce((a, w) => a + w.transaksi, 0), icon: TrendingUp, color: '#7FBB54', bg: 'rgba(127,187,84,0.08)' },
-                    { label: 'Wilayah Dipantau', value: wilayahData.length, icon: MapPin, color: '#1F3826', bg: 'rgba(31,56,38,0.06)' },
-                ].map(s => (
-                    <div key={s.label} className="bg-white rounded-2xl p-4 border" style={{ borderColor: '#DDE5D8', boxShadow: '0 2px 12px rgba(31,56,38,0.06)' }}>
-                        <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-3" style={{ background: s.bg }}>
-                            <s.icon className="w-4 h-4" style={{ color: s.color }} />
-                        </div>
-                        <p className="text-xs font-medium mb-1" style={{ color: '#8DA88F' }}>{s.label}</p>
-                        <p className="text-2xl font-bold" style={{ color: '#1F3826' }}>{s.value.toLocaleString('id')}</p>
-                    </div>
-                ))}
             </div>
         </div>
     );

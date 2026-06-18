@@ -79,13 +79,13 @@ export default function LogistikBackhaul({
         return (
             <div className="flex items-center gap-2 my-4">
                 <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/20" />
-                <div className="flex-1 h-px bg-slate-200 relative group-hover:bg-blue-200 transition-colors">
+                <div className="flex-1 h-px bg-slate-200 relative group-hover:bg-emerald-200 transition-colors">
                     {distanceKm && (
                         <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-[12px] font-bold text-slate-400 whitespace-nowrap">
                             {distanceKm.toFixed(0)} KM
                         </span>
                     )}
-                    <Truck className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 text-blue-600 bg-[#F8FAFC] px-0.5" />
+                    <Truck className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 text-emerald-600 bg-[#F8FAFC] px-0.5" />
                 </div>
                 <div className="w-3 h-3 rounded-full bg-amber-500 shadow-sm shadow-amber-500/20" />
             </div>
@@ -97,16 +97,16 @@ export default function LogistikBackhaul({
             {/* Header */}
             <div className="mb-6">
                 <div className="flex items-center gap-2.5 mb-2">
-                    <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
                         <Truck className="w-4 h-4 text-white" />
                     </div>
-                    <span className="text-xs font-bold text-blue-600/60">
+                    <span className="text-xs font-bold text-emerald-600/60">
                         Smart Logistics · Indonesia
                     </span>
                 </div>
                 <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
                     Logistik{' '}
-                    <span className="text-blue-600">
+                    <span className="text-emerald-600">
                         Backhaul
                     </span>
                 </h1>
@@ -118,7 +118,7 @@ export default function LogistikBackhaul({
             {/* KPI Strip */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 {[
-                    { label: 'Total Match', value: stats.totalMatches, color: 'text-blue-600', bg: 'bg-blue-50', tooltip: 'Jumlah total pencocokan rute yang ditemukan oleh Smart Matching Engine.' },
+                    { label: 'Total Match', value: stats.totalMatches, color: 'text-emerald-600', bg: 'bg-emerald-50', tooltip: 'Jumlah total pencocokan rute yang ditemukan oleh Smart Matching Engine.' },
                     { label: 'Pending', value: stats.pendingMatches, color: 'text-amber-600', bg: 'bg-amber-50', tooltip: 'Pencocokan yang menunggu konfirmasi dari pihak pengirim/penerima.' },
                     { label: 'Berhasil', value: stats.acceptedMatches, color: 'text-emerald-600', bg: 'bg-emerald-50', tooltip: 'Transaksi backhaul yang telah disepakati dan siap jalan.' },
                     {
@@ -135,7 +135,7 @@ export default function LogistikBackhaul({
                                 {k.label}
                             </div>
                             <div className="relative group/tooltip">
-                                <Info className="w-3.5 h-3.5 text-slate-300 hover:text-blue-500 transition-colors cursor-help" />
+                                <Info className="w-3.5 h-3.5 text-slate-300 hover:text-emerald-500 transition-colors cursor-help" />
                                 <div className="absolute top-6 right-0 w-48 opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-300 bg-slate-900 text-white text-[10px] font-bold leading-relaxed p-3 rounded-xl shadow-xl z-[100] pointer-events-none border border-slate-800">
                                     {k.tooltip}
                                 </div>
@@ -147,14 +147,14 @@ export default function LogistikBackhaul({
             </div>
 
             {/* Algorithm Info Banner */}
-            <div className="flex items-start gap-4 px-6 py-4 mb-6 bg-blue-600 rounded-3xl shadow-xl shadow-blue-600/10 text-white relative overflow-hidden group">
+            <div className="flex items-start gap-4 px-6 py-4 mb-6 bg-emerald-600 rounded-3xl shadow-xl shadow-emerald-600/10 text-white relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -mr-24 -mt-24 blur-2xl transition-transform group-hover:scale-110 duration-1000" />
                 <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0 backdrop-blur-sm">
                     <Zap className="w-5 h-5 text-white" />
                 </div>
                 <div className="relative z-10">
                     <p className="text-base font-bold mb-0.5 tracking-tight">Smart Matching Engine Aktif</p>
-                    <p className="text-[11px] text-blue-50/90 leading-relaxed font-medium">
+                    <p className="text-[11px] text-emerald-50/90 leading-relaxed font-medium">
                         Otomatis berdasarkan <strong className="text-white">Haversine ≤100 km</strong> dan <strong className="text-white">harga ≤15%</strong>.
                     </p>
                 </div>
@@ -167,8 +167,8 @@ export default function LogistikBackhaul({
                         key={f}
                         onClick={() => setFilter(f)}
                         className={`px-5 py-2.5 rounded-xl text-[10px] font-bold transition-all duration-300 border uppercase tracking-widest ${filter === f
-                                ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-500/20'
-                                : 'bg-white text-slate-400 border-slate-200 hover:border-blue-400 hover:text-blue-600'
+                                ? 'bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-500/20'
+                                : 'bg-white text-slate-400 border-slate-200 hover:border-emerald-400 hover:text-emerald-600'
                             }`}
                     >
                         {f === 'ALL' ? `Semua (${matches.length})` : f === 'PENDING' ? `Pending (${stats.pendingMatches})` : `Berhasil (${stats.acceptedMatches})`}
@@ -192,15 +192,15 @@ export default function LogistikBackhaul({
                     {filtered.map((match) => (
                         <div
                             key={match.id}
-                            className="bg-white border border-slate-200 rounded-3xl p-6 hover:border-blue-300 transition-all hover:shadow-xl hover:shadow-blue-500/5 group relative overflow-hidden"
+                            className="bg-white border border-slate-200 rounded-3xl p-6 hover:border-emerald-300 transition-all hover:shadow-xl hover:shadow-emerald-500/5 group relative overflow-hidden"
                         >
-                            <div className="absolute top-0 right-0 w-20 h-20 bg-slate-50 rounded-bl-[2rem] -mr-8 -mt-8 transition-colors group-hover:bg-blue-50" />
+                            <div className="absolute top-0 right-0 w-20 h-20 bg-slate-50 rounded-bl-[2rem] -mr-8 -mt-8 transition-colors group-hover:bg-emerald-50" />
                             
                             {/* Card Header */}
                             <div className="flex items-center justify-between mb-6 relative z-10">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center group-hover:bg-blue-600 group-hover:border-blue-600 transition-all">
-                                        <Package className="w-5 h-5 text-blue-600 group-hover:text-white transition-all" />
+                                    <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center group-hover:bg-emerald-600 group-hover:border-emerald-600 transition-all">
+                                        <Package className="w-5 h-5 text-emerald-600 group-hover:text-white transition-all" />
                                     </div>
                                     <div>
                                         <p className="text-base font-bold text-slate-900 capitalize tracking-tight">{match.commodity}</p>
@@ -274,7 +274,7 @@ export default function LogistikBackhaul({
                             <div className="mt-6 pt-4 border-t border-slate-50 flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <div className="px-2.5 py-1 bg-slate-50 rounded-lg border border-slate-100 flex items-center gap-2 group-hover:bg-white transition-colors">
-                                        <div className="w-1 h-1 rounded-full bg-blue-500" />
+                                        <div className="w-1 h-1 rounded-full bg-emerald-500" />
                                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">PROFIT:</span>
                                         <PriceDiff supply={match.supplyPrice} demand={match.demandPrice} />
                                     </div>

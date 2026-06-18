@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useState } from 'react';
 import {
     Truck,
@@ -11,12 +12,23 @@ import {
     Navigation,
     BarChart3,
     ArrowRight,
-    Users,
-    TrendingUp,
     Fuel,
     Route,
     Weight,
+    Activity,
+    TrendingUp,
 } from 'lucide-react';
+
+// ─── Dynamic Import for Leaflet Map ──────────────────────────
+const LogistikMap = dynamic(() => import('@/components/LogistikMapLeaflet'), {
+    ssr: false,
+    loading: () => (
+        <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50">
+            <Activity className="w-6 h-6 animate-spin mb-3 text-emerald-600" />
+            <p className="text-xs font-semibold text-slate-400">Memuat peta pelacakan...</p>
+        </div>
+    ),
+});
 
 // ─── Mock Data ────────────────────────────────────────────────
 const armadaData = [
@@ -96,18 +108,17 @@ const routeStats = [
 ];
 
 // ─── Status helpers ───────────────────────────────────────────
-const statusMap: Record<string, { bg: string; color: string; label: string; dot: string }> = {
-    jalan: { bg: 'rgba(105,126,232,0.12)', color: '#4C5DD4', label: 'Dalam Perjalanan', dot: '#697EE8' },
-    selesai: { bg: 'rgba(127,187,84,0.12)', color: '#5E9C36', label: 'Selesai', dot: '#7FBB54' },
-    standby: { bg: 'rgba(235,151,40,0.12)', color: '#C47D10', label: 'Standby', dot: '#EB9728' },
-    masalah: { bg: 'rgba(239,68,68,0.10)', color: '#DC2626', label: 'Masalah', dot: '#EF4444' },
+const statusMap: Record<string, { bg: string; color: string; label: string }> = {
+    jalan: { bg: 'bg-emerald-50 text-emerald-700 border-emerald-100/50', label: 'Dalam Perjalanan' },
+    selesai: { bg: 'bg-emerald-50 text-emerald-600 border-emerald-100/50', label: 'Selesai' },
+    standby: { bg: 'bg-slate-100 text-slate-600 border-slate-200/50', label: 'Standby' },
+    masalah: { bg: 'bg-rose-50 text-rose-600 border-rose-100/50', label: 'Bermasalah' },
 };
 
 function StatusPill({ status }: { status: string }) {
     const s = statusMap[status] ?? statusMap.standby;
     return (
-        <span className="flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 rounded-full" style={{ background: s.bg, color: s.color, fontFamily: 'Poppins, sans-serif' }}>
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: s.dot }} />
+        <span className={`inline-flex items-center text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${s.bg}`}>
             {s.label}
         </span>
     );
@@ -115,10 +126,10 @@ function StatusPill({ status }: { status: string }) {
 
 // ─── Progress Bar ─────────────────────────────────────────────
 function ProgressBar({ value, status }: { value: number; status: string }) {
-    const color = status === 'selesai' ? '#7FBB54' : status === 'masalah' ? '#EF4444' : '#697EE8';
+    const barColor = status === 'selesai' ? 'bg-emerald-500' : status === 'masalah' ? 'bg-rose-500' : 'bg-emerald-600';
     return (
-        <div className="h-1.5 rounded-full w-full" style={{ background: '#EDF2EA' }}>
-            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${value}%`, background: color }} />
+        <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+            <div className={`h-full rounded-full transition-all duration-500 ${barColor}`} style={{ width: `${value}%` }} />
         </div>
     );
 }
@@ -133,18 +144,18 @@ export default function LogistikPage() {
     const masalahs = armadaData.filter(a => a.status === 'masalah').length;
 
     return (
-        <div className="p-6 space-y-5" style={{ fontFamily: 'Poppins, sans-serif' }}>
+        <div className="p-8 space-y-8 bg-[#F8FAFC]">
 
             {/* Page Header */}
-            <div className="flex items-start justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold" style={{ color: '#1F3826' }}>Monitoring Logistik</h1>
-                    <p className="text-sm mt-0.5" style={{ color: '#8DA88F' }}>
-                        Rute pengiriman, status armada, dan optimasi backhaul
+                    <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Monitoring Logistik</h1>
+                    <p className="text-sm text-slate-400 mt-0.5">
+                        Lacak posisi armada secara real-time, pantau rute pengiriman, dan optimasi backhaul
                     </p>
                 </div>
-                <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold" style={{ background: 'rgba(105,126,232,0.10)', color: '#4C5DD4' }}>
-                    <Navigation className="w-3.5 h-3.5" />
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-600 border border-emerald-100/50 self-start md:self-auto">
+                    <Navigation className="w-4 h-4" />
                     {jalans} Armada Aktif
                 </div>
             </div>
@@ -152,158 +163,194 @@ export default function LogistikPage() {
             {/* KPI Row */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                    { label: 'Dalam Perjalanan', value: jalans, icon: Truck, color: '#697EE8', bg: 'rgba(105,126,232,0.08)' },
-                    { label: 'Selesai Hari Ini', value: selesai, icon: CheckCircle2, color: '#7FBB54', bg: 'rgba(127,187,84,0.08)' },
-                    { label: 'Standby', value: standbys, icon: Clock, color: '#EB9728', bg: 'rgba(235,151,40,0.08)' },
-                    { label: 'Bermasalah', value: masalahs, icon: AlertCircle, color: '#DC2626', bg: 'rgba(239,68,68,0.08)' },
+                    { label: 'Dalam Perjalanan', value: jalans, icon: Truck, color: 'text-emerald-600', bg: 'bg-emerald-50/70' },
+                    { label: 'Selesai Hari Ini', value: selesai, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50/70' },
+                    { label: 'Standby', value: standbys, icon: Clock, color: 'text-slate-500', bg: 'bg-slate-100/70' },
+                    { label: 'Bermasalah', value: masalahs, icon: AlertCircle, color: 'text-rose-600', bg: 'bg-rose-50/70' },
                 ].map(s => (
-                    <div key={s.label} className="bg-white rounded-2xl p-4 border card-hover" style={{ borderColor: '#DDE5D8', boxShadow: '0 2px 12px rgba(31,56,38,0.06)' }}>
-                        <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: s.bg }}>
-                                <s.icon className="w-4 h-4" style={{ color: s.color }} />
+                    <div key={s.label} className="bg-white rounded-2xl p-5 border border-slate-200/60 shadow-sm transition-all hover:shadow-md">
+                        <div className="flex items-center gap-4">
+                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${s.bg} ${s.color}`}>
+                                <s.icon className="w-4 h-4" />
                             </div>
                             <div>
-                                <p className="text-[11px] font-medium" style={{ color: '#8DA88F' }}>{s.label}</p>
-                                <p className="text-xl font-bold" style={{ color: '#1F3826' }}>{s.value}</p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">{s.label}</p>
+                                <p className="text-2xl font-extrabold text-slate-800 mt-1.5 leading-none">{s.value}</p>
                             </div>
                         </div>
                     </div>
                 ))}
             </div>
 
-            {/* Main: Fleet List + Detail */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+            {/* Main Content Split */}
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
-                {/* Fleet Cards */}
-                <div className="xl:col-span-2 space-y-3">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-sm font-bold" style={{ color: '#1F3826' }}>Daftar Armada</h2>
-                        <p className="text-xs" style={{ color: '#8DA88F' }}>{armadaData.length} armada terdaftar</p>
-                    </div>
-                    {armadaData.map((a) => (
-                        <div
-                            key={a.id}
-                            onClick={() => setSelectedArmada(a)}
-                            className="bg-white rounded-2xl p-4 border cursor-pointer transition-all duration-200"
-                            style={{
-                                borderColor: selectedArmada.id === a.id ? '#7FBB54' : '#DDE5D8',
-                                boxShadow: selectedArmada.id === a.id ? '0 4px 20px rgba(127,187,84,0.15)' : '0 2px 12px rgba(31,56,38,0.06)',
-                                background: selectedArmada.id === a.id ? 'rgba(127,187,84,0.03)' : 'white',
-                            }}
-                        >
-                            <div className="flex items-start justify-between mb-3">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                                        style={{ background: selectedArmada.id === a.id ? '#1F3826' : '#EDF2EA' }}>
-                                        <Truck className="w-5 h-5" style={{ color: selectedArmada.id === a.id ? '#7FBB54' : '#7FBB54' }} />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-bold" style={{ color: '#1F3826' }}>{a.id}</p>
-                                        <p className="text-[11px]" style={{ color: '#8DA88F' }}>{a.driver} • {a.plat}</p>
-                                    </div>
-                                </div>
-                                <StatusPill status={a.status} />
+                {/* Left Side: Map + Fleet Grid */}
+                <div className="xl:col-span-2 space-y-6">
+                    
+                    {/* Live Tracking Map Panel */}
+                    <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden flex flex-col">
+                        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                            <div>
+                                <h2 className="text-sm font-extrabold text-slate-800 tracking-tight">Peta Pelacakan Armada Real-Time</h2>
+                                <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Lacak rute pengiriman dan posisi truk saat ini di peta</p>
                             </div>
-
-                            {/* Route */}
-                            <div className="flex items-center gap-2 mb-3">
-                                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg" style={{ background: 'rgba(127,187,84,0.10)' }}>
-                                    <MapPin className="w-3 h-3" style={{ color: '#7FBB54' }} />
-                                    <span className="text-[11px] font-semibold" style={{ color: '#5E9C36' }}>{a.rute.dari}</span>
-                                </div>
-                                <ArrowRight className="w-3.5 h-3.5" style={{ color: '#DDE5D8' }} />
-                                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg" style={{ background: 'rgba(105,126,232,0.10)' }}>
-                                    <MapPin className="w-3 h-3" style={{ color: '#697EE8' }} />
-                                    <span className="text-[11px] font-semibold" style={{ color: '#4C5DD4' }}>{a.rute.ke}</span>
-                                </div>
-                                <span className="text-[10px] ml-auto" style={{ color: '#8DA88F' }}>{a.jarak}</span>
-                            </div>
-
-                            {/* Muatan */}
-                            <div className="flex items-center gap-1.5 mb-3">
-                                <Package className="w-3.5 h-3.5" style={{ color: '#EB9728' }} />
-                                <span className="text-[11px] font-medium" style={{ color: '#8DA88F' }}>{a.muatan}</span>
-                            </div>
-
-                            {/* Progress */}
-                            <div className="space-y-1.5">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-[10px] font-medium" style={{ color: '#8DA88F' }}>Progress Pengiriman</span>
-                                    <span className="text-[10px] font-bold" style={{ color: '#1F3826' }}>{a.progress}%</span>
-                                </div>
-                                <ProgressBar value={a.progress} status={a.status} />
-                                <div className="flex items-center justify-between">
-                                    <span className="text-[10px]" style={{ color: '#8DA88F' }}>ETA: {a.estimasi}</span>
-                                    <span className="text-[10px]" style={{ color: '#8DA88F' }}>BBM: {a.bahan_bakar}</span>
-                                </div>
-                            </div>
+                            <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100/30">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                                Live GPS Tracking
+                            </span>
                         </div>
-                    ))}
+
+                        {/* Interactive map container */}
+                        <div className="h-[400px] w-full relative bg-slate-50">
+                            <LogistikMap 
+                                armadaData={armadaData}
+                                selectedId={selectedArmada.id}
+                                onSelect={(id) => {
+                                    const match = armadaData.find(a => a.id === id);
+                                    if (match) setSelectedArmada(match);
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Fleet Grid */}
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-base font-bold text-slate-900 tracking-tight">Daftar Armada</h2>
+                            <p className="text-xs text-slate-400 font-medium">{armadaData.length} armada terdaftar</p>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {armadaData.map((a) => {
+                                const isSelected = selectedArmada.id === a.id;
+                                return (
+                                    <div
+                                        key={a.id}
+                                        onClick={() => setSelectedArmada(a)}
+                                        className={`bg-white rounded-2xl p-5 border cursor-pointer transition-all duration-150 ${
+                                            isSelected 
+                                                ? 'border-emerald-600 shadow-md bg-emerald-50/10' 
+                                                : 'border-slate-200/60 shadow-sm hover:border-slate-300 hover:shadow-md'
+                                        }`}
+                                    >
+                                        <div className="flex items-start justify-between mb-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
+                                                    isSelected ? 'bg-emerald-600 text-white' : 'bg-slate-50 text-slate-500'
+                                                }`}>
+                                                    <Truck className="w-5 h-5" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-bold text-slate-800">{a.id}</p>
+                                                    <p className="text-[10px] text-slate-400 mt-0.5 font-semibold">{a.driver} • {a.plat}</p>
+                                                </div>
+                                            </div>
+                                            <StatusPill status={a.status} />
+                                        </div>
+
+                                        {/* Route */}
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-100">
+                                                <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                                                <span className="text-[10px] font-bold text-slate-600">{a.rute.dari}</span>
+                                            </div>
+                                            <ArrowRight className="w-3.5 h-3.5 text-slate-300" />
+                                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-100">
+                                                <MapPin className="w-3.5 h-3.5 text-emerald-500" />
+                                                <span className="text-[10px] font-bold text-slate-600">{a.rute.ke}</span>
+                                            </div>
+                                            <span className="text-[10px] font-bold text-slate-400 ml-auto font-mono">{a.jarak}</span>
+                                        </div>
+
+                                        {/* Muatan */}
+                                        <div className="flex items-center gap-1.5 mb-4 text-xs font-semibold text-slate-600">
+                                            <Package className="w-4 h-4 text-amber-500" />
+                                            <span>{a.muatan}</span>
+                                        </div>
+
+                                        {/* Progress */}
+                                        <div className="space-y-2 mt-2 pt-2 border-t border-slate-100/60">
+                                            <div className="flex items-center justify-between text-[10px]">
+                                                <span className="font-semibold text-slate-400">Progress Pengiriman</span>
+                                                <span className="font-bold text-slate-700">{a.progress}%</span>
+                                            </div>
+                                            <ProgressBar value={a.progress} status={a.status} />
+                                            <div className="flex items-center justify-between text-[10px] text-slate-400 font-semibold pt-1">
+                                                <span>ETA: {a.estimasi}</span>
+                                                <span>BBM: {a.bahan_bakar}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
                 </div>
 
-                {/* Right Panel */}
-                <div className="space-y-4">
+                {/* Right Side: Telemetry Details + Stats */}
+                <div className="space-y-6">
 
-                    {/* Armada Detail */}
-                    <div className="bg-white rounded-2xl p-5 border" style={{ borderColor: '#DDE5D8', boxShadow: '0 2px 12px rgba(31,56,38,0.06)' }}>
-                        <h2 className="text-sm font-bold mb-4" style={{ color: '#1F3826' }}>Detail Armada</h2>
+                    {/* Selected Armada Details */}
+                    <div className="bg-white rounded-2xl p-6 border border-slate-200/60 shadow-sm">
+                        <h2 className="text-base font-bold text-slate-900 tracking-tight mb-4">Detail Armada</h2>
 
-                        <div className="rounded-2xl p-4 mb-4" style={{ background: 'linear-gradient(135deg, #1F3826 0%, #2D5038 100%)' }}>
-                            <div className="flex items-center gap-3 mb-3">
-                                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(127,187,84,0.2)' }}>
-                                    <Truck className="w-5 h-5" style={{ color: '#7FBB54' }} />
+                        <div className="rounded-2xl p-5 mb-5 bg-slate-900 border border-slate-800 text-white">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-slate-800 text-emerald-400 border border-slate-700/50">
+                                    <Truck className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <p className="text-xs font-bold text-white">{selectedArmada.id}</p>
-                                    <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.5)' }}>{selectedArmada.plat}</p>
+                                    <p className="text-sm font-extrabold text-white">{selectedArmada.id}</p>
+                                    <p className="text-[10px] font-semibold text-slate-400 mt-0.5">{selectedArmada.plat}</p>
                                 </div>
                             </div>
-                            <p className="text-xs font-semibold text-white mb-1">{selectedArmada.driver}</p>
-                            <div className="flex items-center gap-2">
-                                <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(127,187,84,0.2)', color: '#7FBB54' }}>
+                            <p className="text-xs font-bold text-slate-200 mb-2">{selectedArmada.driver}</p>
+                            <div className="flex items-center gap-3">
+                                <span className="text-[9px] font-bold px-2.5 py-0.5 rounded-full bg-slate-800 text-emerald-400 border border-slate-700/50">
                                     {statusMap[selectedArmada.status].label}
                                 </span>
-                                <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.4)' }}>{selectedArmada.estimasi}</span>
+                                <span className="text-[10px] text-slate-400 font-semibold">{selectedArmada.estimasi}</span>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-2 gap-3">
                             {[
-                                { label: 'Rute', value: `${selectedArmada.rute.dari} → ${selectedArmada.rute.ke}`, icon: Route, color: '#697EE8' },
-                                { label: 'Jarak', value: selectedArmada.jarak, icon: Navigation, color: '#7FBB54' },
-                                { label: 'BBM', value: selectedArmada.bahan_bakar, icon: Fuel, color: '#EB9728' },
-                                { label: 'Muatan', value: selectedArmada.muatan.split('—')[1]?.trim() ?? '—', icon: Weight, color: '#1F3826' },
+                                { label: 'Rute', value: `${selectedArmada.rute.dari} → ${selectedArmada.rute.ke}`, icon: Route, color: '#10B981' },
+                                { label: 'Jarak', value: selectedArmada.jarak, icon: Navigation, color: '#10B981' },
+                                { label: 'BBM', value: selectedArmada.bahan_bakar, icon: Fuel, color: '#F59E0B' },
+                                { label: 'Muatan', value: selectedArmada.muatan.split('—')[1]?.trim() ?? '—', icon: Weight, color: '#64748B' },
                             ].map(item => (
-                                <div key={item.label} className="rounded-xl p-3" style={{ background: '#F4F7F2' }}>
-                                    <div className="flex items-center gap-1.5 mb-1">
-                                        <item.icon className="w-3 h-3" style={{ color: item.color }} />
-                                        <span className="text-[9px] font-medium" style={{ color: '#8DA88F' }}>{item.label}</span>
+                                <div key={item.label} className="rounded-xl p-3 bg-slate-50 border border-slate-100 flex flex-col justify-between">
+                                    <div className="flex items-center gap-1.5 mb-2">
+                                        <item.icon className="w-3.5 h-3.5" style={{ color: item.color }} />
+                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{item.label}</span>
                                     </div>
-                                    <p className="text-[11px] font-bold" style={{ color: '#1F3826' }}>{item.value}</p>
+                                    <p className="text-xs font-extrabold text-slate-800 truncate">{item.value}</p>
                                 </div>
                             ))}
                         </div>
                     </div>
 
                     {/* Route Stats */}
-                    <div className="bg-white rounded-2xl p-5 border" style={{ borderColor: '#DDE5D8', boxShadow: '0 2px 12px rgba(31,56,38,0.06)' }}>
-                        <div className="flex items-center gap-2 mb-4">
-                            <BarChart3 className="w-4 h-4" style={{ color: '#7FBB54' }} />
-                            <h2 className="text-sm font-bold" style={{ color: '#1F3826' }}>Analitik Rute</h2>
+                    <div className="bg-white rounded-2xl p-6 border border-slate-200/60 shadow-sm">
+                        <div className="flex items-center gap-2 mb-5">
+                            <BarChart3 className="w-4 h-4 text-emerald-600" />
+                            <h2 className="text-base font-bold text-slate-900 tracking-tight">Analitik Rute</h2>
                         </div>
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                             {routeStats.map((r) => (
-                                <div key={r.rute}>
-                                    <div className="flex items-center justify-between mb-1">
-                                        <span className="text-[10px] font-medium truncate" style={{ color: '#1F3826' }}>{r.rute}</span>
-                                        <span className="text-[10px] font-bold ml-2" style={{ color: '#8DA88F' }}>{r.frekuensi}x</span>
+                                <div key={r.rute} className="space-y-1.5">
+                                    <div className="flex items-center justify-between text-xs">
+                                        <span className="font-bold text-slate-700 truncate">{r.rute}</span>
+                                        <span className="font-bold text-slate-400 ml-2">{r.frekuensi}x</span>
                                     </div>
-                                    <div className="h-1.5 rounded-full" style={{ background: '#EDF2EA' }}>
-                                        <div className="h-full rounded-full" style={{ width: `${r.utilitas}%`, background: `linear-gradient(90deg, #7FBB54, #697EE8)` }} />
+                                    <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                                        <div className="h-full rounded-full bg-emerald-500" style={{ width: `${r.utilitas}%` }} />
                                     </div>
-                                    <div className="flex items-center justify-between mt-0.5">
-                                        <span className="text-[9px]" style={{ color: '#8DA88F' }}>{r.total_ton} ton dikirim</span>
-                                        <span className="text-[9px]" style={{ color: '#8DA88F' }}>{r.utilitas}% utilitas</span>
+                                    <div className="flex items-center justify-between text-[10px] text-slate-400 font-semibold pt-0.5">
+                                        <span>{r.total_ton} ton dikirim</span>
+                                        <span>{r.utilitas}% utilitas</span>
                                     </div>
                                 </div>
                             ))}
@@ -311,15 +358,17 @@ export default function LogistikPage() {
                     </div>
 
                     {/* Backhaul efficiency */}
-                    <div className="rounded-2xl p-4" style={{ background: 'linear-gradient(135deg, #697EE8 0%, #4C5DD4 100%)' }}>
-                        <div className="flex items-center gap-2 mb-3">
-                            <TrendingUp className="w-4 h-4 text-white" />
-                            <p className="text-xs font-bold text-white">Efisiensi Backhaul</p>
+                    <div className="bg-white rounded-2xl p-6 border border-slate-200/60 shadow-sm flex flex-col justify-between">
+                        <div className="flex items-center gap-2 mb-4">
+                            <TrendingUp className="w-4 h-4 text-emerald-600" />
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Efisiensi Backhaul</p>
                         </div>
-                        <p className="text-3xl font-bold text-white mb-1">78.4%</p>
-                        <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.7)' }}>Penghematan rute truk pulang kosong</p>
-                        <div className="mt-3 h-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.2)' }}>
-                            <div className="h-full rounded-full" style={{ width: '78.4%', background: '#7FBB54' }} />
+                        <div>
+                            <p className="text-3xl font-extrabold text-slate-900 tracking-tight">78.4%</p>
+                            <p className="text-[10px] text-slate-400 font-medium mt-1">Penghematan rute truk pulang kosong</p>
+                            <div className="mt-4 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                                <div className="h-full rounded-full bg-emerald-500" style={{ width: '78.4%' }} />
+                            </div>
                         </div>
                     </div>
                 </div>

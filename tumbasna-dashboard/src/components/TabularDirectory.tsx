@@ -45,7 +45,7 @@ export default function TabularDirectory({ groupedPoints, sortedRegions, lang }:
             <div className="mb-6 flex items-center justify-between">
                 <div>
                     <h2 className="text-xl font-bold text-slate-800 tracking-tight flex items-center gap-2.5">
-                        <ListFilter className="w-5 h-5 text-blue-600" />
+                        <ListFilter className="w-5 h-5 text-emerald-600" />
                         {t.title}
                     </h2>
                     <p className="text-xs text-slate-500 mt-1 font-medium">{t.desc}</p>
@@ -55,7 +55,7 @@ export default function TabularDirectory({ groupedPoints, sortedRegions, lang }:
             {sortedRegions.length === 0 ? (
                 <div className="p-12 border border-slate-200 border-dashed rounded-3xl flex flex-col items-center justify-center text-slate-400 bg-white shadow-sm">
                     <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mb-4">
-                        <ListFilter className="w-8 h-8 opacity-50 text-blue-300" />
+                        <ListFilter className="w-8 h-8 opacity-50 text-emerald-300" />
                     </div>
                     <p className="text-base font-bold text-slate-600">{t.emptyDir}</p>
                 </div>
@@ -75,7 +75,7 @@ export default function TabularDirectory({ groupedPoints, sortedRegions, lang }:
                                                 classNames(
                                                     "snap-start shrink-0 min-w-max px-5 py-3 rounded-xl text-xs font-bold border transition-all duration-300 outline-none flex items-center gap-3",
                                                     selected
-                                                        ? "bg-white text-blue-600 border-blue-200 shadow-md shadow-blue-500/5 ring-1 ring-blue-500/10 z-10"
+                                                        ? "bg-white text-emerald-600 border-emerald-200 shadow-md shadow-emerald-500/5 ring-1 ring-emerald-500/10 z-10"
                                                         : "bg-transparent text-slate-400 border-transparent hover:bg-white hover:text-slate-600 hover:border-slate-200 shadow-none"
                                                 )
                                             }
