@@ -52,9 +52,9 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
   const serviceFee = 2000; // Layanan Aplikasi
   const totalAmount = itemsTotal + shippingCost + serviceFee;
 
-  const handlePlaceOrder = () => {
-    // Generate order through context
-    const orderId = checkout(activeShipping.name, shippingCost);
+  const handlePlaceOrder = async () => {
+    // Generate order through context — async (saves to Supabase)
+    const orderId = await checkout(activeShipping.name, shippingCost);
     if (orderId) {
       onOrderCreated(orderId);
     }

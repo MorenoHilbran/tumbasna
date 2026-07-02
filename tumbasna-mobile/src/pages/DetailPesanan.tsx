@@ -46,8 +46,8 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack }) => {
     );
   }
 
-  const handleConfirmReceived = () => {
-    confirmOrderReceived(orderId);
+  const handleConfirmReceived = async () => {
+    await confirmOrderReceived(orderId);
     setShowToast(true);
   };
 

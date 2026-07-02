@@ -76,8 +76,8 @@ const PembayaranQris: React.FC<PembayaranQrisProps> = ({
     return `${mins.toString().padStart(2, '0')}:${remainingSecs.toString().padStart(2, '0')}`;
   };
 
-  const handleSimulatePayment = () => {
-    payOrder(orderId);
+  const handleSimulatePayment = async () => {
+    await payOrder(orderId);
     setIsSuccess(true);
     setShowToast(true);
   };

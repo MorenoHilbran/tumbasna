@@ -32,8 +32,8 @@ type ViewState = 'tabs' | 'detail_produk' | 'keranjang' | 'checkout' | 'pembayar
 const TABS: { id: TabState; label: string; iconActive: string; iconInactive: string }[] = [
   { id: 'beranda', label: 'Beranda', iconActive: home, iconInactive: homeOutline },
   { id: 'pasar', label: 'Pasar', iconActive: storefront, iconInactive: storefrontOutline },
-  { id: 'pesanan', label: 'Pesanan', iconActive: receipt, iconInactive: receiptOutline },
-  { id: 'chat', label: 'Chat', iconActive: chatbubbles, iconInactive: chatbubblesOutline },
+  { id: 'pesanan', label: 'Transaksi', iconActive: receipt, iconInactive: receiptOutline },
+  { id: 'chat', label: 'Pesan', iconActive: chatbubbles, iconInactive: chatbubblesOutline },
   { id: 'profil', label: 'Profil', iconActive: person, iconInactive: personOutline },
 ];
 
@@ -61,7 +61,7 @@ const MainAppShell: React.FC = () => {
     } else {
       setShowWelcome(true);
     }
-  }, [user?.email]);
+  }, [user?.phone]);
 
   // If user is not logged in, show Welcome page or LoginRegister page
   if (!user) {
@@ -227,33 +227,23 @@ const MainAppShell: React.FC = () => {
         </button>
       )}
 
-      {/* Magic Animated Tab Navigation Bar */}
+      {/* Simple Bottom Navigation Bar */}
       {viewState === 'tabs' && (
-        <div className="magic-nav">
-          <ul className="magic-nav-list">
+        <div className="bottom-nav">
+          <ul className="bottom-nav-list">
             {TABS.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
                 <li 
                   key={tab.id}
-                  className={`magic-nav-item ${isActive ? 'active' : ''}`}
+                  className={`bottom-nav-item ${isActive ? 'active' : ''}`}
                   onClick={() => setActiveTab(tab.id)}
                 >
-                  <span className="magic-nav-icon">
-                    <IonIcon icon={isActive ? tab.iconActive : tab.iconInactive} />
-                  </span>
-                  <span className="magic-nav-text">{tab.label}</span>
+                  <IonIcon icon={isActive ? tab.iconActive : tab.iconInactive} className="bottom-nav-icon" />
+                  <span className="bottom-nav-text">{tab.label}</span>
                 </li>
               );
             })}
-            
-            {/* The animated sliding indicator */}
-            <div 
-              className="magic-indicator" 
-              style={{ transform: `translateX(${activeTabIndex * 100}%)` }}
-            >
-              <div className="magic-indicator-circle"></div>
-            </div>
           </ul>
         </div>
       )}
