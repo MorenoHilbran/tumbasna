@@ -3,24 +3,21 @@ import {
   IonContent,
   IonHeader,
   IonPage,
-  IonTitle,
   IonToolbar,
   IonIcon,
   IonButton,
-  IonCard,
-  IonCardContent,
   IonBadge,
-  IonToast
+  IonToast,
+  IonSpinner
 } from '@ionic/react';
 import {
   timeOutline,
-  walletOutline,
   checkmarkCircle,
   informationCircleOutline,
   chevronForwardOutline,
-  alertCircleOutline
+  walletOutline
 } from 'ionicons/icons';
-import { useApp, Order } from '../context/AppContext';
+import { useApp } from '../context/AppContext';
 import './PembayaranQris.css';
 
 interface PembayaranQrisProps {
@@ -34,10 +31,12 @@ const PembayaranQris: React.FC<PembayaranQrisProps> = ({
   onNavigateToPesanan,
   onNavigateToTracking
 }) => {
-  const { orders, payOrder } = useApp();
+  const { orders, refreshOrders } = useApp();
   const [secondsLeft, setSecondsLeft] = useState(300); // 5 minutes
   const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const order = orders.find((o) => o.id === orderId);
 
@@ -52,12 +51,62 @@ const PembayaranQris: React.FC<PembayaranQrisProps> = ({
     return () => clearInterval(timer);
   }, [secondsLeft, isSuccess]);
 
-  // Sync state if order status is updated from external (or already paid)
+  // Sync state if order status is updated from external
   useEffect(() => {
     if (order && order.status !== 'Menunggu Pembayaran') {
       setIsSuccess(true);
     }
   }, [order]);
+
+  const handlePayMidtrans = async () => {
+    if (!order) return;
+    setIsLoading(true);
+
+    try {
+      // Gunakan VITE_API_URL dari environment, fallback ke localhost (ubah IP jika testing di mobile)
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const response = await fetch(`${API_URL}/api/payments/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: order.id })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Gagal membuat token pembayaran');
+      }
+
+      if (data.token) {
+        // Panggil Midtrans Snap
+        (window as any).snap.pay(data.token, {
+          onSuccess: function (result: any) {
+            setToastMessage("Pembayaran berhasil!");
+            setShowToast(true);
+            setIsSuccess(true);
+            refreshOrders(); // Refresh status order dari backend
+          },
+          onPending: function (result: any) {
+            setToastMessage("Menunggu pembayaran diselesaikan.");
+            setShowToast(true);
+          },
+          onError: function (result: any) {
+            setToastMessage("Terjadi kesalahan saat pembayaran.");
+            setShowToast(true);
+          },
+          onClose: function () {
+            setToastMessage("Anda menutup popup sebelum pembayaran selesai.");
+            setShowToast(true);
+          }
+        });
+      }
+    } catch (error: any) {
+      setToastMessage(error.message);
+      setShowToast(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (!order) {
     return (
@@ -69,22 +118,14 @@ const PembayaranQris: React.FC<PembayaranQrisProps> = ({
     );
   }
 
-  // Format Timer to MM:SS
   const formatTime = (secs: number) => {
     const mins = Math.floor(secs / 60);
     const remainingSecs = secs % 60;
     return `${mins.toString().padStart(2, '0')}:${remainingSecs.toString().padStart(2, '0')}`;
   };
 
-  const handleSimulatePayment = async () => {
-    await payOrder(orderId);
-    setIsSuccess(true);
-    setShowToast(true);
-  };
-
   return (
     <IonPage>
-      {/* Header */}
       <IonHeader className="ion-no-border">
         <IonToolbar className="qris-toolbar">
           <div className="qris-toolbar-inner">
@@ -98,7 +139,6 @@ const PembayaranQris: React.FC<PembayaranQrisProps> = ({
       <IonContent className="payment-content">
         <div className="payment-container">
           {!isSuccess ? (
-            /* QRIS SCAN INTERFACE */
             <>
               {/* Alert Countdown */}
               <div className="payment-timer-banner">
@@ -112,50 +152,35 @@ const PembayaranQris: React.FC<PembayaranQrisProps> = ({
                 <h2 className="payment-value">Rp {order.totalAmount.toLocaleString('id-ID')}</h2>
                 <div className="payment-details-row">
                   <span>ID Transaksi: <strong>{order.id}</strong></span>
-                  <span>Metode: <strong>QRIS Dinamis</strong></span>
+                  <span>Vendor: <strong>Midtrans</strong></span>
                 </div>
-              </div>
-
-              {/* QR Code Presentation Box */}
-              <div className="qris-presentation-box">
-                <div className="qris-header-logo">
-                  <span className="qris-text">QRIS</span>
-                  <span className="gpn-text">GPN</span>
-                </div>
-                
-                <div className="qris-code-container">
-                  <img src={order.paymentQrCode} alt="QRIS Code" className="qris-image" />
-                </div>
-
-                <p className="qris-footer-desc">
-                  Dipindai otomatis oleh semua aplikasi M-Banking dan E-Wallet (GoPay, OVO, Dana, LinkAja, BCA, Mandiri, dll)
-                </p>
               </div>
 
               {/* Security Banner */}
-              <div className="payment-security-notice">
+              <div className="payment-security-notice" style={{ marginTop: '20px', marginBottom: '20px' }}>
                 <IonIcon icon={informationCircleOutline} />
                 <span>Sistem menggunakan Escrow Tumbasna. Dana akan DITAHAN sementara hingga barang sampai ke lokasi Anda secara aman.</span>
               </div>
 
-              {/* Simulation Helper Button */}
+              {/* Midtrans Button */}
               <div className="simulation-wrapper ion-padding-horizontal">
-                <div className="simulation-note">
-                  <IonIcon icon={alertCircleOutline} />
-                  <span>Tekan tombol di bawah untuk menyimulasikan transaksi pembayaran QRIS sukses dari E-Wallet Anda.</span>
-                </div>
                 <IonButton
                   expand="block"
                   color="tertiary"
                   className="simulate-pay-btn pulse-button"
-                  onClick={handleSimulatePayment}
+                  onClick={handlePayMidtrans}
+                  disabled={isLoading}
                 >
-                  Simulasikan Bayar Sukses
+                  {isLoading ? <IonSpinner name="crescent" /> : (
+                    <>
+                      <IonIcon icon={walletOutline} slot="start" />
+                      Lanjutkan ke Pembayaran
+                    </>
+                  )}
                 </IonButton>
               </div>
             </>
           ) : (
-            /* PAYMENT SUCCESS SCREEN (DANA DITAHAN) */
             <div className="payment-success-card">
               <div className="success-icon-wrapper">
                 <IonIcon icon={checkmarkCircle} />
@@ -175,7 +200,7 @@ const PembayaranQris: React.FC<PembayaranQrisProps> = ({
                 <div className="process-timeline">
                   <div className="process-step checked">
                     <span className="step-num">1</span>
-                    <span className="step-text">Pembayaran QRIS Buyer (Selesai)</span>
+                    <span className="step-text">Pembayaran Buyer (Selesai)</span>
                   </div>
                   <div className="process-step active">
                     <span className="step-num">2</span>
@@ -216,7 +241,7 @@ const PembayaranQris: React.FC<PembayaranQrisProps> = ({
       <IonToast
         isOpen={showToast}
         onDidDismiss={() => setShowToast(false)}
-        message="Simulasi Pembayaran Berhasil! Status diubah menjadi: Dana Ditahan."
+        message={toastMessage}
         duration={3000}
         position="bottom"
         className="custom-toast"

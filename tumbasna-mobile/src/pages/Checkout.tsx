@@ -37,24 +37,50 @@ interface CheckoutProps {
 const SHIPPING_METHODS = [
   { id: 'kurir-lokal', name: 'Kurir Lokal - L300 Box', price: 40000, desc: 'Estimasi tiba dalam 1-2 Hari' },
   { id: 'ekspedisi', name: 'Ekspedisi Logistik Kilat (Next Day)', price: 25000, desc: 'Estimasi tiba dalam 2-3 Hari' },
-  { id: 'cod', name: 'Cash on Delivery (COD - Sesuai Ketentuan)', price: 15000, desc: 'Bayar ongkos kirim saat barang tiba' }
+  { id: 'cod', name: 'Cash on Delivery (COD - Sesuai Ketentuan)', price: 0, desc: 'Bayar ongkos kirim saat barang tiba (Rp 0 di sistem)' }
 ];
 
 const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
   const { cart, user, checkout } = useApp();
   const [selectedCourier, setSelectedCourier] = useState(SHIPPING_METHODS[0].id);
+  const [dynamicShippingCost, setDynamicShippingCost] = useState(SHIPPING_METHODS[0].price);
+  const [isCalculatingOngkir, setIsCalculatingOngkir] = useState(false);
 
   if (!user || cart.length === 0) return null;
 
   const itemsTotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
   const activeShipping = SHIPPING_METHODS.find((m) => m.id === selectedCourier) || SHIPPING_METHODS[0];
-  const shippingCost = activeShipping.price;
+  
+  React.useEffect(() => {
+    const fetchShipping = async () => {
+      setIsCalculatingOngkir(true);
+      try {
+        const totalWeightGrams = cart.reduce((acc, item) => acc + (item.quantity * 1000), 0);
+        const res = await fetch('http://localhost:3000/api/shipping/cost', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ courier: selectedCourier, weight: totalWeightGrams })
+        });
+        const data = await res.json();
+        if (data.success) {
+          setDynamicShippingCost(data.cost);
+        } else {
+          setDynamicShippingCost(activeShipping.price);
+        }
+      } catch {
+        setDynamicShippingCost(activeShipping.price);
+      } finally {
+        setIsCalculatingOngkir(false);
+      }
+    };
+    fetchShipping();
+  }, [selectedCourier, cart, activeShipping.price]);
+
   const serviceFee = 2000; // Layanan Aplikasi
-  const totalAmount = itemsTotal + shippingCost + serviceFee;
+  const totalAmount = itemsTotal + dynamicShippingCost + serviceFee;
 
   const handlePlaceOrder = async () => {
-    // Generate order through context — async (saves to Supabase)
-    const orderId = await checkout(activeShipping.name, shippingCost);
+    const orderId = await checkout(activeShipping.name, dynamicShippingCost);
     if (orderId) {
       onOrderCreated(orderId);
     }
@@ -142,8 +168,8 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
             <span>Rp {itemsTotal.toLocaleString('id-ID')}</span>
           </div>
           <div className="breakdown-row">
-            <span>Ongkos Pengiriman</span>
-            <span>Rp {shippingCost.toLocaleString('id-ID')}</span>
+            <span>Ongkos Pengiriman {isCalculatingOngkir && '(Menghitung...)'}</span>
+            <span>Rp {dynamicShippingCost.toLocaleString('id-ID')}</span>
           </div>
           <div className="breakdown-row">
             <span>Biaya Layanan Aplikasi</span>
