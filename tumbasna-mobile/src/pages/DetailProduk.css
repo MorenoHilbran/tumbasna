@@ -18,9 +18,9 @@
 }
 
 .detail-back-btn, .detail-cart-btn {
-  background: rgba(31, 56, 38, 0.05);
-  border: 1px solid rgba(31, 56, 38, 0.1);
-  color: #1F3826;
+  background: rgba(0, 104, 55, 0.05);
+  border: 1px solid rgba(0, 104, 55, 0.1);
+  color: #006837;
   width: 40px;
   height: 40px;
   border-radius: 12px;
@@ -67,7 +67,7 @@
   position: absolute;
   top: 16px;
   left: 16px;
-  background: rgba(31, 56, 38, 0.85);
+  background: rgba(0, 104, 55, 0.85);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   color: #ffffff;
@@ -104,7 +104,7 @@
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 19px;
   font-weight: 800;
-  color: #1F3826;
+  color: #006837;
   margin: 0;
   flex: 1;
   line-height: 1.35;
@@ -121,7 +121,7 @@
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 20px;
   font-weight: 800;
-  color: #EB9728;
+  color: #F7941D;
 }
 
 .detail-unit {
@@ -148,11 +148,11 @@
   gap: 4px;
   font-size: 12px;
   font-weight: 700;
-  color: #1F3826;
+  color: #006837;
 }
 
 .detail-rating ion-icon {
-  color: #EB9728;
+  color: #F7941D;
   font-size: 14px;
 }
 
@@ -174,14 +174,14 @@
   align-items: center;
   gap: 10px;
   background: #ffffff;
-  border: 1px solid rgba(31, 56, 38, 0.06);
+  border: 1px solid rgba(0, 104, 55, 0.06);
   padding: 12px;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(31, 56, 38, 0.02);
+  box-shadow: 0 4px 12px rgba(0, 104, 55, 0.02);
 }
 
 .delivery-info-item ion-icon {
-  color: #7FBB54;
+  color: #8CC63F;
   font-size: 20px;
   flex-shrink: 0;
 }
@@ -204,18 +204,18 @@
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 11px;
   font-weight: 700;
-  color: #1F3826;
+  color: #006837;
   line-height: 1.25;
 }
 
 /* AI Insight Panel */
 .ai-insight-panel {
   background: #ffffff;
-  border: 1px solid rgba(127, 187, 84, 0.25);
+  border: 1px solid rgba(140, 198, 63, 0.25);
   border-radius: 16px;
   padding: 16px;
   margin-bottom: 24px;
-  box-shadow: 0 6px 20px rgba(127, 187, 84, 0.04);
+  box-shadow: 0 6px 20px rgba(140, 198, 63, 0.04);
 }
 
 .ai-insight-header {
@@ -232,17 +232,17 @@
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 13px;
   font-weight: 800;
-  color: #1F3826;
+  color: #006837;
 }
 
 .ai-insight-title ion-icon {
-  color: #7FBB54;
+  color: #8CC63F;
   font-size: 16px;
 }
 
 .ai-insight-badge {
-  --background: rgba(31, 56, 38, 0.06);
-  color: #1F3826;
+  --background: rgba(0, 104, 55, 0.06);
+  color: #006837;
   font-size: 8.5px;
   font-weight: 700;
   padding: 4px 8px;
@@ -275,7 +275,7 @@
   align-items: flex-end;
   height: 90px;
   padding-bottom: 4px;
-  border-bottom: 1px dashed rgba(31, 56, 38, 0.08);
+  border-bottom: 1px dashed rgba(0, 104, 55, 0.08);
 }
 
 .chart-bar-wrapper {
@@ -294,14 +294,14 @@
 
 .chart-bar-fill {
   width: 12px;
-  background: rgba(31, 56, 38, 0.12);
+  background: rgba(0, 104, 55, 0.12);
   border-radius: 3px 3px 0 0;
   transition: height 0.3s ease;
 }
 
 .chart-bar-fill.active-fill {
-  background: #7FBB54;
-  box-shadow: 0 0 8px rgba(127, 187, 84, 0.3);
+  background: #8CC63F;
+  box-shadow: 0 0 8px rgba(140, 198, 63, 0.3);
 }
 
 .chart-bar-label {
@@ -344,7 +344,7 @@
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 13.5px;
   font-weight: 800;
-  color: #1F3826;
+  color: #006837;
   margin: 0 0 10px 0;
 }
 
@@ -361,16 +361,16 @@
   align-items: center;
   gap: 12px;
   background: #ffffff;
-  border: 1px solid rgba(31, 56, 38, 0.06);
+  border: 1px solid rgba(0, 104, 55, 0.06);
   padding: 14px;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(31, 56, 38, 0.02);
+  box-shadow: 0 4px 12px rgba(0, 104, 55, 0.02);
 }
 
 .supplier-avatar {
   width: 42px;
   height: 42px;
-  background: #1F3826;
+  background: #006837;
   color: #ffffff;
   border-radius: 50%;
   display: flex;
@@ -394,7 +394,7 @@
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 13px;
   font-weight: 700;
-  color: #1F3826;
+  color: #006837;
   margin: 0 0 2px 0;
 }
 
@@ -414,8 +414,8 @@
   gap: 3px;
   font-size: 8.5px;
   font-weight: 700;
-  color: #7FBB54;
-  background: rgba(127, 187, 84, 0.1);
+  color: #8CC63F;
+  background: rgba(140, 198, 63, 0.1);
   padding: 2px 6px;
   border-radius: 4px;
 }
@@ -427,19 +427,19 @@
   left: 0;
   right: 0;
   background: #ffffff;
-  border-top: 1px solid rgba(31, 56, 38, 0.08);
+  border-top: 1px solid rgba(0, 104, 55, 0.08);
   padding: 12px 16px 24px;
   display: flex;
   align-items: center;
   gap: 12px;
   z-index: 100;
-  box-shadow: 0 -4px 16px rgba(31, 56, 38, 0.04);
+  box-shadow: 0 -4px 16px rgba(0, 104, 55, 0.04);
 }
 
 .qty-selector {
   display: flex;
   align-items: center;
-  border: 1.5px solid rgba(31, 56, 38, 0.12);
+  border: 1.5px solid rgba(0, 104, 55, 0.12);
   border-radius: 10px;
   overflow: hidden;
   height: 40px;
@@ -455,7 +455,7 @@
   align-items: center;
   justify-content: center;
   font-size: 16px;
-  color: #1F3826;
+  color: #006837;
   cursor: pointer;
 }
 
@@ -463,7 +463,7 @@
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 13px;
   font-weight: 800;
-  color: #1F3826;
+  color: #006837;
   min-width: 32px;
   text-align: center;
 }
@@ -483,8 +483,8 @@
 
 .add-cart-btn-full {
   --border-radius: 10px;
-  --border-color: rgba(31, 56, 38, 0.3);
-  --color: #1F3826;
+  --border-color: rgba(0, 104, 55, 0.3);
+  --color: #006837;
   --box-shadow: none;
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-weight: 700;
@@ -496,7 +496,7 @@
 
 .buy-now-btn-full {
   --border-radius: 10px;
-  --background: #EB9728;
+  --background: #F7941D;
   --background-activated: #d4831b;
   --color: #ffffff;
   --box-shadow: none;

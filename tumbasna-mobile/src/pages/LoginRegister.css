@@ -15,14 +15,14 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
-  border-bottom: 1px solid rgba(31, 56, 38, 0.03);
+  border-bottom: 1px solid rgba(0, 104, 55, 0.03);
 }
 
 .auth-header-back-btn {
   background: transparent;
   border: none;
   font-size: 20px;
-  color: #1F3826;
+  color: #006837;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -41,7 +41,7 @@
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 15px;
   font-weight: 800;
-  color: #1F3826;
+  color: #006837;
 }
 
 .auth-header-placeholder {
@@ -65,7 +65,7 @@
   font-family: 'Playfair Display', serif;
   font-size: 28px;
   font-weight: 700;
-  color: #1F3826;
+  color: #006837;
   margin: 0 0 10px;
   line-height: 1.25;
 }
@@ -106,14 +106,14 @@
 }
 
 .login-input-row:focus-within {
-  border-color: #7FBB54;
+  border-color: #8CC63F;
 }
 
 .login-phone-prefix {
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 14.5px;
   font-weight: 700;
-  color: #1F3826;
+  color: #006837;
   margin-right: 12px;
 }
 
@@ -131,7 +131,7 @@
   outline: none;
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 14.5px;
-  color: #1F3826;
+  color: #006837;
   font-weight: 600;
   padding: 0;
 }
@@ -163,14 +163,14 @@
 
 .forgot-password-link a {
   font-size: 11.5px;
-  color: #7FBB54;
+  color: #8CC63F;
   text-decoration: none;
   font-weight: 700;
 }
 
 .login-submit-btn-dark {
   width: 100%;
-  background: #1C2B21;
+  background: #005b30;
   color: #ffffff;
   border: none;
   height: 52px;
@@ -225,7 +225,7 @@
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 1.5px;
-  color: #1F3826;
+  color: #006837;
   cursor: pointer;
   transition: background 0.2s ease;
   outline: none;
@@ -250,7 +250,7 @@
 }
 
 .register-highlight-btn {
-  color: #C05C2E;
+  color: #F7941D;
   font-weight: 800;
   cursor: pointer;
 }
@@ -290,8 +290,8 @@
 .register-card-float {
   background: #ffffff;
   border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(31, 56, 38, 0.04);
-  border: 1px solid rgba(31, 56, 38, 0.05);
+  box-shadow: 0 10px 30px rgba(0, 104, 55, 0.04);
+  border: 1px solid rgba(0, 104, 55, 0.05);
   padding: 24px 20px;
   width: 100%;
   max-width: 400px;
@@ -314,7 +314,7 @@
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 19px;
   font-weight: 800;
-  color: #1F3826;
+  color: #006837;
   text-align: center;
   margin: 0 0 24px;
   letter-spacing: -0.3px;
@@ -350,7 +350,7 @@
 }
 
 .reg-input-wrapper:focus-within {
-  border-color: #7FBB54;
+  border-color: #8CC63F;
 }
 
 .reg-input-wrapper input {
@@ -360,7 +360,7 @@
   outline: none;
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 13.5px;
-  color: #1F3826;
+  color: #006837;
   font-weight: 600;
   padding: 0;
 }
@@ -389,14 +389,14 @@
 }
 
 .reg-input-wrapper-phone:focus-within {
-  border-color: #7FBB54;
+  border-color: #8CC63F;
 }
 
 .reg-input-wrapper-phone .phone-prefix {
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 13.5px;
   font-weight: 700;
-  color: #1F3826;
+  color: #006837;
 }
 
 .reg-input-wrapper-phone .phone-prefix-divider {
@@ -413,7 +413,7 @@
   outline: none;
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 13.5px;
-  color: #1F3826;
+  color: #006837;
   font-weight: 600;
   padding: 0;
 }
@@ -435,9 +435,13 @@
   outline: none;
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 13.5px;
-  color: #1F3826;
+  color: #006837;
   font-weight: 600;
   cursor: pointer;
+  --padding-start: 0;
+  --padding-end: 0;
+  --placeholder-color: #9EA8A2;
+  --placeholder-opacity: 1;
 }
 
 .reg-input-grid {
@@ -459,14 +463,14 @@
 
 .agri-shield-notice-simple ion-icon {
   font-size: 14px;
-  color: #7FBB54;
+  color: #8CC63F;
   flex-shrink: 0;
   margin-top: 1px;
 }
 
 .register-submit-btn-orange {
   width: 100%;
-  background: #C05C2E;
+  background: #F7941D;
   color: #ffffff;
   border: none;
   height: 48px;
@@ -477,7 +481,7 @@
   cursor: pointer;
   transition: transform 0.1s ease;
   outline: none;
-  box-shadow: 0 4px 12px rgba(192, 92, 46, 0.2);
+  box-shadow: 0 4px 12px rgba(247, 148, 29, 0.2);
 }
 
 .register-submit-btn-orange:active {
@@ -494,13 +498,13 @@
 }
 
 .login-highlight-btn {
-  color: #1F3826;
+  color: #006837;
   font-weight: 800;
   cursor: pointer;
 }
 
 .custom-toast {
-  --background: #1F3826;
+  --background: #006837;
   --color: #ffffff;
   font-family: 'Plus Jakarta Sans', sans-serif;
 }

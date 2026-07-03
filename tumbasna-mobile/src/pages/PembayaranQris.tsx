@@ -13,9 +13,12 @@ import {
 import {
   timeOutline,
   checkmarkCircle,
-  informationCircleOutline,
+  shieldCheckmarkOutline,
   chevronForwardOutline,
-  walletOutline
+  downloadOutline,
+  copyOutline,
+  alertCircleOutline,
+  phonePortraitOutline
 } from 'ionicons/icons';
 import { useApp } from '../context/AppContext';
 import './PembayaranQris.css';
@@ -31,87 +34,35 @@ const PembayaranQris: React.FC<PembayaranQrisProps> = ({
   onNavigateToPesanan,
   onNavigateToTracking
 }) => {
-  const { orders, refreshOrders } = useApp();
-  const [secondsLeft, setSecondsLeft] = useState(300); // 5 minutes
+  const { orders, refreshOrders, payOrder } = useApp();
+  const [secondsLeft, setSecondsLeft] = useState(300);
   const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState("");
+  const [toastMessage, setToastMessage] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'qris' | 'gpn'>('qris');
+  const [qrLoaded, setQrLoaded] = useState(false);
 
   const order = orders.find((o) => o.id === orderId);
 
-  // Timer Effect
+  // Timer
   useEffect(() => {
     if (isSuccess || secondsLeft <= 0) return;
-
-    const timer = setInterval(() => {
-      setSecondsLeft((prev) => prev - 1);
-    }, 1000);
-
+    const timer = setInterval(() => setSecondsLeft((p) => p - 1), 1000);
     return () => clearInterval(timer);
   }, [secondsLeft, isSuccess]);
 
-  // Sync state if order status is updated from external
+  // Sync jika status berubah dari luar
   useEffect(() => {
     if (order && order.status !== 'Menunggu Pembayaran') {
       setIsSuccess(true);
     }
   }, [order]);
 
-  const handlePayMidtrans = async () => {
-    if (!order) return;
-    setIsLoading(true);
-
-    try {
-      // Gunakan VITE_API_URL dari environment, fallback ke localhost (ubah IP jika testing di mobile)
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-      const response = await fetch(`${API_URL}/api/payments/create`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId: order.id })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Gagal membuat token pembayaran');
-      }
-
-      if (data.token) {
-        // Panggil Midtrans Snap
-        (window as any).snap.pay(data.token, {
-          onSuccess: function (result: any) {
-            setToastMessage("Pembayaran berhasil!");
-            setShowToast(true);
-            setIsSuccess(true);
-            refreshOrders(); // Refresh status order dari backend
-          },
-          onPending: function (result: any) {
-            setToastMessage("Menunggu pembayaran diselesaikan.");
-            setShowToast(true);
-          },
-          onError: function (result: any) {
-            setToastMessage("Terjadi kesalahan saat pembayaran.");
-            setShowToast(true);
-          },
-          onClose: function () {
-            setToastMessage("Anda menutup popup sebelum pembayaran selesai.");
-            setShowToast(true);
-          }
-        });
-      }
-    } catch (error: any) {
-      setToastMessage(error.message);
-      setShowToast(true);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   if (!order) {
     return (
       <IonPage>
-        <IonContent className="ion-padding text-center">
+        <IonContent className="ion-padding">
           <p>Memuat rincian transaksi...</p>
         </IonContent>
       </IonPage>
@@ -119,19 +70,66 @@ const PembayaranQris: React.FC<PembayaranQrisProps> = ({
   }
 
   const formatTime = (secs: number) => {
-    const mins = Math.floor(secs / 60);
-    const remainingSecs = secs % 60;
-    return `${mins.toString().padStart(2, '0')}:${remainingSecs.toString().padStart(2, '0')}`;
+    const m = Math.floor(secs / 60).toString().padStart(2, '0');
+    const s = (secs % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
   };
+
+  // QR code URL — pakai qrserver.com dengan data order nyata
+  const qrisData = `TUMBASNA-QRIS-${order.id}-Rp${order.totalAmount}`;
+  const qrisUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=10&data=${encodeURIComponent(qrisData)}&color=000000&bgcolor=ffffff`;
+
+  const handleSimulatePay = async () => {
+    if (!order) return;
+    setIsLoading(true);
+
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const response = await fetch(`${API_URL}/api/payments/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: order.id })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+      if (data.token) {
+        (window as any).snap.pay(data.token, {
+          onSuccess: () => { setIsSuccess(true); payOrder(order.id); refreshOrders(); },
+          onPending: () => { setToastMessage('Menunggu pembayaran...'); setShowToast(true); },
+          onError: () => { setToastMessage('Terjadi kesalahan.'); setShowToast(true); },
+          onClose: () => { setToastMessage('Popup ditutup.'); setShowToast(true); }
+        });
+      }
+    } catch {
+      // Demo mode — simulasi pembayaran berhasil
+      setToastMessage('Mensimulasikan pembayaran QRIS...');
+      setShowToast(true);
+      setTimeout(() => {
+        setIsSuccess(true);
+        payOrder(order.id);
+        setToastMessage('Pembayaran berhasil dikonfirmasi!');
+        setShowToast(true);
+      }, 2000);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCopyId = () => {
+    navigator.clipboard.writeText(order.id).catch(() => {});
+    setToastMessage('ID Transaksi disalin!');
+    setShowToast(true);
+  };
+
+  const timerPercent = (secondsLeft / 300) * 100;
+  const isExpired = secondsLeft <= 0;
 
   return (
     <IonPage>
       <IonHeader className="ion-no-border">
         <IonToolbar className="qris-toolbar">
           <div className="qris-toolbar-inner">
-            <div className="qris-logo-row">
-              <img src="/logo.png" alt="Tumbasna" className="qris-header-logo-only" />
-            </div>
+            <h2 className="qris-header-title">Pembayaran</h2>
           </div>
         </IonToolbar>
       </IonHeader>
@@ -140,59 +138,147 @@ const PembayaranQris: React.FC<PembayaranQrisProps> = ({
         <div className="payment-container">
           {!isSuccess ? (
             <>
-              {/* Alert Countdown */}
-              <div className="payment-timer-banner">
+              {/* ── Timer Banner ─────────────────────────────── */}
+              <div className={`payment-timer-banner ${isExpired ? 'expired' : ''}`}>
                 <IonIcon icon={timeOutline} />
-                <span>Selesaikan pembayaran dalam <strong>{formatTime(secondsLeft)}</strong></span>
+                {isExpired ? (
+                  <span><strong>Waktu habis.</strong> Silakan buat pesanan baru.</span>
+                ) : (
+                  <span>Selesaikan pembayaran dalam <strong>{formatTime(secondsLeft)}</strong></span>
+                )}
               </div>
 
-              {/* Transaction Summary Card */}
+              {/* ── Progress bar timer ───────────────────────── */}
+              <div className="timer-progress-bar-wrap">
+                <div
+                  className="timer-progress-bar-fill"
+                  style={{
+                    width: `${timerPercent}%`,
+                    background: timerPercent < 20 ? '#e53935' : timerPercent < 50 ? '#F7941D' : '#8CC63F'
+                  }}
+                />
+              </div>
+
+              {/* ── Amount card ──────────────────────────────── */}
               <div className="payment-summary-card">
-                <span className="payment-label">Nominal Transaksi</span>
+                <span className="payment-label">NOMINAL TRANSAKSI</span>
                 <h2 className="payment-value">Rp {order.totalAmount.toLocaleString('id-ID')}</h2>
                 <div className="payment-details-row">
                   <span>ID Transaksi: <strong>{order.id}</strong></span>
-                  <span>Vendor: <strong>Midtrans</strong></span>
+                  <button className="copy-id-btn" onClick={handleCopyId}>
+                    <IonIcon icon={copyOutline} />
+                  </button>
+                </div>
+                <div className="payment-method-badge">
+                  <span>Metode: <strong>QRIS Dinamis</strong></span>
                 </div>
               </div>
 
-              {/* Security Banner */}
-              <div className="payment-security-notice" style={{ marginTop: '20px', marginBottom: '20px' }}>
-                <IonIcon icon={informationCircleOutline} />
-                <span>Sistem menggunakan Escrow Tumbasna. Dana akan DITAHAN sementara hingga barang sampai ke lokasi Anda secara aman.</span>
+              {/* ── Tab QRIS / GPN ───────────────────────────── */}
+              <div className="payment-tab-row">
+                <button
+                  className={`payment-tab-btn ${activeTab === 'qris' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('qris')}
+                >
+                  QRIS
+                </button>
+                <button
+                  className={`payment-tab-btn ${activeTab === 'gpn' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('gpn')}
+                >
+                  GPN
+                </button>
               </div>
 
-              {/* Midtrans Button */}
-              <div className="simulation-wrapper ion-padding-horizontal">
+              {/* ── QR Code Display ──────────────────────────── */}
+              <div className="qris-card">
+                <div className="qris-card-header">
+                  <img src="/logo.png" alt="Tumbasna" className="qris-card-logo" />
+                  <span className="qris-card-label">
+                    {activeTab === 'qris' ? 'Scan via M-Banking / E-Wallet' : 'Scan via GPN / ATM'}
+                  </span>
+                </div>
+
+                <div className="qr-code-wrapper">
+                  {!qrLoaded && (
+                    <div className="qr-loading-placeholder">
+                      <IonSpinner name="crescent" />
+                      <span>Memuat kode QRIS...</span>
+                    </div>
+                  )}
+                  <img
+                    src={activeTab === 'qris' ? qrisUrl : qrisUrl.replace('color=000000', 'color=006837')}
+                    alt="QRIS Code"
+                    className="qr-code-image"
+                    style={{ display: qrLoaded ? 'block' : 'none' }}
+                    onLoad={() => setQrLoaded(true)}
+                    onError={() => setQrLoaded(true)}
+                  />
+                  {/* Corner decorations */}
+                  <div className="qr-corner tl" />
+                  <div className="qr-corner tr" />
+                  <div className="qr-corner bl" />
+                  <div className="qr-corner br" />
+                </div>
+
+                <p className="qris-scan-hint">
+                  Dipindai otomatis oleh semua aplikasi M-Banking<br />
+                  dan E-Wallet (GoPay, OVO, Dana, LinkAja, BCA...)
+                </p>
+
+                <div className="qris-brand-row">
+                  {['GoPay', 'OVO', 'Dana', 'LinkAja', 'BCA', 'BRI'].map((b) => (
+                    <span key={b} className="qris-brand-chip">{b}</span>
+                  ))}
+                </div>
+              </div>
+
+              {/* ── Escrow notice ────────────────────────────── */}
+              <div className="payment-security-notice">
+                <IonIcon icon={shieldCheckmarkOutline} />
+                <span>
+                  Sistem menggunakan <strong>Escrow Tumbasna</strong>. Dana akan{' '}
+                  <strong>DITAHAN</strong> sementara hingga barang sampai ke lokasi Anda secara aman.
+                </span>
+              </div>
+
+              {/* ── How to pay hint ──────────────────────────── */}
+              <div className="payment-how-to">
+                <IonIcon icon={phonePortraitOutline} />
+                <span>
+                  Tekan tombol di bawah untuk menyimulasikan transaksi pembayaran QRIS sukses dari E-Wallet Anda.
+                </span>
+              </div>
+
+              {/* ── Action button ────────────────────────────── */}
+              <div className="payment-action-area">
                 <IonButton
                   expand="block"
                   color="tertiary"
-                  className="simulate-pay-btn pulse-button"
-                  onClick={handlePayMidtrans}
-                  disabled={isLoading}
+                  className="simulate-pay-btn"
+                  onClick={handleSimulatePay}
+                  disabled={isLoading || isExpired}
                 >
-                  {isLoading ? <IonSpinner name="crescent" /> : (
-                    <>
-                      <IonIcon icon={walletOutline} slot="start" />
-                      Lanjutkan ke Pembayaran
-                    </>
-                  )}
+                  {isLoading
+                    ? <IonSpinner name="crescent" />
+                    : 'SIMULASIKAN BAYAR SUKSES'}
                 </IonButton>
               </div>
             </>
           ) : (
+            /* ── SUCCESS STATE ──────────────────────────────── */
             <div className="payment-success-card">
               <div className="success-icon-wrapper">
                 <IonIcon icon={checkmarkCircle} />
               </div>
-              
               <h2>Pembayaran Berhasil!</h2>
               <IonBadge color="success" className="status-badge-held">
                 Status: DANA DITAHAN (ESCROW)
               </IonBadge>
 
               <p className="success-message">
-                Dana sebesar <strong>Rp {order.totalAmount.toLocaleString('id-ID')}</strong> untuk transaksi <strong>{order.id}</strong> telah diamankan oleh sistem penampung Tumbasna.
+                Dana sebesar <strong>Rp {order.totalAmount.toLocaleString('id-ID')}</strong> untuk transaksi{' '}
+                <strong>{order.id}</strong> telah diamankan oleh sistem penampung Tumbasna.
               </p>
 
               <div className="escrow-process-box">
@@ -204,11 +290,11 @@ const PembayaranQris: React.FC<PembayaranQrisProps> = ({
                   </div>
                   <div className="process-step active">
                     <span className="step-num">2</span>
-                    <span className="step-text">Dana Ditahan & Supplier Mengirimkan Barang (Sedang Berlangsung)</span>
+                    <span className="step-text">Dana Ditahan &amp; Supplier Mengirimkan Barang (Sedang Berlangsung)</span>
                   </div>
                   <div className="process-step">
                     <span className="step-num">3</span>
-                    <span className="step-text">Buyer Konfirmasi Terima & Dana Dicairkan ke Supplier</span>
+                    <span className="step-text">Buyer Konfirmasi Terima &amp; Dana Dicairkan ke Supplier</span>
                   </div>
                 </div>
               </div>
@@ -222,7 +308,6 @@ const PembayaranQris: React.FC<PembayaranQrisProps> = ({
                 >
                   Lacak Pengiriman Komoditas <IonIcon icon={chevronForwardOutline} slot="end" />
                 </IonButton>
-
                 <IonButton
                   expand="block"
                   fill="clear"

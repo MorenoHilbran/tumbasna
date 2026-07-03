@@ -76,13 +76,13 @@ const DetailProduk: React.FC<DetailProdukProps> = ({ product, onBack, onNavigate
       return {
         status: 'Sangat Direkomendasikan Membeli Sekarang',
         text: `Tren harga diprediksi terus MERANGKAK NAIK sebesar 10-15% hingga akhir bulan akibat penurunan curah hujan di wilayah hulu. Membeli saat ini menghemat sekitar Rp${(product.price * 0.12).toFixed(0)}/kg.`,
-        color: '#EB9728'
+        color: '#F7941D'
       };
     } else {
       return {
         status: 'Rekomendasi Pembelian Moderat',
         text: 'Tren harga diprediksi stabil turun tipis 3% minggu depan karena panen raya di tingkat lokal mulai merata. Jika kebutuhan mendesak, silakan lakukan pembelian bertahap.',
-        color: '#697EE8'
+        color: '#009245'
       };
     }
   };

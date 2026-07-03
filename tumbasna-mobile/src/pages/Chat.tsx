@@ -44,6 +44,16 @@ const Chat: React.FC<ChatProps> = ({ initialPartner, onClearInitialPartner }) =>
       const thread = chats.find((c) => c.supplierName === initialPartner);
       if (thread) {
         setSelectedThread(thread);
+      } else {
+        // If thread doesn't exist yet, create a temporary one for the view
+        // It will be added to the global state once a message is sent
+        setSelectedThread({
+          supplierName: initialPartner,
+          lastMessage: '',
+          lastTime: '',
+          unreadCount: 0,
+          messages: []
+        });
       }
       if (onClearInitialPartner) {
         onClearInitialPartner();

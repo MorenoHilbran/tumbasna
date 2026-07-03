@@ -1,0 +1,190 @@
+.splash-content-wrapper {
+  --background: #ffffff;
+}
+
+.splash-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #ffffff;
+  position: relative;
+  overflow: hidden;
+}
+
+.splash-background-pattern {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(140, 198, 63, 0.04) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(247, 148, 29, 0.04) 0%, transparent 40%);
+  z-index: 1;
+}
+
+.splash-content {
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-top: -10vh;
+}
+
+.splash-logo {
+  width: 160px;
+  height: auto;
+  margin-bottom: 10px;
+  animation: logoFadeIn 1s ease-out forwards;
+  filter: drop-shadow(0 10px 20px rgba(0,0,0,0.1));
+}
+
+.splash-brand-text {
+  font-family: var(--font-sans);
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -1.5px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  animation: fadeUp 1s ease-out 0.2s both;
+}
+
+.splash-brand-tumbas {
+  color: var(--ion-color-primary); /* #006837 */
+}
+
+.splash-brand-na {
+  color: var(--ion-color-secondary); /* #8CC63F */
+}
+
+.splash-divider {
+  width: 60px;
+  height: 3px;
+  display: flex;
+  margin: 10px auto;
+  border-radius: 3px;
+  overflow: hidden;
+  animation: scaleIn 0.8s ease-out 0.4s both;
+}
+
+.splash-divider-left {
+  flex: 1;
+  background-color: var(--ion-color-tertiary); /* #F7941D */
+}
+
+.splash-divider-right {
+  flex: 1;
+  background-color: var(--ion-color-primary); /* #006837 */
+}
+
+.splash-tagline {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: #333333;
+  font-weight: 600;
+  margin-top: 10px;
+  line-height: 1.4;
+  animation: fadeUp 1s ease-out 0.5s both;
+}
+
+.splash-tagline span {
+  color: var(--ion-color-success); /* #009245 */
+  font-weight: 800;
+}
+
+/* Floating Leaves */
+.splash-leaf {
+  position: absolute;
+  z-index: 5;
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.15));
+  opacity: 0.9;
+}
+
+.splash-leaf-1 {
+  top: 15%;
+  right: 15%;
+  width: 45px;
+  transform: rotate(45deg);
+  animation: float1 4s ease-in-out infinite, fadeIn 1.5s ease-out;
+}
+
+.splash-leaf-2 {
+  bottom: 30%;
+  left: 5%;
+  width: 60px;
+  transform: rotate(-15deg);
+  animation: float2 5s ease-in-out infinite alternate, fadeIn 1.5s ease-out;
+}
+
+@keyframes float1 {
+  0% { transform: translateY(0) rotate(45deg); }
+  50% { transform: translateY(-15px) rotate(50deg); }
+  100% { transform: translateY(0) rotate(45deg); }
+}
+
+@keyframes float2 {
+  0% { transform: translateY(0) rotate(-15deg); }
+  100% { transform: translateY(-20px) rotate(-5deg); }
+}
+
+/* Bottom Waves */
+.splash-waves-container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 35vh; /* Larger to make sure they show nicely */
+  z-index: 2;
+  overflow: hidden;
+  animation: wavesUp 1s ease-out;
+}
+
+.splash-wave {
+  position: absolute;
+  bottom: -5px; /* Cover any gaps */
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.splash-wave-orange {
+  z-index: 3;
+}
+
+.splash-wave-green-light {
+  z-index: 4;
+}
+
+.splash-wave-green-dark {
+  z-index: 5;
+}
+
+/* Animations */
+@keyframes logoFadeIn {
+  0% { opacity: 0; transform: scale(0.9) translateY(20px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes fadeUp {
+  0% { opacity: 0; transform: translateY(15px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  0% { opacity: 0; transform: scaleX(0); }
+  100% { opacity: 1; transform: scaleX(1); }
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes wavesUp {
+  0% { transform: translateY(50px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}

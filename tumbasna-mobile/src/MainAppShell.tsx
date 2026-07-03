@@ -23,6 +23,7 @@ import DetailPesanan from './pages/DetailPesanan';
 import PembayaranQris from './pages/PembayaranQris';
 import LoginRegister from './pages/LoginRegister';
 import Welcome from './pages/Welcome';
+import Splash from './pages/Splash';
 
 import './MainAppShell.css';
 
@@ -50,8 +51,16 @@ const MainAppShell: React.FC = () => {
   const [selectedChatPartner, setSelectedChatPartner] = useState<string | null>(null);
 
   // Auth Onboarding Navigation State
+  const [showSplash, setShowSplash] = useState(true);
   const [showWelcome, setShowWelcome] = useState(true);
   const [initialLoginMode, setInitialLoginMode] = useState<'login' | 'register'>('login');
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 2500); // 2.5 seconds splash screen
+    return () => clearTimeout(timer);
+  }, []);
 
   // Reset tab to beranda on user login or reset onboarding on logout
   useEffect(() => {
@@ -64,6 +73,10 @@ const MainAppShell: React.FC = () => {
   }, [user?.phone]);
 
   // If user is not logged in, show Welcome page or LoginRegister page
+  if (showSplash) {
+    return <Splash />;
+  }
+
   if (!user) {
     if (showWelcome) {
       return (
@@ -148,6 +161,11 @@ const MainAppShell: React.FC = () => {
               onBack={() => {
                 setViewState('tabs');
                 setActiveTab('pesanan');
+              }}
+              onNavigateToChat={(supplierName) => {
+                setSelectedChatPartner(supplierName);
+                setViewState('tabs');
+                setActiveTab('chat');
               }}
             />
           );

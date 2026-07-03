@@ -83,7 +83,7 @@
   width: 120%;
   height: 40%;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(127, 187, 84, 0.05) 0%, rgba(248, 247, 244, 0) 70%);
+  background: radial-gradient(circle, rgba(140, 198, 63, 0.05) 0%, rgba(248, 247, 244, 0) 70%);
   filter: blur(80px);
   pointer-events: none;
   z-index: 1;
@@ -227,7 +227,7 @@
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: rgba(31, 56, 38, 0.1);
+  background: rgba(0, 104, 55, 0.1);
   cursor: pointer;
   transition: all 0.3s ease;
 }
@@ -254,7 +254,7 @@
   justify-content: center;
   gap: 8px;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(31, 56, 38, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 104, 55, 0.1);
   transition: all 0.2s ease;
   outline: none;
 }

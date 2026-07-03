@@ -19,6 +19,7 @@ import {
   locationOutline,
   star,
   cartOutline,
+  checkmarkCircleOutline,
   optionsOutline,
   cubeOutline
 } from 'ionicons/icons';
@@ -35,6 +36,7 @@ const Pasar: React.FC<PasarProps> = ({ onSelectProduct }) => {
   const [activeFilter, setActiveFilter] = useState<'semua' | 'termurah' | 'terdekat' | 'terbaru'>('semua');
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
 
   // Filtering and Sorting logic
   const getFilteredProducts = () => {
@@ -79,10 +81,21 @@ const Pasar: React.FC<PasarProps> = ({ onSelectProduct }) => {
   };
 
   const handleQuickBuy = (e: React.MouseEvent, product: Product) => {
-    e.stopPropagation(); // Prevent card navigation
+    e.stopPropagation();
+    if (addedIds.has(product.id)) return; // prevent double-tap
     addToCart(product, 1);
-    setToastMessage(`Berhasil menambahkan 1 kg ${product.name} ke Keranjang`);
+    setToastMessage(`1 kg ${product.name} ditambahkan ke Keranjang`);
     setShowToast(true);
+
+    // Tampilkan state sukses pada tombol selama 1.5 detik
+    setAddedIds((prev) => new Set(prev).add(product.id));
+    setTimeout(() => {
+      setAddedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(product.id);
+        return next;
+      });
+    }, 1500);
   };
 
   const filtered = getFilteredProducts();
@@ -96,7 +109,7 @@ const Pasar: React.FC<PasarProps> = ({ onSelectProduct }) => {
             <div className="market-logo-row">
               <img src="/logo.png" alt="Tumbasna" className="market-header-logo-only" />
             </div>
-            <IonIcon icon={optionsOutline} style={{ color: '#1F3826', fontSize: '22px' }} />
+            <IonIcon icon={optionsOutline} style={{ color: '#006837', fontSize: '22px' }} />
           </div>
         </IonToolbar>
 
@@ -112,6 +125,10 @@ const Pasar: React.FC<PasarProps> = ({ onSelectProduct }) => {
           </div>
         </div>
 
+      </IonHeader>
+
+      {/* Content */}
+      <IonContent className="pasar-content">
         {/* Filter chips */}
         <div className="filter-chips-row">
           {(['semua', 'termurah', 'terdekat', 'terbaru'] as const).map((f) => (
@@ -124,10 +141,7 @@ const Pasar: React.FC<PasarProps> = ({ onSelectProduct }) => {
             </button>
           ))}
         </div>
-      </IonHeader>
 
-      {/* Content */}
-      <IonContent className="pasar-content">
         <div className="products-grid">
           {filtered.length > 0 ? (
             filtered.map((product) => (
@@ -171,15 +185,13 @@ const Pasar: React.FC<PasarProps> = ({ onSelectProduct }) => {
                   </div>
 
                   <div className="product-action-row">
-                    <IonButton
-                      expand="block"
-                      color="tertiary"
-                      className="buy-now-btn"
+                    <button
+                      className={`buy-now-btn-native ${addedIds.has(product.id) ? 'added' : ''}`}
                       onClick={(e) => handleQuickBuy(e, product)}
                     >
-                      <IonIcon icon={cartOutline} slot="start" />
-                      Beli
-                    </IonButton>
+                      <IonIcon icon={addedIds.has(product.id) ? checkmarkCircleOutline : cartOutline} />
+                      <span>{addedIds.has(product.id) ? 'Ditambahkan!' : 'Beli'}</span>
+                    </button>
                   </div>
                 </div>
               </IonCard>

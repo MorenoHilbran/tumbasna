@@ -29,13 +29,13 @@
 
 /* Profile Card Header */
 .profile-card-header {
-  background: linear-gradient(135deg, #1F3826 0%, #112015 100%);
+  background: linear-gradient(135deg, #006837 0%, #005b30 100%);
   border-radius: 18px;
   margin: 16px;
   padding: 24px 20px 20px;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 8px 24px rgba(31, 56, 38, 0.15);
+  box-shadow: 0 8px 24px rgba(0, 104, 55, 0.15);
 }
 
 .profile-card-bg-glow {
@@ -44,7 +44,7 @@
   right: -40px;
   width: 120px;
   height: 120px;
-  background: radial-gradient(circle, rgba(127, 187, 84, 0.18) 0%, rgba(127, 187, 84, 0) 70%);
+  background: radial-gradient(circle, rgba(140, 198, 63, 0.18) 0%, rgba(140, 198, 63, 0) 70%);
   z-index: 0;
   pointer-events: none;
 }
@@ -63,7 +63,7 @@
 }
 
 .profile-avatar-large {
-  background: linear-gradient(135deg, #7FBB54 0%, #5E9C38 100%);
+  background: linear-gradient(135deg, #8CC63F 0%, #5E9C38 100%);
   color: #ffffff;
   width: 68px;
   height: 68px;
@@ -83,7 +83,7 @@
   position: absolute;
   bottom: -2px;
   right: -2px;
-  background: #7FBB54;
+  background: #8CC63F;
   color: #ffffff;
   width: 20px;
   height: 20px;
@@ -92,7 +92,7 @@
   align-items: center;
   justify-content: center;
   font-size: 11px;
-  border: 2px solid #1F3826;
+  border: 2px solid #006837;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   z-index: 2;
 }
@@ -125,13 +125,13 @@
 }
 
 .profile-shield-verified {
-  background: rgba(127, 187, 84, 0.18);
-  border: 1px solid rgba(127, 187, 84, 0.35);
+  background: rgba(140, 198, 63, 0.18);
+  border: 1px solid rgba(140, 198, 63, 0.35);
   padding: 2px 10px;
   border-radius: 12px;
   font-size: 9px;
   font-weight: 700;
-  color: #7FBB54;
+  color: #8CC63F;
   width: fit-content;
   letter-spacing: 0.3px;
   z-index: 1;
@@ -194,15 +194,15 @@
   border-radius: 12px;
   margin: 0 16px 14px;
   padding: 4px 16px;
-  border: 1px solid rgba(31, 56, 38, 0.06);
-  box-shadow: 0 4px 12px rgba(31, 56, 38, 0.02);
+  border: 1px solid rgba(0, 104, 55, 0.06);
+  box-shadow: 0 4px 12px rgba(0, 104, 55, 0.02);
 }
 
 .profile-info-item {
   display: flex;
   align-items: center;
   padding: 14px 0;
-  border-bottom: 1.5px dashed rgba(31, 56, 38, 0.06);
+  border-bottom: 1.5px dashed rgba(0, 104, 55, 0.06);
 }
 
 .profile-info-item:last-child {
@@ -211,7 +211,7 @@
 
 .info-icon-wrapper {
   background: #F8F7F4;
-  color: #1F3826;
+  color: #006837;
   width: 38px;
   height: 38px;
   border-radius: 50%;
@@ -221,7 +221,7 @@
   margin-right: 14px;
   font-size: 18px;
   flex-shrink: 0;
-  border: 1.5px solid rgba(31, 56, 38, 0.05);
+  border: 1.5px solid rgba(0, 104, 55, 0.05);
 }
 
 .info-text-col {
@@ -241,7 +241,7 @@
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 13px;
   font-weight: 700;
-  color: #1F3826;
+  color: #006837;
   line-height: 1.4;
 }
 
@@ -250,8 +250,8 @@
   background: #ffffff;
   border-radius: 12px;
   margin: 0 16px 20px;
-  border: 1px solid rgba(31, 56, 38, 0.06);
-  box-shadow: 0 4px 12px rgba(31, 56, 38, 0.02);
+  border: 1px solid rgba(0, 104, 55, 0.06);
+  box-shadow: 0 4px 12px rgba(0, 104, 55, 0.02);
   overflow: hidden;
 }
 
@@ -263,7 +263,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 14px 16px;
-  border-bottom: 1.5px dashed rgba(31, 56, 38, 0.06);
+  border-bottom: 1.5px dashed rgba(0, 104, 55, 0.06);
   cursor: pointer;
   outline: none;
   transition: background 0.15s ease;
@@ -296,12 +296,12 @@
 
 .menu-icon-wrapper.settings-bg {
   background: #EEF2EE;
-  color: #1F3826;
+  color: #006837;
 }
 
 .menu-icon-wrapper.help-bg {
   background: #FDF4E9;
-  color: #EB9728;
+  color: #F7941D;
 }
 
 .menu-text-col {
@@ -314,7 +314,7 @@
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 13px;
   font-weight: 700;
-  color: #1F3826;
+  color: #006837;
 }
 
 .menu-subtitle {
@@ -332,12 +332,12 @@
 
 .menu-badge-green {
   background: #EFF8F0;
-  color: #7FBB54;
+  color: #8CC63F;
   font-size: 8px;
   font-weight: 800;
   padding: 2px 6px;
   border-radius: 4px;
-  border: 1px solid rgba(127, 187, 84, 0.3);
+  border: 1px solid rgba(140, 198, 63, 0.3);
 }
 
 .menu-badge-gray {

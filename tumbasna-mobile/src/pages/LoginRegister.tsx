@@ -312,19 +312,19 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ initialIsLogin = true, on
                 <div className="reg-input-group">
                   <label className="reg-field-label">Jenis Usaha</label>
                   <div className="reg-select-wrapper">
-                    <select
+                    <IonSelect
                       value={businessType}
-                      onChange={(e) => setBusinessType(e.target.value)}
+                      onIonChange={(e) => setBusinessType(e.detail.value)}
                       className="reg-native-select"
-                      required
+                      placeholder="Pilih Kategori Usaha"
+                      interface="action-sheet"
                     >
-                      <option value="" disabled>Pilih Kategori Usaha</option>
-                      <option value="Rumah Makan / Restoran">Rumah Makan / Restoran</option>
-                      <option value="Katering">Katering / Jasa Boga</option>
-                      <option value="Warung Sembako / Toko Kelontong">Warung Sembako</option>
-                      <option value="Pedagang Sayur Pasar">Pedagang Pasar / Sayur Keliling</option>
-                      <option value="Usaha Olahan Makanan">Usaha Olahan Makanan (Home Industry)</option>
-                    </select>
+                      <IonSelectOption value="Rumah Makan / Restoran">Rumah Makan / Restoran</IonSelectOption>
+                      <IonSelectOption value="Katering">Katering / Jasa Boga</IonSelectOption>
+                      <IonSelectOption value="Warung Sembako / Toko Kelontong">Warung Sembako</IonSelectOption>
+                      <IonSelectOption value="Pedagang Sayur Pasar">Pedagang Pasar / Sayur Keliling</IonSelectOption>
+                      <IonSelectOption value="Usaha Olahan Makanan">Usaha Olahan Makanan (Home Industry)</IonSelectOption>
+                    </IonSelect>
                   </div>
                 </div>
 
@@ -346,18 +346,18 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ initialIsLogin = true, on
                   <div className="reg-input-group">
                     <label className="reg-field-label">Nama Bank</label>
                     <div className="reg-select-wrapper">
-                      <select
+                      <IonSelect
                         value={bankName}
-                        onChange={(e) => setBankName(e.target.value)}
+                        onIonChange={(e) => setBankName(e.detail.value)}
                         className="reg-native-select"
-                        required
+                        placeholder="Pilih Bank"
+                        interface="action-sheet"
                       >
-                        <option value="" disabled>Pilih Bank</option>
-                        <option value="Bank Central Asia (BCA)">BCA</option>
-                        <option value="Bank Rakyat Indonesia (BRI)">BRI</option>
-                        <option value="Bank Mandiri">Mandiri</option>
-                        <option value="Bank Negara Indonesia (BNI)">BNI</option>
-                      </select>
+                        <IonSelectOption value="Bank Central Asia (BCA)">BCA</IonSelectOption>
+                        <IonSelectOption value="Bank Rakyat Indonesia (BRI)">BRI</IonSelectOption>
+                        <IonSelectOption value="Bank Mandiri">Mandiri</IonSelectOption>
+                        <IonSelectOption value="Bank Negara Indonesia (BNI)">BNI</IonSelectOption>
+                      </IonSelect>
                     </div>
                   </div>
 

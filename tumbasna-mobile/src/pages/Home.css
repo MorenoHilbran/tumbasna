@@ -10,7 +10,7 @@
 .dash-header {
   padding: 16px 16px 16px;
   background: #FBF9F4;
-  border-bottom: 1px solid rgba(31, 56, 38, 0.06);
+  border-bottom: 1px solid rgba(0, 104, 55, 0.06);
   margin-bottom: 16px;
 }
 
@@ -31,14 +31,14 @@
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 20px;
   font-weight: 800;
-  color: #1F3826;
+  color: #006837;
   margin: 0 0 6px;
 }
 
 .dash-username-italic {
   font-family: 'Playfair Display', serif;
   font-style: italic;
-  color: #1F3826;
+  color: #006837;
   font-weight: 700;
 }
 
@@ -49,7 +49,7 @@
 }
 
 .dash-loc-pin {
-  color: #EB9728;
+  color: #F7941D;
   font-size: 13px;
 }
 
@@ -63,7 +63,7 @@
 
 /* 1. Pesanan Terdaftar Card */
 .dash-active-orders-card {
-  background: #1E3123;
+  background: #005b30;
   border-radius: 12px;
   margin: 0 16px 16px;
   padding: 20px 18px;
@@ -72,7 +72,7 @@
   justify-content: space-between;
   align-items: center;
   overflow: hidden;
-  box-shadow: 0 6px 18px rgba(31, 56, 38, 0.15);
+  box-shadow: 0 6px 18px rgba(0, 104, 55, 0.15);
 }
 
 .dash-card-left {
@@ -84,7 +84,7 @@
 .dash-card-label-gold {
   font-size: 9px;
   font-weight: 800;
-  color: #EB9728;
+  color: #F7941D;
   letter-spacing: 1.2px;
   margin-bottom: 6px;
 }
@@ -99,7 +99,7 @@
 }
 
 .dash-cta-btn {
-  background: #EB9728;
+  background: #F7941D;
   border: none;
   color: #ffffff;
   padding: 10px 18px;
@@ -112,7 +112,7 @@
   gap: 8px;
   cursor: pointer;
   width: fit-content;
-  box-shadow: 0 4px 10px rgba(235, 151, 40, 0.3);
+  box-shadow: 0 4px 10px rgba(247, 148, 29, 0.3);
   transition: all 0.2s ease;
   outline: none;
 }
@@ -142,13 +142,13 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  border: 1px solid rgba(31, 56, 38, 0.06);
-  box-shadow: 0 4px 12px rgba(31, 56, 38, 0.02);
+  border: 1px solid rgba(0, 104, 55, 0.06);
+  box-shadow: 0 4px 12px rgba(0, 104, 55, 0.02);
 }
 
 .dash-expense-icon-wrapper {
   background: #FDF4E9;
-  color: #EB9728;
+  color: #F7941D;
   width: 44px;
   height: 44px;
   border-radius: 10px;
@@ -176,7 +176,7 @@
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 18px;
   font-weight: 800;
-  color: #1F3826;
+  color: #006837;
   margin: 0;
   letter-spacing: 0.5px;
 }
@@ -187,8 +187,8 @@
   border-radius: 14px;
   margin: 0 16px 20px;
   padding: 18px 16px 14px;
-  border: 1px solid rgba(31, 56, 38, 0.06);
-  box-shadow: 0 4px 16px rgba(31, 56, 38, 0.04);
+  border: 1px solid rgba(0, 104, 55, 0.06);
+  box-shadow: 0 4px 16px rgba(0, 104, 55, 0.04);
 }
 
 .dash-ai-header {
@@ -205,8 +205,8 @@
 }
 
 .dash-ai-logo-black {
-  background: #1F3826;
-  color: #EB9728;
+  background: #006837;
+  color: #F7941D;
   width: 34px;
   height: 34px;
   border-radius: 8px;
@@ -231,18 +231,18 @@
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 12.5px;
   font-weight: 800;
-  color: #1F3826;
+  color: #006837;
   margin: 0;
 }
 
 .dash-ai-badge-pintar {
   background: #EFF8F0;
-  color: #7FBB54;
+  color: #8CC63F;
   font-size: 8px;
   font-weight: 800;
   padding: 2px 6px;
   border-radius: 4px;
-  border: 1px solid rgba(127, 187, 84, 0.3);
+  border: 1px solid rgba(140, 198, 63, 0.3);
 }
 
 .dash-ai-subtext {
@@ -292,13 +292,13 @@
 }
 
 .dash-ai-tab-btn.active {
-  background: #C05C2E;
+  background: #F7941D;
   color: #ffffff;
 }
 
 .dash-ai-inner-card {
   background: #FFF9F3;
-  border: 1px solid rgba(235, 151, 40, 0.12);
+  border: 1px solid rgba(247, 148, 29, 0.12);
   border-radius: 10px;
   padding: 14px;
   margin-bottom: 12px;
@@ -312,23 +312,23 @@
 }
 
 .dash-ai-warn-icon {
-  color: #EB9728;
+  color: #F7941D;
   font-size: 16px;
 }
 
 .dash-ai-warn-icon.info-blue {
-  color: #697EE8;
+  color: #009245;
 }
 
 .dash-ai-warn-icon.action-orange {
-  color: #EB9728;
+  color: #F7941D;
 }
 
 .dash-ai-inner-title-row h5 {
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 11.5px;
   font-weight: 800;
-  color: #1F3826;
+  color: #006837;
   margin: 0;
 }
 
@@ -340,7 +340,7 @@
 }
 
 .dash-ai-inner-cta-btn {
-  background: #1F3826;
+  background: #006837;
   border: none;
   color: #ffffff;
   width: 100%;
@@ -359,14 +359,14 @@
 }
 
 .dash-ai-inner-cta-btn:active {
-  background: #112015;
+  background: #005b30;
 }
 
 .dash-ai-qa-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-top: 1px solid rgba(31, 56, 38, 0.06);
+  border-top: 1px solid rgba(0, 104, 55, 0.06);
   padding-top: 10px;
   margin-top: 12px;
 }
@@ -380,7 +380,7 @@
 }
 
 .dash-ai-bot-icon {
-  color: #7FBB54;
+  color: #8CC63F;
   font-size: 16px;
 }
 
@@ -393,7 +393,7 @@
 
 .dash-ai-qa-btn {
   background: #FDF0E5;
-  color: #EB9728;
+  color: #F7941D;
   border: none;
   padding: 6px 12px;
   border-radius: 14px;
@@ -421,8 +421,8 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  border: 1px solid rgba(31, 56, 38, 0.06);
-  box-shadow: 0 4px 12px rgba(31, 56, 38, 0.02);
+  border: 1px solid rgba(0, 104, 55, 0.06);
+  box-shadow: 0 4px 12px rgba(0, 104, 55, 0.02);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -432,7 +432,7 @@
 }
 
 .dash-quick-icon-black {
-  background: #1F3826;
+  background: #006837;
   color: #ffffff;
   width: 38px;
   height: 38px;
@@ -447,7 +447,7 @@
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 10px;
   font-weight: 800;
-  color: #1F3826;
+  color: #006837;
   letter-spacing: 0.5px;
 }
 
@@ -468,7 +468,7 @@
   font-size: 15px;
   font-weight: 700;
   font-style: italic;
-  color: #1F3826;
+  color: #006837;
   margin: 0;
 }
 
@@ -476,7 +476,7 @@
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 9.5px;
   font-weight: 800;
-  color: #EB9728;
+  color: #F7941D;
   cursor: pointer;
   letter-spacing: 0.5px;
 }
@@ -494,8 +494,8 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  border: 1px solid rgba(31, 56, 38, 0.06);
-  box-shadow: 0 2px 8px rgba(31, 56, 38, 0.02);
+  border: 1px solid rgba(0, 104, 55, 0.06);
+  box-shadow: 0 2px 8px rgba(0, 104, 55, 0.02);
 }
 
 .dash-notif-icon-box {
@@ -516,7 +516,7 @@
 
 .dash-notif-icon-box.pink-bg {
   background: #FFF0ED;
-  color: #EB9728;
+  color: #F7941D;
 }
 
 .dash-notif-info {
@@ -527,7 +527,7 @@
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 11.5px;
   font-weight: 800;
-  color: #1F3826;
+  color: #006837;
   margin: 0;
 }
 
