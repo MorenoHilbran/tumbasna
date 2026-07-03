@@ -35,7 +35,7 @@ interface CheckoutProps {
 }
 
 const SHIPPING_METHODS = [
-  { id: 'kurir-lokal', name: 'Kurir Lokal - L300 Box', price: 40000, desc: 'Estimasi tiba dalam 1-2 Hari' },
+  { id: 'kurir-lokal', name: 'Kurir Lokal (L300 / Pribadi)', price: 0, desc: 'Tarif ongkir dinegosiasikan dengan supplier' },
   { id: 'ekspedisi', name: 'Ekspedisi Logistik Kilat (Next Day)', price: 25000, desc: 'Estimasi tiba dalam 2-3 Hari' },
   { id: 'cod', name: 'Cash on Delivery (COD - Sesuai Ketentuan)', price: 0, desc: 'Bayar ongkos kirim saat barang tiba (Rp 0 di sistem)' }
 ];
@@ -56,7 +56,8 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
       setIsCalculatingOngkir(true);
       try {
         const totalWeightGrams = cart.reduce((acc, item) => acc + (item.quantity * 1000), 0);
-        const res = await fetch('http://localhost:3000/api/shipping/cost', {
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+        const res = await fetch(`${API_URL}/api/shipping/cost`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ courier: selectedCourier, weight: totalWeightGrams })
