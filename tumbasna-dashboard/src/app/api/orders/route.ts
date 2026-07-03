@@ -7,12 +7,11 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get('userId');
 
-    if (!userId) {
-      return NextResponse.json({ error: 'userId wajib diisi' }, { status: 400 });
-    }
+    // Jika userId ada, filter by buyerUserId. Jika tidak, ambil semua (untuk admin dashboard)
+    const whereClause = userId ? { buyerUserId: userId } : {};
 
     const orders = await prisma.order.findMany({
-      where: { buyerUserId: userId },
+      where: whereClause,
       orderBy: { createdAt: 'desc' },
       include: {
         items: {

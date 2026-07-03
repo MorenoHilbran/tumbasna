@@ -20,20 +20,7 @@ import {
 } from 'lucide-react';
 
 // ─── Mock Data ────────────────────────────────────────────────
-const transaksiData = [
-    { id: 'TRX-8821', buyer: 'Pasar Manis', supplier: 'UD Tani Jaya', produk: 'Beras Premium', qty: '300 kg', nilai: 4260000, status: 'selesai', tanggal: '2026-06-06', wilayah: 'Banyumas', metode: 'QRIS' },
-    { id: 'TRX-8820', buyer: 'RM Sederhana', supplier: 'Kebun Hijau', produk: 'Cabai Merah', qty: '50 kg', nilai: 1925000, status: 'proses', tanggal: '2026-06-06', wilayah: 'Cilacap', metode: 'Transfer' },
-    { id: 'TRX-8819', buyer: 'Swalayan Maju', supplier: 'CV Agro', produk: 'Bawang Putih', qty: '200 kg', nilai: 6500000, status: 'selesai', tanggal: '2026-06-06', wilayah: 'Banyumas', metode: 'QRIS' },
-    { id: 'TRX-8818', buyer: 'Toko Barokah', supplier: 'PT Sweet', produk: 'Gula Pasir', qty: '100 kg', nilai: 1550000, status: 'batal', tanggal: '2026-06-05', wilayah: 'Kebumen', metode: 'QRIS' },
-    { id: 'TRX-8817', buyer: 'Warung Pak Haji', supplier: 'Petani Cilacap', produk: 'Beras Medium', qty: '150 kg', nilai: 1725000, status: 'selesai', tanggal: '2026-06-05', wilayah: 'Cilacap', metode: 'Transfer' },
-    { id: 'TRX-8816', buyer: 'Minimarket 24', supplier: 'UD Makmur', produk: 'Minyak Goreng', qty: '80 kg', nilai: 1424000, status: 'selesai', tanggal: '2026-06-05', wilayah: 'Purbalingga', metode: 'QRIS' },
-    { id: 'TRX-8815', buyer: 'Hotel Bintang', supplier: 'Farm Fresh', produk: 'Tomat', qty: '40 kg', nilai: 340000, status: 'proses', tanggal: '2026-06-05', wilayah: 'Kebumen', metode: 'Transfer' },
-    { id: 'TRX-8814', buyer: 'Catering Andini', supplier: 'CV Tani', produk: 'Jagung Pipil', qty: '500 kg', nilai: 3400000, status: 'selesai', tanggal: '2026-06-04', wilayah: 'Cilacap', metode: 'QRIS' },
-    { id: 'TRX-8813', buyer: 'Pasar Wage', supplier: 'Kelompok Tani', produk: 'Cabai Rawit', qty: '30 kg', nilai: 1350000, status: 'selesai', tanggal: '2026-06-04', wilayah: 'Banjarnegara', metode: 'QRIS' },
-    { id: 'TRX-8812', buyer: 'UMKM Tempe', supplier: 'UD Kedelai', produk: 'Kedelai', qty: '200 kg', nilai: 1960000, status: 'menunggu', tanggal: '2026-06-04', wilayah: 'Banjarnegara', metode: 'Transfer' },
-    { id: 'TRX-8811', buyer: 'Resto Jogja', supplier: 'Distributor JT', produk: 'Bawang Merah', qty: '80 kg', nilai: 2240000, status: 'selesai', tanggal: '2026-06-03', wilayah: 'Banyumas', metode: 'QRIS' },
-    { id: 'TRX-8810', buyer: 'Warung Makan', supplier: 'Petani Lokal', produk: 'Kentang', qty: '60 kg', nilai: 720000, status: 'batal', tanggal: '2026-06-03', wilayah: 'Purbalingga', metode: 'Transfer' },
-];
+// Transaksi data akan di-fetch dari API
 
 // ─── Status Badge ─────────────────────────────────────────────
 function StatusBadge({ status }: { status: string }) {
@@ -66,11 +53,82 @@ export default function TransaksiPage() {
     const [statusFilter, setStatusFilter] = useState('Semua');
     const [wilayahFilter, setWilayahFilter] = useState('Semua');
     const [currentPage, setCurrentPage] = useState(1);
-    const [selectedTrx, setSelectedTrx] = useState<typeof transaksiData[0] | null>(transaksiData[0]);
+    const [transaksiData, setTransaksiData] = useState<any[]>([]);
+    const [selectedTrx, setSelectedTrx] = useState<any | null>(null);
     const [shippingOptions, setShippingOptions] = useState<any[]>([]);
     const [selectedShipping, setSelectedShipping] = useState<any | null>(null);
     const [shippingLoading, setShippingLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const perPage = 8;
+
+    useEffect(() => {
+        fetchOrders();
+    }, []);
+
+    const fetchOrders = () => {
+        setIsLoading(true);
+        fetch('/api/orders')
+            .then(res => res.json())
+            .then(json => {
+                if (json.success) {
+                    const mapped = json.data.map((o: any) => {
+                        let statusUI = 'menunggu';
+                        if (o.status === 'SELESAI') statusUI = 'selesai';
+                        if (o.status === 'DIPROSES' || o.status === 'DIKIRIM') statusUI = 'proses';
+                        if (o.status === 'DIBATALKAN') statusUI = 'batal';
+
+                        return {
+                            id: o.id,
+                            buyer: o.items?.[0]?.product?.name ? 'Toko ' + o.supplierName.split(' ')[0] : 'Toko Tani',
+                            supplier: o.supplierName,
+                            produk: o.items?.[0]?.product?.name || 'Komoditas',
+                            qty: (o.items?.[0]?.quantity || 100) + ' kg',
+                            nilai: o.totalAmount,
+                            status: statusUI,
+                            tanggal: o.date,
+                            wilayah: o.supplierLocation.split(',')[0] || 'Cilacap',
+                            metode: 'QRIS',
+                            dbStatus: o.status,
+                            trackingTimeline: o.trackingTimeline || []
+                        };
+                    });
+                    setTransaksiData(mapped);
+                    if (mapped.length > 0) setSelectedTrx(mapped[0]);
+                }
+            })
+            .catch(console.error)
+            .finally(() => setIsLoading(false));
+    };
+
+    const handleUpdateStatus = async (id: string, newStatus: string) => {
+        try {
+            const body: any = { status: newStatus };
+            
+            // Jika admin klik "Kirim Barang", kita update timeline trackingnya untuk mobile
+            if (newStatus === 'DIKIRIM' && selectedTrx) {
+                const updatedTimeline = [...(selectedTrx.trackingTimeline || [])];
+                const currentTime = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                if (updatedTimeline.length >= 4) {
+                    updatedTimeline[2] = { ...updatedTimeline[2], done: true, time: currentTime };
+                    updatedTimeline[3] = { ...updatedTimeline[3], time: 'Sedang Berjalan', description: 'Barang telah dijemput kurir logistik dan dalam perjalanan ke lokasi Anda.' };
+                    body.trackingTimeline = updatedTimeline;
+                }
+            }
+
+            const res = await fetch(`/api/orders/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            
+            if (res.ok) {
+                fetchOrders();
+                alert(`Status transaksi ${id} berhasil diubah menjadi ${newStatus}`);
+            }
+        } catch (e) {
+            console.error('Gagal update status:', e);
+        }
+    };
 
     useEffect(() => {
         if (!selectedTrx) return;
@@ -466,6 +524,24 @@ export default function TransaksiPage() {
                                     ))}
                                 </div>
                             </div>
+                            
+                            {/* Action Button */}
+                            {selectedTrx.dbStatus === 'DIPROSES' && (
+                                <div className="mt-6">
+                                    <button
+                                        onClick={() => handleUpdateStatus(selectedTrx.id, 'DIKIRIM')}
+                                        className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <CheckCircle2 className="w-4 h-4" />
+                                        Kirim Barang Sekarang (Update Resi)
+                                    </button>
+                                </div>
+                            )}
+                            {selectedTrx.dbStatus === 'DIKIRIM' && (
+                                <div className="mt-6 text-center text-xs font-bold text-slate-500 bg-slate-50 border border-slate-200 py-3 rounded-xl">
+                                    Barang Sedang Dikirim. Menunggu Konfirmasi Pembeli.
+                                </div>
+                            )}
                         </div>
                     ) : (
                         <div className="h-full flex flex-col items-center justify-center text-center py-12">
