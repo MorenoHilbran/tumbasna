@@ -49,6 +49,7 @@ const MainAppShell: React.FC = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [selectedChatPartner, setSelectedChatPartner] = useState<string | null>(null);
+  const [selectedChatPartnerPhone, setSelectedChatPartnerPhone] = useState<string | null>(null);
 
   // Auth Onboarding Navigation State
   const [showSplash, setShowSplash] = useState(true);
@@ -106,6 +107,12 @@ const MainAppShell: React.FC = () => {
               product={selectedProduct}
               onBack={() => setViewState('tabs')}
               onNavigateToCart={() => setViewState('keranjang')}
+              onNavigateToChat={(supplierName, supplierPhone) => {
+                setSelectedChatPartner(supplierName);
+                setSelectedChatPartnerPhone(supplierPhone);
+                setViewState('tabs');
+                setActiveTab('chat');
+              }}
             />
           );
         }
@@ -203,7 +210,11 @@ const MainAppShell: React.FC = () => {
             return (
               <Chat
                 initialPartner={selectedChatPartner}
-                onClearInitialPartner={() => setSelectedChatPartner(null)}
+                initialPartnerPhone={selectedChatPartnerPhone}
+                onClearInitialPartner={() => {
+                  setSelectedChatPartner(null);
+                  setSelectedChatPartnerPhone(null);
+                }}
               />
             );
           case 'profil':

@@ -146,7 +146,13 @@ router.post('/api/send', authMiddleware, async (req: Request, res: Response) => 
     }
 
     try {
-        const jid = phone.includes('@') ? phone : `${phone}@s.whatsapp.net`;
+        let cleanPhone = phone.split('@')[0].replace(/\D/g, '');
+        if (cleanPhone.startsWith('0')) {
+            cleanPhone = '62' + cleanPhone.substring(1);
+        } else if (cleanPhone.length > 0 && !cleanPhone.startsWith('62')) {
+            cleanPhone = '62' + cleanPhone;
+        }
+        const jid = `${cleanPhone}@s.whatsapp.net`;
         await sock.sendMessage(jid, { text: message });
         res.json({ success: true, message: 'Pesan terkirim' });
     } catch (error: any) {

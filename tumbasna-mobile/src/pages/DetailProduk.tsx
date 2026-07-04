@@ -25,7 +25,8 @@ import {
   addOutline,
   removeOutline,
   checkmarkCircleOutline,
-  shieldCheckmarkOutline
+  shieldCheckmarkOutline,
+  chatbubblesOutline
 } from 'ionicons/icons';
 import { useApp, Product } from '../context/AppContext';
 import './DetailProduk.css';
@@ -34,9 +35,10 @@ interface DetailProdukProps {
   product: Product;
   onBack: () => void;
   onNavigateToCart: () => void;
+  onNavigateToChat: (supplierName: string, supplierPhone: string) => void;
 }
 
-const DetailProduk: React.FC<DetailProdukProps> = ({ product, onBack, onNavigateToCart }) => {
+const DetailProduk: React.FC<DetailProdukProps> = ({ product, onBack, onNavigateToCart, onNavigateToChat }) => {
   const { addToCart } = useApp();
   const [quantity, setQuantity] = useState(1);
   const [showToast, setShowToast] = useState(false);
@@ -222,6 +224,13 @@ const DetailProduk: React.FC<DetailProdukProps> = ({ product, onBack, onNavigate
                   </span>
                 </div>
               </div>
+              <button 
+                className="chat-supplier-btn"
+                onClick={() => onNavigateToChat(product.supplierName, product.supplierPhone || '')}
+              >
+                <IonIcon icon={chatbubblesOutline} />
+                <span>Chat Penjual</span>
+              </button>
             </div>
           </div>
 

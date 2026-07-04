@@ -29,11 +29,16 @@ export async function GET(req: Request) {
                     { phoneNumber: phone.replace('+', '') }
                 ]
             },
-            select: { id: true }
+            select: { id: true, name: true }
         });
 
         if (user) {
-            return NextResponse.json({ success: true, isWhitelisted: true });
+            return NextResponse.json({ 
+                success: true, 
+                isWhitelisted: true, 
+                isRegistered: !!user.name,
+                name: user.name 
+            });
         }
 
         // 2. Jika tidak ada di User, cek di tabel ChatSession (Untuk akun sekunder / admin)

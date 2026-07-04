@@ -5,23 +5,25 @@ import { geocodeLocation } from '@/lib/geocoding';
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { phone, commodity, volume, price, location } = body;
+    const { phone, commodity, volume, price, location, image, lat: bodyLat, lng: bodyLng } = body;
 
     if (!phone || !commodity || !volume || !price || !location) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     // Geocoding processing
-    let lat = null;
-    let lng = null;
-    try {
-      const coords = await geocodeLocation(location);
-      if (coords) {
-        lat = coords.lat;
-        lng = coords.lng;
+    let lat = bodyLat !== undefined && bodyLat !== null ? Number(bodyLat) : null;
+    let lng = bodyLng !== undefined && bodyLng !== null ? Number(bodyLng) : null;
+    if (lat === null || lng === null) {
+      try {
+        const coords = await geocodeLocation(location);
+        if (coords) {
+          lat = coords.lat;
+          lng = coords.lng;
+        }
+      } catch (geoError) {
+        console.error('[API SUPPLY] Geocoding failed:', geoError);
       }
-    } catch (geoError) {
-      console.error('[API SUPPLY] Geocoding failed:', geoError);
     }
 
     // 1. Find or Create User (Role: PETANI)
@@ -46,6 +48,7 @@ export async function POST(req: Request) {
         lat,
         lng,
         status: 'ACTIVE',
+        image: image || null,
       },
     });
 
@@ -85,10 +88,14 @@ export async function POST(req: Request) {
       // 4. KIRIM PUSH NOTIFICATION VIA WA BOT
       try {
         const messageToSeller = `🎉 *MATCH FOUND! (Pembeli Ditemukan)*\n\nDitemukan Pedagang yang mencari ${matchedDemand.commodity}:\n- Volume yg dicari: ${matchedDemand.qty}kg\n- Harga Target: Rp${matchedDemand.price}\n- Lokasi: ${matchedDemand.location}\n\nHubungi Pedagang lewat nomor ini: wa.me/${matchedDemand.user.phoneNumber}`;
+        const waApiKey = process.env.WHATSAPP_API_KEY || process.env.TUMBASNA_SECRET_KEY || 'tumbasna-rahasia-banget';
         
         const reqSeller = fetch('http://127.0.0.1:3002/api/send', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-secret-key': waApiKey
+          },
           body: JSON.stringify({
             phone: phone, // nomor si Petani
             message: messageToSeller
@@ -99,7 +106,10 @@ export async function POST(req: Request) {
         
         const reqBuyer = fetch('http://127.0.0.1:3002/api/send', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-secret-key': waApiKey
+          },
           body: JSON.stringify({
             phone: matchedDemand.user.phoneNumber, // nomor si Pedagang
             message: messageToBuyer

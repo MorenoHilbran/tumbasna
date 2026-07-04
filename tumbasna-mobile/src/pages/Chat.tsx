@@ -22,10 +22,11 @@ import './Chat.css';
 
 interface ChatProps {
   initialPartner?: string | null;
+  initialPartnerPhone?: string | null;
   onClearInitialPartner?: () => void;
 }
 
-const Chat: React.FC<ChatProps> = ({ initialPartner, onClearInitialPartner }) => {
+const Chat: React.FC<ChatProps> = ({ initialPartner, initialPartnerPhone, onClearInitialPartner }) => {
   const { chats, sendMessage } = useApp();
   const [selectedThread, setSelectedThread] = useState<ChatThread | null>(null);
   const [typedMessage, setTypedMessage] = useState('');
@@ -49,6 +50,7 @@ const Chat: React.FC<ChatProps> = ({ initialPartner, onClearInitialPartner }) =>
         // It will be added to the global state once a message is sent
         setSelectedThread({
           supplierName: initialPartner,
+          supplierPhone: initialPartnerPhone || undefined,
           lastMessage: '',
           lastTime: '',
           unreadCount: 0,
@@ -70,7 +72,7 @@ const Chat: React.FC<ChatProps> = ({ initialPartner, onClearInitialPartner }) =>
     e.preventDefault();
     if (!typedMessage.trim() || !activeThread) return;
 
-    sendMessage(activeThread.supplierName, typedMessage.trim());
+    sendMessage(activeThread.supplierName, typedMessage.trim(), activeThread.supplierPhone);
     setTypedMessage('');
   };
 

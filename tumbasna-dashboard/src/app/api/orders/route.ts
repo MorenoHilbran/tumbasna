@@ -7,8 +7,17 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get('userId');
 
-    // Jika userId ada, filter by buyerUserId. Jika tidak, ambil semua (untuk admin dashboard)
-    const whereClause = userId ? { buyerUserId: userId } : {};
+    // Jika userId ada dan merupakan UUID valid, filter by buyerUserId. 
+    // Jika userId ada tapi tidak valid (misal user mock), kembalikan array kosong.
+    // Jika userId tidak ada, ambil semua (untuk admin dashboard).
+    let whereClause = {};
+    if (userId) {
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(userId)) {
+        return NextResponse.json({ success: true, data: [] });
+      }
+      whereClause = { buyerUserId: userId };
+    }
 
     const orders = await prisma.order.findMany({
       where: whereClause,

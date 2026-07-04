@@ -37,6 +37,24 @@ const Pasar: React.FC<PasarProps> = ({ onSelectProduct }) => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
+  const [userCoords, setUserCoords] = useState<[number, number] | null>(null);
+
+  // Fetch user location when "Terdekat" is active
+  React.useEffect(() => {
+    if (activeFilter === 'terdekat' && !userCoords) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setUserCoords([pos.coords.latitude, pos.coords.longitude]);
+        },
+        (err) => {
+          console.warn('Gagal mendapatkan lokasi GPS untuk filter Terdekat:', err);
+          // Fallback to Magelang coordinates
+          setUserCoords([-7.4705, 110.2178]);
+        },
+        { enableHighAccuracy: true, timeout: 5000 }
+      );
+    }
+  }, [activeFilter, userCoords]);
 
   // Filtering and Sorting logic
   const getFilteredProducts = () => {
@@ -57,21 +75,49 @@ const Pasar: React.FC<PasarProps> = ({ onSelectProduct }) => {
     if (activeFilter === 'termurah') {
       result.sort((a, b) => a.price - b.price);
     } else if (activeFilter === 'terdekat') {
-      // Mock closest supplier sorting based on location strings
-      // Magelang/Boyolali is considered closest (12km, 15km), then Brebes (25km), Dieng (30km), Cianjur, Karo
-      const locationPriority: { [key: string]: number } = {
-        'Selo, Boyolali': 1,
-        'Magelang, Jawa Tengah': 2,
-        'Brebes, Jawa Tengah': 3,
-        'Dieng, Banjarnegara': 4,
-        'Cianjur, Jawa Barat': 5,
-        'Karo, Sumatera Utara': 6
-      };
-      result.sort((a, b) => {
-        const priorityA = locationPriority[a.supplierLocation] || 99;
-        const priorityB = locationPriority[b.supplierLocation] || 99;
-        return priorityA - priorityB;
-      });
+      if (userCoords) {
+        // Helper: Haversine
+        const haversineKm = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+          const R = 6371;
+          const dLat = (lat2 - lat1) * Math.PI / 180;
+          const dLon = (lon2 - lon1) * Math.PI / 180;
+          const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) *
+            Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+          return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        };
+
+        result.sort((a, b) => {
+          const latA = a.lat ?? null;
+          const lngA = a.lng ?? null;
+          const latB = b.lat ?? null;
+          const lngB = b.lng ?? null;
+
+          if (latA === null || lngA === null) return 1;
+          if (latB === null || lngB === null) return -1;
+
+          const distA = haversineKm(userCoords[0], userCoords[1], latA, lngA);
+          const distB = haversineKm(userCoords[0], userCoords[1], latB, lngB);
+          return distA - distB;
+        });
+      } else {
+        // Fallback mock sorting if GPS coordinates are still loading
+        const locationPriority: { [key: string]: number } = {
+          'Selo, Boyolali': 1,
+          'Magelang, Jawa Tengah': 2,
+          'Brebes, Jawa Tengah': 3,
+          'Dieng, Banjarnegara': 4,
+          'Cianjur, Jawa Barat': 5,
+          'Karo, Sumatera Utara': 6
+        };
+        result.sort((a, b) => {
+          const priorityA = locationPriority[a.supplierLocation] || 99;
+          const priorityB = locationPriority[b.supplierLocation] || 99;
+          return priorityA - priorityB;
+        });
+      }
     } else if (activeFilter === 'terbaru') {
       // Sort by newest products (descending id)
       result.sort((a, b) => b.id.localeCompare(a.id));

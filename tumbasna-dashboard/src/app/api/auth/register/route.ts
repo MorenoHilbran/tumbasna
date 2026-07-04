@@ -18,16 +18,50 @@ export async function POST(req: Request) {
     // Cek apakah nomor sudah terdaftar
     const existing = await prisma.user.findUnique({ where: { phoneNumber: normalizedPhone } });
     if (existing) {
-      return NextResponse.json({ error: 'Nomor HP sudah terdaftar' }, { status: 409 });
+      if (existing.name) {
+        return NextResponse.json({ error: 'Nomor HP sudah terdaftar' }, { status: 409 });
+      }
+      
+      // Jika nomor sudah terbuat (misal via supply input) tapi nama masih kosong, kita lengkapi profilnya
+      const updatedUser = await prisma.user.update({
+        where: { phoneNumber: normalizedPhone },
+        data: {
+          name: ownerName,
+          email: email || null,
+          role: body.role || 'PEDAGANG',
+          address: address || null,
+          businessName: businessName || null,
+          businessType: businessType || null,
+          bankName: bankName || null,
+          bankAccount: bankAccount || null,
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          id: updatedUser.id,
+          phoneNumber: updatedUser.phoneNumber,
+          name: updatedUser.name,
+          email: updatedUser.email,
+          role: updatedUser.role,
+          address: updatedUser.address,
+          businessName: updatedUser.businessName,
+          businessType: updatedUser.businessType,
+          bankName: updatedUser.bankName,
+          bankAccount: updatedUser.bankAccount,
+          balance: Number(updatedUser.balance),
+        }
+      }, { status: 200 });
     }
 
-    // Buat user baru dengan role PEDAGANG (buyer mobile)
+    // Buat user baru dengan role dari body (default: PEDAGANG)
     const user = await prisma.user.create({
       data: {
         phoneNumber: normalizedPhone,
         name: ownerName,
         email: email || null,
-        role: 'PEDAGANG',
+        role: body.role || 'PEDAGANG',
         address: address || null,
         businessName: businessName || null,
         businessType: businessType || null,

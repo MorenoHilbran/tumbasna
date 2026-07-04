@@ -1,0 +1,51 @@
+--- TESTING WHITE LIST ENDPOINT ---
+Whitelist Result:
+{
+  "success": true,
+  "isWhitelisted": false
+}
+
+--- TESTING SESSION HISTORY ENDPOINT ---
+Session Result history:
+[
+  {
+    "role": "user",
+    "content": "Pesan Input:\n\"'SUPPLY'\""
+  },
+  {
+    "role": "assistant",
+    "content": "{\n  \"intent\": \"SUPPLY\",\n  \"supplier_name\": \"Gacorian.id\",\n  \"supplier_location\": \"Kalimanah, Kabupaten Purbalingga\",\n  \"contact_phone\": \"085869236023\",\n  \"items\": [],\n  \"status\": \"INCOMPLETE\",\n  \"reply_message\": \"Baik! Untuk menambahkan komoditas yang dijual, saya perlu tahu nama komoditas, beratnya dalam kg, dan harga per kg. Silakan beritahu saya komoditas yang Anda ingin tambahkan, misalnya 'Cabai' atau 'Beras'.\"\n}"
+  },
+  {
+    "role": "user",
+    "content": "Pesan Input:\n\"Beras beratnya 50kg harga per 1kg nya 15ribu\""
+  },
+  {
+    "role": "assistant",
+    "content": "{\n  \"intent\": \"SUPPLY\",\n  \"supplier_name\": \"Gacorian.id\",\n  \"supplier_location\": \"Kalimanah, Kabupaten Purbalingga\",\n  \"contact_phone\": \"085869236023\",\n  \"items\": [\n    {\n      \"commodity\": \"Beras\",\n      \"weight_kg\": 50,\n      \"price\": 15000,\n      \"location\": \"Kalimanah, Kabupaten Purbalingga\"\n    }\n  ],\n  \"status\": \"COMPLETE\",\n  \"reply_message\": \"Komoditas Beras telah berhasil ditambahkan ke dalam daftar Anda. Anda dapat melihat daftar komoditas Anda dengan menggunakan intent 'LIST'.\"\n}"
+  },
+  {
+    "role": "user",
+    "content": "Pesan Input:\n\"halo\""
+  },
+  {
+    "role": "assistant",
+    "content": "{\n  \"intent\": \"UNKNOWN\",\n  \"supplier_name\": \"Gacorian.id\",\n  \"supplier_location\": \"Kalimanah, Kabupaten Purbalingga\",\n  \"contact_phone\": \"085869236023\",\n  \"items\": [\n    {\n      \"commodity\": \"Beras\",\n      \"weight_kg\": 50,\n      \"price\": 15000,\n      \"location\": \"Kalimanah, Kabupaten Purbalingga\"\n    }\n  ],\n  \"status\": \"COMPLETE\",\n  \"reply_message\": \"Halo! Apa yang dapat saya bantu Anda hari ini?\"\n}"
+  },
+  {
+    "role": "user",
+    "content": "Pesan Input:\n\"\"Daftarkan saya dengan nama Gacorian.id lokasi Kalimanah Purbalingga\"\""
+  },
+  {
+    "role": "assistant",
+    "content": "{\n  \"intent\": \"REGISTER\",\n  \"supplier_name\": \"Gacorian.id\",\n  \"supplier_location\": \"Kalimanah, Kabupaten Purbalingga\",\n  \"contact_phone\": null,\n  \"items\": [],\n  \"status\": \"INCOMPLETE\",\n  \"reply_message\": \"Terima kasih atas informasi tersebut! Saya perlu tahu nomor telepon aktif Anda untuk dapat menghubungi Anda. Silakan beritahu saya nomor telepon Anda, misalnya '08123456789'.\"\n}"
+  },
+  {
+    "role": "user",
+    "content": "Pesan Input:\n\"11111111111111\""
+  },
+  {
+    "role": "assistant",
+    "content": "{\n  \"intent\": \"REGISTER\",\n  \"supplier_name\": \"Gacorian.id\",\n  \"supplier_location\": \"Kalimanah, Kabupaten Purbalingga\",\n  \"contact_phone\": \"11111111111111\",\n  \"items\": [],\n  \"status\": \"INCOMPLETE\",\n  \"reply_message\": \"Nomor telepon Anda telah berhasil direkam. Saya perlu tahu foto profil Anda untuk dapat menampilkan informasi Anda dengan lebih baik. Silakan kirim foto profil Anda.\"\n}"
+  }
+]

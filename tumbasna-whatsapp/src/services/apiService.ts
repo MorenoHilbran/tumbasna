@@ -8,6 +8,9 @@ export interface ApiPayload {
     volume: number;
     price: number;
     location: string;
+    image?: string | null;
+    lat?: number | null;
+    lng?: number | null;
 }
 
 export const apiService = {
@@ -53,5 +56,24 @@ export const apiService = {
             console.error(`[API ERROR] Gagal check whitelist (URL: ${API_URL}/api/user/whitelist):`, error.message);
             return { success: false, isWhitelisted: false };
         }
-    }
+    },
+    async registerSupplier(data: { phone: string; name: string; location: string }) {
+        try {
+            const response = await axios.post(`${API_URL}/api/auth/register`, {
+                phone: data.phone,
+                ownerName: data.name,
+                businessName: data.name,
+                address: data.location,
+                businessType: 'Supplier Pertanian',
+                role: 'PETANI',
+                email: '',
+                bankName: '',
+                bankAccount: '',
+            });
+            return response.data;
+        } catch (error: any) {
+            console.error(`[API ERROR] Gagal registrasi supplier:`, error.message);
+            throw error;
+        }
+    },
 };

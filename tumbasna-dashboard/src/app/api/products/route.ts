@@ -19,8 +19,18 @@ export async function GET() {
         stock: entry.qty,
         supplierName: entry.user.name || 'Petani ' + entry.user.phoneNumber,
         supplierLocation: entry.location,
-        supplierRating: 4.8, // Mocked rating for now
-        image: '/image/produk/' + entry.commodity.replace(/\s+/g, '').toLowerCase() + '.png', // Simple image mapping
+        supplierPhone: entry.user.phoneNumber,
+        lat: entry.lat,
+        lng: entry.lng,
+        supplierRating: (() => {
+          const str = entry.userId || entry.user.phoneNumber || 'default';
+          let hash = 0;
+          for (let i = 0; i < str.length; i++) {
+            hash = str.charCodeAt(i) + ((hash << 5) - hash);
+          }
+          return 4.5 + (Math.abs(hash) % 6) * 0.1;
+        })(),
+        image: entry.image || ('/image/produk/' + entry.commodity.replace(/\s+/g, '').toLowerCase() + '.png'), 
         description: `Komoditas ${entry.commodity} segar dari ${entry.location}. Kualitas terjamin.`,
         shippingEstimate: '1-3 Hari',
         category: entry.commodity,

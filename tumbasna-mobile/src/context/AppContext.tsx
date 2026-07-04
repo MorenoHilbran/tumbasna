@@ -9,6 +9,9 @@ export interface Product {
   supplierName: string; supplierLocation: string; supplierRating: number;
   image: string; description: string; shippingEstimate: string;
   category: string; priceHistory: { month: string; price: number }[];
+  lat?: number | null;
+  lng?: number | null;
+  supplierPhone?: string;
 }
 export interface CartItem { product: Product; quantity: number; }
 export interface TrackingStep { title: string; description: string; time: string; done: boolean; }
@@ -26,6 +29,7 @@ export interface ChatMessage {
 export interface ChatThread {
   supplierName: string; lastMessage: string; lastTime: string;
   unreadCount: number; messages: ChatMessage[];
+  supplierPhone?: string;
 }
 export interface User {
   id?: string; ownerName: string; businessName: string; phone: string;
@@ -47,7 +51,7 @@ interface AppContextType {
   checkout: (courier: string, shippingCost: number) => Promise<string>;
   payOrder: (orderId: string) => Promise<void>;
   confirmOrderReceived: (orderId: string) => Promise<void>;
-  sendMessage: (supplierName: string, text: string) => void;
+  sendMessage: (supplierName: string, text: string, supplierPhone?: string) => void;
   refreshOrders: () => Promise<void>;
 }
 
@@ -169,6 +173,44 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem('tumbasna_chats', JSON.stringify(chats));
   }, [chats]);
+
+  // ── Fetch supplier nyata dari DB dan merge ke daftar chat ────────────────
+  useEffect(() => {
+    const fetchSuppliers = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/chat/suppliers`);
+        if (!res.ok) return;
+        const json = await res.json();
+        if (!json.success || !json.data?.length) return;
+
+        setChats(prev => {
+          const existingNames = new Set(prev.map(c => c.supplierName));
+          const newThreads: ChatThread[] = json.data
+            .filter((s: any) => !existingNames.has(s.name))
+            .map((s: any) => ({
+              supplierName: s.name,
+              supplierPhone: s.phone,
+              lastMessage: s.activeProducts[0]
+                ? `Menjual: ${s.activeProducts[0].commodity} — Rp${s.activeProducts[0].price.toLocaleString('id-ID')}/kg`
+                : 'Supplier terdaftar via WhatsApp',
+              lastTime: '',
+              unreadCount: 0,
+              messages: [{
+                id: `intro-${s.id}`,
+                sender: 'supplier' as const,
+                text: `Halo! Saya ${s.name} dari ${s.location}. ${s.activeProducts.length > 0 ? `Saat ini saya menjual: ${s.activeProducts.map((p: any) => `${p.commodity} (${p.qty}kg @ Rp${p.price.toLocaleString('id-ID')})`).join(', ')}.` : ''} Ada yang bisa saya bantu?`,
+                timestamp: '',
+                status: 'read' as const,
+              }],
+            }));
+          return [...prev, ...newThreads];
+        });
+      } catch {
+        console.warn('[AppContext] Gagal fetch suppliers dari API.');
+      }
+    };
+    fetchSuppliers();
+  }, []);
 
   // ── Fetch products dari dashboard API ────────────────────────────────────
   useEffect(() => {
@@ -440,12 +482,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // ── Chat ─────────────────────────────────────────────────────────────────
-  const sendMessage = (supplierName: string, text: string) => {
+  const sendMessage = (supplierName: string, text: string, supplierPhone?: string) => {
     const newMessage: ChatMessage = { id: `msg-${Date.now()}`, sender: 'buyer', text, timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }), status: 'sent' };
     setChats((prev) => {
       const exists = prev.some((t) => t.supplierName === supplierName);
-      if (exists) return prev.map((t) => t.supplierName === supplierName ? { ...t, lastMessage: text, lastTime: newMessage.timestamp, messages: [...t.messages, newMessage] } : t);
-      return [...prev, { supplierName, lastMessage: text, lastTime: newMessage.timestamp, unreadCount: 0, messages: [newMessage] }];
+      if (exists) return prev.map((t) => t.supplierName === supplierName ? { ...t, supplierPhone: t.supplierPhone || supplierPhone, lastMessage: text, lastTime: newMessage.timestamp, messages: [...t.messages, newMessage] } : t);
+      return [...prev, { supplierName, supplierPhone, lastMessage: text, lastTime: newMessage.timestamp, unreadCount: 0, messages: [newMessage] }];
     });
 
     if (supplierName === 'Tumbasna AI Pintar') {
@@ -474,21 +516,99 @@ Pertanyaan pengguna: ${text}`;
           const reply: ChatMessage = { id: `msg-${Date.now() + 1}`, sender: 'supplier', text: responseText, timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }), status: 'read' };
           setChats((prev) => prev.map((t) => t.supplierName === supplierName ? { ...t, lastMessage: responseText, lastTime: reply.timestamp, unreadCount: t.unreadCount + 1, messages: [...t.messages, reply] } : t));
         } catch (error: any) {
-          console.error("Gemini AI error:", error);
-          let fallbackMsg = "Maaf, koneksi ke asisten AI sedang terganggu.";
-          if (error.message && error.message.includes("503")) {
-            fallbackMsg = "Maaf, asisten AI saat ini sedang menerima banyak permintaan (sibuk). Silakan coba lagi dalam beberapa saat ya.";
+          console.warn("Gemini AI error, attempting fallback to Groq...", error);
+          try {
+            const productContext = products.map(p => 
+              `- ${p.name} (Harga: Rp${p.price.toLocaleString('id-ID')}, Stok: ${p.stock}, Supplier: ${p.supplierName} - ${p.supplierLocation})`
+            ).join('\n');
+
+            const prompt = `Anda adalah "Tumbasna AI Pintar", asisten resmi di aplikasi Tumbasna (pasar komoditas untuk warung/toko). Jawablah dengan ringkas, ramah, dan sangat membantu.
+
+Berikut adalah data produk terkini yang ada di sistem database Tumbasna:
+${productContext}
+
+Tugas Anda:
+1. Jika pengguna bertanya tentang harga, ketersediaan, atau mencari barang, gunakan data produk di atas untuk merekomendasikannya.
+2. Jika barang tidak ada di data, beritahu dengan sopan bahwa barang saat ini belum tersedia di Tumbasna.
+
+Pertanyaan pengguna: ${text}`;
+
+            const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${import.meta.env.VITE_GROQ_API_KEY || ''}`
+              },
+              body: JSON.stringify({
+                model: 'llama-3.1-8b-instant',
+                messages: [{ role: 'user', content: prompt }],
+                temperature: 0.2
+              })
+            });
+
+            if (!groqRes.ok) throw new Error(`Groq API returned status ${groqRes.status}`);
+            const groqData = await groqRes.json();
+            const responseText = groqData.choices[0].message.content;
+
+            const reply: ChatMessage = { id: `msg-${Date.now() + 1}`, sender: 'supplier', text: responseText, timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }), status: 'read' };
+            setChats((prev) => prev.map((t) => t.supplierName === supplierName ? { ...t, lastMessage: responseText, lastTime: reply.timestamp, unreadCount: t.unreadCount + 1, messages: [...t.messages, reply] } : t));
+          } catch (groqError: any) {
+            console.error("Groq fallback also failed:", groqError);
+            let fallbackMsg = "Maaf, koneksi ke asisten AI sedang terganggu.";
+            if (error.message && error.message.includes("503")) {
+              fallbackMsg = "Maaf, asisten AI saat ini sedang menerima banyak permintaan (sibuk). Silakan coba lagi dalam beberapa saat ya.";
+            }
+            const reply: ChatMessage = { id: `msg-${Date.now() + 1}`, sender: 'supplier', text: fallbackMsg, timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }), status: 'read' };
+            setChats((prev) => prev.map((t) => t.supplierName === supplierName ? { ...t, lastMessage: fallbackMsg, lastTime: reply.timestamp, unreadCount: t.unreadCount + 1, messages: [...t.messages, reply] } : t));
           }
-          const reply: ChatMessage = { id: `msg-${Date.now() + 1}`, sender: 'supplier', text: fallbackMsg, timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }), status: 'read' };
-          setChats((prev) => prev.map((t) => t.supplierName === supplierName ? { ...t, lastMessage: fallbackMsg, lastTime: reply.timestamp, unreadCount: t.unreadCount + 1, messages: [...t.messages, reply] } : t));
         }
       })();
     } else {
-      setTimeout(() => {
-        const responseText = `[WhatsApp Sync] Terima kasih pesanannya. Terkait "${text.substring(0, 20)}...", akan kami proses secepatnya.`;
-        const reply: ChatMessage = { id: `msg-${Date.now() + 1}`, sender: 'supplier', text: responseText, timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }), status: 'read' };
-        setChats((prev) => prev.map((t) => t.supplierName === supplierName ? { ...t, lastMessage: responseText, lastTime: reply.timestamp, unreadCount: t.unreadCount + 1, messages: [...t.messages, reply] } : t));
-      }, 1000);
+      // ── Relay pesan ke supplier nyata via WA ─────────────────────────────
+      (async () => {
+        try {
+          const thread = chats.find(c => c.supplierName === supplierName);
+          let finalSupplierPhone = supplierPhone || thread?.supplierPhone || '';
+          if (!finalSupplierPhone) {
+            const matchedProduct = products.find(p => p.supplierName === supplierName);
+            if (matchedProduct?.supplierPhone) {
+              finalSupplierPhone = matchedProduct.supplierPhone;
+            }
+          }
+          const buyerPhone = user?.phone || '';
+          console.log('[sendMessage] Relay WA debug:', {
+            supplierName,
+            supplierPhone,
+            threadSupplierPhone: thread?.supplierPhone,
+            finalSupplierPhone,
+            buyerPhone,
+            text
+          });
+          if (finalSupplierPhone && buyerPhone) {
+            const res = await fetch(`${API_BASE}/api/chat/suppliers`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ buyerPhone, supplierPhone: finalSupplierPhone, message: text }),
+            });
+            console.log('[sendMessage] Relay WA response status:', res.status);
+            const resJson = await res.json();
+            console.log('[sendMessage] Relay WA response body:', resJson);
+            
+            // Update status pesan jadi delivered setelah berhasil dikirim ke WA
+            setChats((prev) => prev.map((t) => {
+              if (t.supplierName !== supplierName) return t;
+              const msgs = [...t.messages];
+              const lastIdx = msgs.length - 1;
+              if (msgs[lastIdx]?.sender === 'buyer') msgs[lastIdx] = { ...msgs[lastIdx], status: 'delivered' };
+              return { ...t, messages: msgs };
+            }));
+          } else {
+            console.warn('[sendMessage] Skip relay WA because phone is missing:', { finalSupplierPhone, buyerPhone });
+          }
+        } catch (err: any) {
+          console.error('[sendMessage] Gagal relay ke WA supplier:', err.message);
+        }
+      })();
     }
   };
 

@@ -14,15 +14,8 @@ export async function GET(req: Request) {
       where: { phoneNumber: phone },
     });
     
-    let history = [];
-    if (session?.history) {
-      try {
-        history = JSON.parse(session.history);
-      } catch (e) {
-        console.error('Failed to parse history JSON from DB:', e);
-      }
-    }
-    // Default kembalikan array kosong jika belum ada memori
+    // history di Prisma adalah tipe Json — sudah berupa array/object, TIDAK perlu JSON.parse
+    const history = Array.isArray(session?.history) ? session.history : [];
     return NextResponse.json({ history });
   } catch (error: any) {
     console.error('[API GET SESSION ERROR]', error.message);
@@ -46,27 +39,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true, message: 'Session cleared' });
     }
 
-    if (history === undefined && body.isWhitelisted === undefined) {
-      return NextResponse.json({ error: 'Payload (history or isWhitelisted) is required' }, { status: 400 });
+    if (history === undefined) {
+      return NextResponse.json({ error: 'Payload history is required' }, { status: 400 });
     }
 
-    const updateData: any = {};
-    const createData: any = { phoneNumber: phone };
-    
-    if (history !== undefined) {
-        const historyStr = JSON.stringify(history);
-        updateData.history = historyStr;
-        createData.history = historyStr;
-    }
-    if (body.isWhitelisted !== undefined) {
-        updateData.isWhitelisted = body.isWhitelisted;
-        createData.isWhitelisted = body.isWhitelisted;
-    }
-
+    // Simpan history langsung sebagai Json (tidak stringify — Prisma handle sendiri)
     const session = await prisma.chatSession.upsert({
       where: { phoneNumber: phone },
-      update: updateData,
-      create: createData,
+      update: { history: history },
+      create: { phoneNumber: phone, history: history },
     });
 
     return NextResponse.json({ success: true, data: session });

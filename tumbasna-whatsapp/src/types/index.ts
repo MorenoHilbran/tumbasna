@@ -6,9 +6,11 @@ export interface ParsedItem {
 }
 
 export interface ParsedData {
-    intent: "SUPPLY" | "DEMAND" | "CANCEL" | "INQUIRY" | "UNKNOWN" | "LIST";
+    intent: "SUPPLY" | "DEMAND" | "CANCEL" | "INQUIRY" | "UNKNOWN" | "LIST" | "REGISTER" | "STATUS";
     items: ParsedItem[];
-    contact_phone?: string;
+    supplier_name?: string | null;
+    supplier_location?: string | null;
+    contact_phone?: string | null;
     status: "COMPLETE" | "INCOMPLETE" | "WARNING";
     reply_message: string;
 }
