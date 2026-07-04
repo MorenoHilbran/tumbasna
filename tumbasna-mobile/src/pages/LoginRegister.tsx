@@ -24,6 +24,7 @@ import {
   eyeOffOutline,
   helpCircleOutline
 } from 'ionicons/icons';
+import { useGoogleLogin } from '@react-oauth/google';
 import { useApp } from '../context/AppContext';
 import './LoginRegister.css';
 
@@ -39,6 +40,7 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ initialIsLogin = true, on
   const [loading, setLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
+  const [isGoogleRegister, setIsGoogleRegister] = useState(false);
 
   // Sync isLogin if initialIsLogin prop changes
   React.useEffect(() => {
@@ -109,6 +111,37 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ initialIsLogin = true, on
     }
   };
 
+  const handleGoogleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setLoading(true);
+      try {
+        const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+        });
+        const userInfo = await userInfoRes.json();
+        
+        // Populate the registration fields from real Google data
+        setOwnerName(userInfo.name || '');
+        setEmail(userInfo.email || '');
+        setPassword('google-oauth-linked');
+        
+        setIsGoogleRegister(true);
+        setIsLogin(false);
+        setToastMessage('Berhasil Otorisasi Google. Silakan lengkapi data usaha Anda.');
+        setShowToast(true);
+      } catch (err) {
+        setToastMessage('Gagal mengambil data dari Google.');
+        setShowToast(true);
+      } finally {
+        setLoading(false);
+      }
+    },
+    onError: () => {
+      setToastMessage('Proses login Google dibatalkan atau gagal.');
+      setShowToast(true);
+    },
+  });
+
   return (
     <IonPage>
       {/* Dynamic Header based on Login / Register */}
@@ -131,7 +164,9 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ initialIsLogin = true, on
         {isLogin ? (
           <img src="/logo.png" alt="Tumbasna" className="auth-header-logo-centered" />
         ) : (
-          <span className="auth-header-title-centered">Informasi Akun</span>
+          <span className="auth-header-title-centered">
+            {isGoogleRegister ? 'Lengkapi Profil' : 'Informasi Akun'}
+          </span>
         )}
         <div className="auth-header-placeholder"></div>
       </div>
@@ -196,10 +231,7 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ initialIsLogin = true, on
             <button
               type="button"
               className="login-google-btn"
-              onClick={() => {
-                setToastMessage('Fitur Google Sign-In sedang disiapkan.');
-                setShowToast(true);
-              }}
+              onClick={() => handleGoogleLogin()}
             >
               <img
                 src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg"
@@ -237,7 +269,9 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ initialIsLogin = true, on
               <div className="register-card-logo-row">
                 <img src="/logo.png" alt="Tumbasna" className="register-card-logo" />
               </div>
-              <h2 className="register-card-title">Daftar Akun Buyer</h2>
+              <h2 className="register-card-title">
+                {isGoogleRegister ? 'Lengkapi Data Usaha' : 'Daftar Akun Buyer'}
+              </h2>
 
               <form onSubmit={handleAuth} className="register-card-form">
                 <div className="reg-input-group">
@@ -248,6 +282,7 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ initialIsLogin = true, on
                       placeholder="Tani Maju Sejahtera"
                       value={ownerName}
                       onChange={(e) => setOwnerName(e.target.value)}
+                      readOnly={isGoogleRegister}
                       required
                     />
                     <IonIcon icon={personOutline} className="reg-input-icon" />
@@ -291,23 +326,26 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ initialIsLogin = true, on
                       placeholder="budi.santoso@gmail.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      readOnly={isGoogleRegister}
                     />
                     <IonIcon icon={mailOutline} className="reg-input-icon" />
                   </div>
                 </div>
 
-                <div className="reg-input-group">
-                  <label className="reg-field-label">Password</label>
-                  <div className="reg-input-wrapper">
-                    <input
-                      type="password"
-                      placeholder="••••••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
+                {!isGoogleRegister && (
+                  <div className="reg-input-group">
+                    <label className="reg-field-label">Password</label>
+                    <div className="reg-input-wrapper">
+                      <input
+                        type="password"
+                        placeholder="••••••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <div className="reg-input-group">
                   <label className="reg-field-label">Jenis Usaha</label>

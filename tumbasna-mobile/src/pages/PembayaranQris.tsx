@@ -20,6 +20,7 @@ import {
   alertCircleOutline,
   phonePortraitOutline
 } from 'ionicons/icons';
+import { QRCodeSVG } from 'qrcode.react';
 import { useApp } from '../context/AppContext';
 import './PembayaranQris.css';
 
@@ -75,9 +76,7 @@ const PembayaranQris: React.FC<PembayaranQrisProps> = ({
     return `${m}:${s}`;
   };
 
-  // QR code URL — pakai qrserver.com dengan data order nyata
   const qrisData = `TUMBASNA-QRIS-${order.id}-Rp${order.totalAmount}`;
-  const qrisUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=10&data=${encodeURIComponent(qrisData)}&color=000000&bgcolor=ffffff`;
 
   const handleSimulatePay = async () => {
     if (!order) return;
@@ -206,14 +205,16 @@ const PembayaranQris: React.FC<PembayaranQrisProps> = ({
                       <span>Memuat kode QRIS...</span>
                     </div>
                   )}
-                  <img
-                    src={activeTab === 'qris' ? qrisUrl : qrisUrl.replace('color=000000', 'color=006837')}
-                    alt="QRIS Code"
-                    className="qr-code-image"
-                    style={{ display: qrLoaded ? 'block' : 'none' }}
-                    onLoad={() => setQrLoaded(true)}
-                    onError={() => setQrLoaded(true)}
-                  />
+                  <div style={{ display: qrLoaded ? 'flex' : 'none', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
+                    <QRCodeSVG
+                      value={qrisData}
+                      size={200}
+                      fgColor={activeTab === 'qris' ? '#000000' : '#006837'}
+                      onLoad={() => setQrLoaded(true)}
+                    />
+                  </div>
+                  {/* Pemicu loading palsu agar UI mulus */}
+                  <img src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="" onLoad={() => setQrLoaded(true)} style={{display: 'none'}} />
                   {/* Corner decorations */}
                   <div className="qr-corner tl" />
                   <div className="qr-corner tr" />

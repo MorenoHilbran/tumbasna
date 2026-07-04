@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const API_BASE = 'http://localhost:3000';
 
@@ -447,19 +448,48 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return [...prev, { supplierName, lastMessage: text, lastTime: newMessage.timestamp, unreadCount: 0, messages: [newMessage] }];
     });
 
-    setTimeout(() => {
-      let responseText = '';
-      if (supplierName === 'Tumbasna AI Pintar') {
-        const q = text.toLowerCase();
-        if (q.includes('harga') || q.includes('pasar') || q.includes('prediksi')) responseText = 'Analisis AI: Kentang Dieng diprediksi naik 12% dalam 7 hari karena penurunan pasokan. Bawang Merah Brebes diprediksi turun 4% karena panen raya.';
-        else if (q.includes('supplier') || q.includes('rekomendasi')) responseText = 'Berdasarkan penilaian, Grosir Bumbu Nusantara (Semarang) terpilih sebagai Supplier Terbaik minggu ini dengan rating 4.9.';
-        else responseText = 'Halo! Saya siap membantu. Tanyakan tentang tren harga, rekomendasi supplier, atau program beli bersama.';
-      } else {
-        responseText = `[WhatsApp Sync] Terima kasih pesanannya. Terkait "${text.substring(0, 20)}...", akan kami proses secepatnya.`;
-      }
-      const reply: ChatMessage = { id: `msg-${Date.now() + 1}`, sender: 'supplier', text: responseText, timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }), status: 'read' };
-      setChats((prev) => prev.map((t) => t.supplierName === supplierName ? { ...t, lastMessage: responseText, lastTime: reply.timestamp, unreadCount: t.unreadCount + 1, messages: [...t.messages, reply] } : t));
-    }, 1000);
+    if (supplierName === 'Tumbasna AI Pintar') {
+      (async () => {
+        try {
+          const genAI = new GoogleGenerativeAI('AQ.Ab8RN6KKGdob7DJ8S1BSNfq5ffmROjDY-zlHWFRzpqcAWRMmlg');
+          const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
+          
+          // Mempersiapkan data dari state (database lokal/API) untuk AI
+          const productContext = products.map(p => 
+            `- ${p.name} (Harga: Rp${p.price.toLocaleString('id-ID')}, Stok: ${p.stock}, Supplier: ${p.supplierName} - ${p.supplierLocation})`
+          ).join('\n');
+
+          const prompt = `Anda adalah "Tumbasna AI Pintar", asisten resmi di aplikasi Tumbasna (pasar komoditas untuk warung/toko). Jawablah dengan ringkas, ramah, dan sangat membantu.
+
+Berikut adalah data produk terkini yang ada di sistem database Tumbasna:
+${productContext}
+
+Tugas Anda:
+1. Jika pengguna bertanya tentang harga, ketersediaan, atau mencari barang, gunakan data produk di atas untuk merekomendasikannya.
+2. Jika barang tidak ada di data, beritahu dengan sopan bahwa barang saat ini belum tersedia di Tumbasna.
+
+Pertanyaan pengguna: ${text}`;
+          const result = await model.generateContent(prompt);
+          const responseText = result.response.text();
+          const reply: ChatMessage = { id: `msg-${Date.now() + 1}`, sender: 'supplier', text: responseText, timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }), status: 'read' };
+          setChats((prev) => prev.map((t) => t.supplierName === supplierName ? { ...t, lastMessage: responseText, lastTime: reply.timestamp, unreadCount: t.unreadCount + 1, messages: [...t.messages, reply] } : t));
+        } catch (error: any) {
+          console.error("Gemini AI error:", error);
+          let fallbackMsg = "Maaf, koneksi ke asisten AI sedang terganggu.";
+          if (error.message && error.message.includes("503")) {
+            fallbackMsg = "Maaf, asisten AI saat ini sedang menerima banyak permintaan (sibuk). Silakan coba lagi dalam beberapa saat ya.";
+          }
+          const reply: ChatMessage = { id: `msg-${Date.now() + 1}`, sender: 'supplier', text: fallbackMsg, timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }), status: 'read' };
+          setChats((prev) => prev.map((t) => t.supplierName === supplierName ? { ...t, lastMessage: fallbackMsg, lastTime: reply.timestamp, unreadCount: t.unreadCount + 1, messages: [...t.messages, reply] } : t));
+        }
+      })();
+    } else {
+      setTimeout(() => {
+        const responseText = `[WhatsApp Sync] Terima kasih pesanannya. Terkait "${text.substring(0, 20)}...", akan kami proses secepatnya.`;
+        const reply: ChatMessage = { id: `msg-${Date.now() + 1}`, sender: 'supplier', text: responseText, timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }), status: 'read' };
+        setChats((prev) => prev.map((t) => t.supplierName === supplierName ? { ...t, lastMessage: responseText, lastTime: reply.timestamp, unreadCount: t.unreadCount + 1, messages: [...t.messages, reply] } : t));
+      }, 1000);
+    }
   };
 
   return (

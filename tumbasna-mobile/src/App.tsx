@@ -25,10 +25,17 @@ import './theme/variables.css';
 // Initialize Ionic React components
 setupIonicReact();
 
+import { GoogleOAuthProvider } from '@react-oauth/google';
+
+// Client ID Google OAuth (Disiapkan untuk Client ID yang sesungguhnya)
+const GOOGLE_CLIENT_ID = 'GANTI_DENGAN_GOOGLE_CLIENT_ID_ANDA.apps.googleusercontent.com';
+
 const App: React.FC = () => (
-  <AppProvider>
-    <MainAppShell />
-  </AppProvider>
+  <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+    <AppProvider>
+      <MainAppShell />
+    </AppProvider>
+  </GoogleOAuthProvider>
 );
 
 export default App;

@@ -40,6 +40,14 @@
   object-fit: contain;
 }
 
+.checkout-header-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f532a;
+  margin: 0;
+}
+
 .checkout-content {
   --background: #F8F7F4;
 }
