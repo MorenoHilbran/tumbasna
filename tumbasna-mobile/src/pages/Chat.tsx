@@ -20,6 +20,51 @@ import {
 import { useApp, ChatThread } from '../context/AppContext';
 import './Chat.css';
 
+// Helper to format markdown-like syntax for messages (bold, italic, newlines)
+const parseInline = (text: string): React.ReactNode[] => {
+  if (!text) return [];
+  // Regex to match **bold**, *bold*, __italic__, _italic_
+  const regex = /(\*\*.*?\*\*|\*.*?\*|__.*?__|_+?_)/g;
+  const tokens = text.split(regex);
+  
+  return tokens.map((token, i) => {
+    if (token.startsWith('**') && token.endsWith('**')) {
+      return <strong key={i}>{token.slice(2, -2)}</strong>;
+    }
+    if (token.startsWith('*') && token.endsWith('*')) {
+      return <strong key={i}>{token.slice(1, -1)}</strong>;
+    }
+    if (token.startsWith('__') && token.endsWith('__')) {
+      return <strong key={i}>{token.slice(2, -2)}</strong>;
+    }
+    if (token.startsWith('_') && token.endsWith('_')) {
+      return <em key={i}>{token.slice(1, -1)}</em>;
+    }
+    return token;
+  });
+};
+
+const formatMessageText = (text: string): React.ReactNode => {
+  if (!text) return '';
+  const lines = text.split('\n');
+  return lines.map((line, index) => (
+    <React.Fragment key={index}>
+      {parseInline(line)}
+      {index < lines.length - 1 && <br />}
+    </React.Fragment>
+  ));
+};
+
+const stripMarkdown = (text: string): string => {
+  if (!text) return '';
+  return text
+    .replace(/\*\*\*(.*?)\*\*\*/g, '$1')
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/\*(.*?)\*/g, '$1')
+    .replace(/__(.*?)__/g, '$1')
+    .replace(/_(.*?)_/g, '$1');
+};
+
 interface ChatProps {
   initialPartner?: string | null;
   initialPartnerPhone?: string | null;
@@ -172,7 +217,7 @@ const Chat: React.FC<ChatProps> = ({ initialPartner, initialPartnerPhone, onClea
                       </div>
                       
                       <div className="thread-message-row">
-                        <p className="thread-last-msg">{thread.lastMessage}</p>
+                        <p className="thread-last-msg">{stripMarkdown(thread.lastMessage)}</p>
                         {thread.unreadCount > 0 && (
                           <span className="thread-unread-badge">{thread.unreadCount}</span>
                         )}
@@ -217,7 +262,7 @@ const Chat: React.FC<ChatProps> = ({ initialPartner, initialPartnerPhone, onClea
                     )}
                     
                     <div className={`message-bubble ${isAiPartner && !isBuyer ? 'ai-message-bubble' : ''}`}>
-                      <p className="message-text">{msg.text}</p>
+                      <p className="message-text">{formatMessageText(msg.text)}</p>
                       <div className="message-meta">
                         <span className="message-time">{msg.timestamp}</span>
                         {isBuyer && (
