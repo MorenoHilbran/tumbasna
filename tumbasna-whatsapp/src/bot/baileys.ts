@@ -128,6 +128,12 @@ export async function connectWhatsApp() {
             console.log(`📩 [MESSAGE RECEIVED] Dari: ${sender}, Teks: "${text}", fromMe: ${isFromMe}`);
 
             if (isFromMe) continue; // ignore own messages
+
+            // Hanya proses pesan dari obrolan pribadi (Direct Message)
+            if (!sender.endsWith('@s.whatsapp.net')) {
+                console.log(`⏩ [SKIP] Mengabaikan pesan non-pribadi (grup/status) dari: ${sender}`);
+                continue;
+            }
             
             const pushName = msg.pushName || 'Unknown';
             const enableRealWA = process.env.ENABLE_REAL_WA === 'true';

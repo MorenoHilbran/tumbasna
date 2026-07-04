@@ -24,10 +24,14 @@ export async function extractMessageData(sender: string, message: string): Promi
         try {
             const { apiService } = require('../services/apiService');
             const whitelistRes = await apiService.checkWhitelist(phoneNumber);
+            if (!whitelistRes || whitelistRes.success === false) {
+                throw new Error("Gagal memverifikasi status pendaftaran karena server dashboard tidak merespon.");
+            }
             isRegistered = !!whitelistRes?.isRegistered;
             registeredName = whitelistRes?.name || '';
         } catch (dbErr: any) {
-            console.warn(`⚠️ [AGENT] Gagal cek status registrasi DB, fallback ke false:`, dbErr.message);
+            console.warn(`⚠️ [AGENT] Gagal cek status registrasi DB:`, dbErr.message);
+            throw dbErr;
         }
 
         // 3. Tambahkan pesan user ke history SEKARANG (agar tercatat meskipun AI error nanti)
@@ -57,9 +61,7 @@ ${isRegistered ? `- Registered Name: "${registeredName}"` : ""}
             const aiStudio = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
             
             // Format messages for direct Gemini API call
-            const contents = [
-                { role: 'user', parts: [{ text: dynamicSystemPrompt }] }
-            ];
+            const contents = [];
             
             for (const msg of historyJson.slice(0, -1)) {
                 contents.push({
@@ -76,7 +78,10 @@ ${isRegistered ? `- Registered Name: "${registeredName}"` : ""}
             console.log(`🤖 [AI CALL] Mengirim ke Gemini Direct (gemini-1.5-flash) untuk ${phoneNumber}...`);
             const response = await aiStudio.models.generateContent({
                 model: 'gemini-1.5-flash',
-                contents: contents
+                contents: contents,
+                config: {
+                    systemInstruction: dynamicSystemPrompt
+                }
             });
             
             if (response.text) {

@@ -57,6 +57,17 @@ export const apiService = {
             return { success: false, isWhitelisted: false };
         }
     },
+    async getSupplierOrders(phone: string) {
+        try {
+            const response = await axios.get(`${API_URL}/api/orders`, {
+                params: { phone }
+            });
+            return response.data;
+        } catch (error: any) {
+            console.error(`[API ERROR] Gagal mengambil data ORDERS (URL: ${API_URL}/api/orders):`, error.message);
+            return { success: false, data: [] };
+        }
+    },
     async registerSupplier(data: { phone: string; name: string; location: string }) {
         try {
             const response = await axios.post(`${API_URL}/api/auth/register`, {
