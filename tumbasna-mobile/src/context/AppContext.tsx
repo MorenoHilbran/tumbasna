@@ -451,7 +451,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (supplierName === 'Tumbasna AI Pintar') {
       (async () => {
         try {
-          const genAI = new GoogleGenerativeAI('AQ.Ab8RN6KKGdob7DJ8S1BSNfq5ffmROjDY-zlHWFRzpqcAWRMmlg');
+          const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
           const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
           
           // Mempersiapkan data dari state (database lokal/API) untuk AI

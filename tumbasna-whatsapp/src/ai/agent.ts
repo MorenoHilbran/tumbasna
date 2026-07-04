@@ -26,31 +26,32 @@ export async function extractMessageData(sender: string, message: string): Promi
         // Simpan sementara pesan user ke DB
         await saveSessionHistory(sender, historyJson, false);
 
-        // 3. Mapping untuk LangChain
-        const chatHistory = historyJson.slice(0, -1).map(msg => 
-            msg.role === 'user' ? new HumanMessage(msg.content) : new AIMessage(msg.content)
-        );
+        // 3. Setup Native Google GenAI
+        const { GoogleGenAI } = require('@google/genai');
+        const ai = new GoogleGenAI({ apiKey: apiKey });
 
-        // 4. Setup LangChain ChatOpenAI Client
-        const chat = new ChatOpenAI({
-            apiKey: apiKey,
-            configuration: { baseURL: rootBaseUrl },
-            modelName: modelName,
-            temperature: 0.1,
-            maxRetries: 1,
+        const formattedHistory = historyJson.slice(0, -1).map(msg => ({
+            role: msg.role === 'user' ? 'user' : 'model',
+            parts: [{ text: msg.content }]
+        }));
+
+        formattedHistory.push({
+            role: 'user',
+            parts: [{ text: `Pesan Input:\n"${message}"` }]
         });
 
-        const sendMessages = [
-            new SystemMessage(SYSTEM_PROMPT),
-            ...chatHistory,
-            new HumanMessage(`Pesan Input:\n"${message}"`)
-        ];
-
-        console.log(`🤖 [AI CALL] Mengirim ke LLM (${modelName}) untuk ${phoneNumber}...`);
+        console.log(`🤖 [AI CALL] Mengirim ke Gemini Native untuk ${phoneNumber}...`);
         
-        // 5. Invoke LLM dengan Timeout (menggunakan Promise.race sebagai simulasi sederhana jika needed, tapi ChatOpenAI punya parameter sendiri)
-        const responseMsg = await chat.invoke(sendMessages);
-        const text = responseMsg.content.toString();
+        const response = await ai.models.generateContent({
+            model: 'gemini-1.5-flash',
+            contents: formattedHistory,
+            config: {
+                systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+                temperature: 0.1
+            }
+        });
+        
+        const text = response.text;
         // console.log(`🤖 [AI RAW RESPONSE]:\n${text}`);
 
         const cleanJson = text.replace(/```json/gi, "").replace(/```/gi, "").trim();
