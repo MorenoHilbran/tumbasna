@@ -24,7 +24,7 @@ const API_URL = process.env.API_URL || 'http://127.0.0.1:3000';
 // Upload gambar ke Supabase Storage via dashboard API
 async function uploadImageToStorage(buffer: Buffer, filename: string): Promise<string | null> {
     try {
-        const FormData = require('form-data');
+        const FormData = (await import('form-data')).default || await import('form-data');
         const form = new FormData();
         form.append('file', buffer, { filename, contentType: 'image/jpeg' });
         const response = await axios.post(`${API_URL}/api/upload`, form, {
@@ -121,45 +121,62 @@ export async function connectWhatsApp() {
         if (type !== 'notify') return;
 
         for (const msg of messages) {
-            const sender = msg.key.remoteJid || 'unknown';
+            const sender = msg.key.remoteJid;
+            if (!sender) continue;
+
             const text = extractText(msg.message) || '';
             const isFromMe = msg.key.fromMe || false;
+
+            // Ekstrak nomor telepon asli HANYA untuk database lookup, jangan ubah routing JID Baileys!
+            let dbPhoneNumber = sender.split('@')[0]; 
+            const anyKey = msg.key as any;
+            if (sender.endsWith('@lid') && anyKey.senderPn) {
+                dbPhoneNumber = anyKey.senderPn.split('@')[0];
+                console.log(`🔄 [LID] Routing ke ${sender}, DB Lookup Phone: ${dbPhoneNumber}`);
+            }
 
             console.log(`📩 [MESSAGE RECEIVED] Dari: ${sender}, Teks: "${text}", fromMe: ${isFromMe}`);
 
             if (isFromMe) continue; // ignore own messages
 
-            // Hanya proses pesan dari obrolan pribadi (Direct Message)
-            if (!sender.endsWith('@s.whatsapp.net')) {
-                console.log(`⏩ [SKIP] Mengabaikan pesan non-pribadi (grup/status) dari: ${sender}`);
+            // Abaikan grup/broadcast
+            if (sender.endsWith('@g.us') || sender.endsWith('@broadcast')) {
+                console.log(`⏩ [SKIP] Mengabaikan pesan grup/status dari: ${sender}`);
                 continue;
             }
             
             const pushName = msg.pushName || 'Unknown';
             const enableRealWA = process.env.ENABLE_REAL_WA === 'true';
+
+            // Kirim balasan SECARA STANDAR MENGGUNAKAN JID BAWAAN BAILEYS (LID)
+            const sendFn = async (jid: string, content: any) => {
+                // jid yang dilempar dari messageHandler adalah dbPhoneNumber@s.whatsapp.net
+                // TETAPI kita abaikan dan paksa kirim ke 'sender' (LID) asli berdasarkan penemuan diagnostik
+                console.log(`🚀 [DEBUG SEND] Membalas ke: ${sender} ...`);
+                try {
+                    const result = await sock.sendMessage(sender, content, { quoted: msg });
+                    console.log(`✅ [DEBUG SEND SUCCESS] Result key: ${result?.key?.id}`);
+                    return result;
+                } catch (e: any) {
+                    console.error(`❌ [DEBUG SEND ERROR]:`, e.message);
+                    throw e;
+                }
+            };
             
             // ─── Handle Location Message ─────────────────────────────
             const isLocation = !!msg.message?.locationMessage;
             if (isLocation && enableRealWA && msg.message?.locationMessage) {
-                const locMsg = msg.message.locationMessage;
-                const lat = locMsg.degreesLatitude;
-                const lng = locMsg.degreesLongitude;
-                if (typeof lat === 'number' && typeof lng === 'number') {
-                    console.log(`📍 [LOCATION] Share lokasi diterima dari ${sender}: Lat=${lat}, Lng=${lng}`);
-                    
+                const locMsg = msg.message!.locationMessage!;
+                const lat = locMsg.degreesLatitude || 0;
+                const lng = locMsg.degreesLongitude || 0;
+                if (lat && lng) {
                     const addressName = await reverseGeocode(lat, lng);
                     console.log(`📍 [LOCATION] Alamat terdeteksi: ${addressName}`);
 
-                    // Buat teks representasi lokasi agar diproses AI
                     const combinedText = `[Supplier mengirim share location] Nama Lokasi: ${addressName} | Lat: ${lat} | Lng: ${lng}`;
-
-                    await processIncomingMessage(
-                        sender,
-                        pushName,
-                        combinedText,
-                        (jid, content) => sock.sendMessage(jid, content, { quoted: msg })
-                    );
-                    continue; // skip sisa processing
+                    
+                    await processIncomingMessage(sender, pushName, combinedText, sendFn);
+                    continue;
                 }
             }
 
@@ -174,26 +191,23 @@ export async function connectWhatsApp() {
                     const buffer = await downloadMediaMessage(msg, 'buffer', {}) as Buffer;
                     const filename = `product_${Date.now()}.jpg`;
                     imageUrl = await uploadImageToStorage(buffer, filename);
-                    if (imageUrl) console.log(`✅ [IMAGE UPLOAD] URL: ${imageUrl}`);
+                    if (imageUrl) {
+                        const { saveMetadata } = await import('../ai/memory');
+                        await saveMetadata(sender, { lastImageUrl: imageUrl });
+                    }
                 } catch (err: any) {
                     console.error('[IMAGE ERROR] Gagal download gambar:', err.message);
                 }
-                // Buat teks dari caption gambar agar diproses AI
                 const combinedText = imageCaption
                     ? `[Supplier mengirim foto produk] Keterangan: ${imageCaption}${imageUrl ? ` | URL Foto: ${imageUrl}` : ''}`
                     : `[Supplier mengirim foto produk tanpa keterangan. Tolong tanyakan nama komoditas, berat, dan harga.]`;
 
-                await processIncomingMessage(
-                    sender,
-                    pushName,
-                    combinedText,
-                    (jid, content) => sock.sendMessage(jid, content, { quoted: msg })
-                );
-                continue; // sudah diproses, skip ke pesan berikutnya
+                await processIncomingMessage(sender, pushName, combinedText, sendFn);
+                continue;
             }
 
             if (!text) {
-                console.log(`⏩ [SKIP] Pesan kosong dari ${sender}`);
+                console.log(`⏩ [SKIP] Pesan kosong`);
                 continue;
             }
 
@@ -204,16 +218,9 @@ export async function connectWhatsApp() {
             }
 
             // Delegasi processing ke layer Handlers
-            await processIncomingMessage(
-                sender,
-                pushName,
-                text,
-                (jid, content) => sock.sendMessage(jid, content, { quoted: msg })
-            );
+            await processIncomingMessage(sender, pushName, text, sendFn);
         }
     });
 
     return sock;
 }
-
-

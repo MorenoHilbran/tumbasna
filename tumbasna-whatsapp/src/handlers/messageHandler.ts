@@ -8,158 +8,189 @@ export async function processIncomingMessage(
     text: string,
     sendMessage: (jid: string, content: AnyMessageContent) => Promise<any>
 ) {
-    const phoneNumber = sender.split('@')[0];
-    console.log(`[ACCESS] Menanggapi pesan dari nomor: ${phoneNumber}`);
+    const rawPhoneNumber = sender.split('@')[0];
+    const { getEffectivePhoneNumber, saveMetadata, getLastImageUrl } = await import('../ai/memory');
+    const phoneNumber = await getEffectivePhoneNumber(sender);
+    console.log(`[ACCESS] Menanggapi pesan dari nomor: ${rawPhoneNumber} (Effective: ${phoneNumber})`);
 
     const cleanText = text.trim().toLowerCase();
 
     // 1. Cek status whitelist/registrasi di database terlebih dahulu
     let isRegistered = false;
     let userInfo: any = null;
+    console.log(`🔍 [WHITELIST] Mengecek registrasi nomor ${phoneNumber}...`);
     try {
         const whitelistRes = await apiService.checkWhitelist(phoneNumber);
+        console.log(`🔍 [WHITELIST RESULT] success=${whitelistRes.success}, isRegistered=${whitelistRes.isRegistered}, name=${whitelistRes.name}`);
         if (whitelistRes.success && whitelistRes.isRegistered) {
             isRegistered = true;
             userInfo = whitelistRes;
         }
-    } catch (err) {
-        console.error("⚠️ [MENU ERROR] Gagal check whitelist untuk menu cepat:", err);
+    } catch (err: any) {
+        console.error(`⚠️ [WHITELIST ERROR] Gagal check whitelist: ${err.message}`);
+        // Tetap lanjut — bot harus selalu membalas meskipun dashboard offline
     }
+    console.log(`✅ [WHITELIST DONE] isRegistered=${isRegistered}`);
 
-    // 2. Jika user terdaftar, jalankan menu cepat (Numeric / Keyword Shortcuts)
-    if (isRegistered && userInfo) {
-        if (cleanText === 'menu' || cleanText === 'help' || cleanText === 'bantuan' || cleanText === 'hallo' || cleanText === 'halo' || cleanText === 'p') {
-            const menuText = `*MENU UTAMA MITRA TUMBASNA* 🌾\n\n` +
-                `Halo Bpk/Ibu *${userInfo.name || pushName}*, selamat datang di layanan WhatsApp Mitra Tumbasna. Ketik kode angka berikut untuk menu transaksi cepat:\n\n` +
-                `*1* 👤 Lihat Profil & Rekening Bank\n` +
-                `*2* 💰 Lihat Saldo Escrow QRIS\n` +
-                `*3* 📦 Lihat Daftar Listing Produk Aktif\n` +
-                `*4* 🛒 Lihat Pesanan Masuk (Order)\n` +
-                `*5* ✍️ Cara Jual / Daftarkan Komoditas\n` +
-                `*6* 📞 Hubungi Bantuan / CS\n\n` +
-                `💡 _Atau Juragan bisa langsung mengetik pesan teks bebas untuk menawarkan hasil tani Juragan secara otomatis._`;
-            await sendMessage(sender, { text: menuText });
-            return;
-        }
+    // 2. Tampilkan Menu Cepat (Numeric / Keyword Shortcuts)
+    const menuKeywords = ['menu', 'help', 'bantuan', 'hallo', 'halo', 'p'];
+    const numberKeywords = ['1', '2', '3', '4', '5', '6', 'profil', 'rekening', 'saldo', 'listing', 'produk', 'pesanan', 'order', 'jual', 'tambah', 'cs', 'bantuan'];
 
-        if (cleanText === '1' || cleanText === 'profil' || cleanText === 'rekening') {
-            const bankName = userInfo.bankName || '-';
-            const bankAccount = userInfo.bankAccount || '-';
-            const address = userInfo.address || '-';
-            const businessName = userInfo.businessName || '-';
-            const businessType = userInfo.businessType || '-';
-            
-            const profileText = `*PROFIL JURAGAN* 👤\n\n` +
-                `• Nama Lengkap: *${userInfo.name || '-'}*\n` +
-                `• Nama Usaha: *${businessName}*\n` +
-                `• Jenis Usaha: *${businessType}*\n` +
-                `• No. Telepon: *+${phoneNumber}*\n` +
-                `• Alamat Kebun/Gudang: *${address}*\n\n` +
-                `*INFORMASI REKENING BANK*\n` +
-                `• Nama Bank: *${bankName}*\n` +
-                `• No. Rekening: *${bankAccount}*\n\n` +
-                `_Catatan: Informasi profil dan rekening bank dapat diubah oleh Admin TPID melalui dashboard._\n\n` +
-                `💡 Ketik *MENU* untuk kembali ke menu utama.`;
-            await sendMessage(sender, { text: profileText });
-            return;
-        }
-
-        if (cleanText === '2' || cleanText === 'saldo') {
-            const balance = userInfo.balance || 0;
-            const balanceText = `*SALDO JURAGAN* 💰\n\n` +
-                `Nama Mitra: *${userInfo.name}*\n` +
-                `Saldo Aktif: *Rp ${balance.toLocaleString('id-ID')}*\n\n` +
-                `_Catatan: Dana QRIS Escrow penjualan otomatis dicairkan ke Saldo Juragan setelah pembeli menyatakan barang sampai (status selesai)._\n\n` +
-                `💡 Ketik *MENU* untuk kembali ke menu utama.`;
-            await sendMessage(sender, { text: balanceText });
-            return;
-        }
-
-        if (cleanText === '3' || cleanText === 'listing' || cleanText === 'produk') {
-            try {
-                const result = await apiService.getUserEntries(phoneNumber);
-                if (result.success && result.data.length > 0) {
-                    let listText = `*DAFTAR KOMODITAS JURAGAN* 📦\n\n`;
-                    result.data.forEach((entry: any, index: number) => {
-                        listText += `${index + 1}. *${entry.commodity.toUpperCase()}* [${entry.status}]\n`;
-                        listText += `   - Stok Awal: *${entry.originalQty} kg*\n`;
-                        listText += `   - Terjual: *${entry.soldQty} kg*\n`;
-                        listText += `   - Sisa Stok: *${entry.remainingQty} kg*\n`;
-                        listText += `   - Harga: *Rp ${entry.price.toLocaleString('id-ID')}/kg*\n`;
-                        listText += `   - Lokasi: ${entry.location}\n\n`;
-                    });
-                    listText += `💡 Ketik *MENU* untuk kembali ke menu utama.`;
-                    await sendMessage(sender, { text: listText });
-                } else {
-                    await sendMessage(sender, { text: "Juragan belum memiliki catatan penawaran komoditas di sistem kami.\n\n💡 Ketik *MENU* untuk kembali ke menu utama." });
-                }
-            } catch (error) {
-                console.error(`❌ [ERROR LIST] Gagal mengambil list:`, error);
-                await sendMessage(sender, { text: "Maaf, saya gagal mengambil daftar komoditas Juragan. Silakan coba lagi nanti." });
+    if (menuKeywords.includes(cleanText) || numberKeywords.includes(cleanText)) {
+        if (isRegistered && userInfo) {
+            if (menuKeywords.includes(cleanText)) {
+                const menuText = `*MENU UTAMA MITRA TUMBASNA* 🌾\n\n` +
+                    `Halo Bpk/Ibu *${userInfo.name || pushName}*, selamat datang di layanan WhatsApp Mitra Tumbasna. Ketik kode angka berikut untuk menu transaksi cepat:\n\n` +
+                    `*1* 👤 Lihat Profil & Rekening Bank\n` +
+                    `*2* 💰 Lihat Saldo Escrow QRIS\n` +
+                    `*3* 📦 Lihat Daftar Listing Produk Aktif\n` +
+                    `*4* 🛒 Lihat Pesanan Masuk (Order)\n` +
+                    `*5* ✍️ Cara Jual / Daftarkan Komoditas\n` +
+                    `*6* 📞 Hubungi Bantuan / CS\n\n` +
+                    `💡 _Atau Juragan bisa langsung mengetik pesan teks bebas untuk menawarkan hasil tani Juragan secara otomatis._`;
+                await sendMessage(sender, { text: menuText });
+                return;
             }
-            return;
-        }
 
-        if (cleanText === '4' || cleanText === 'pesanan' || cleanText === 'order') {
-            try {
-                const result = await apiService.getSupplierOrders(phoneNumber);
-                if (result.success && result.data.length > 0) {
-                    let statusText = `*DAFTAR PESANAN MASUK JURAGAN* 🛒\n\n`;
-                    result.data.forEach((order: any, index: number) => {
-                        const itemsText = order.items.map((it: any) => `  - ${it.product.name} (x${it.quantity})`).join('\n');
-                        
-                        const escrowStatus = order.status === 'SELESAI' 
-                            ? 'Escrow Cair (Masuk Saldo)' 
-                            : 'Escrow Ditahan (Dana aman di QRIS Escrow, menunggu barang diterima pembeli)';
-
-                        let trackingInfo = `Kurir: *${order.courier}*`;
-                        if (order.trackingTimeline && Array.isArray(order.trackingTimeline) && order.trackingTimeline.length > 0) {
-                            const latestTimeline = order.trackingTimeline[order.trackingTimeline.length - 1];
-                            const timelineStr = typeof latestTimeline === 'object' ? (latestTimeline.status || latestTimeline.description || JSON.stringify(latestTimeline)) : latestTimeline;
-                            trackingInfo += `\n   Lacak Terakhir: _${timelineStr}_`;
-                        } else {
-                            trackingInfo += `\n   Lacak Terakhir: _Belum ada pergerakan_`;
-                        }
-
-                        statusText += `${index + 1}. *ID Pesanan: ${order.id}*\n`;
-                        statusText += `   Komoditas:\n${itemsText}\n`;
-                        statusText += `   Pengiriman: ${trackingInfo}\n`;
-                        statusText += `   Total Pembayaran: *Rp ${order.totalAmount.toLocaleString('id-ID')}*\n`;
-                        statusText += `   Status: *${order.status}*\n`;
-                        statusText += `   Escrow: *${escrowStatus}*\n\n`;
-                    });
-                    statusText += `💡 Ketik *MENU* untuk kembali ke menu utama.`;
-                    await sendMessage(sender, { text: statusText });
-                } else {
-                    await sendMessage(sender, { text: "Juragan belum memiliki pesanan masuk di sistem kami.\n\n💡 Ketik *MENU* untuk kembali ke menu utama." });
-                }
-            } catch (error) {
-                console.error(`❌ [ERROR ORDERS] Gagal mengambil pesanan:`, error);
-                await sendMessage(sender, { text: "Maaf, saya gagal mengambil daftar pesanan Juragan. Silakan coba lagi nanti." });
+            if (cleanText === '1' || cleanText === 'profil' || cleanText === 'rekening') {
+                const bankName = userInfo.bankName || '-';
+                const bankAccount = userInfo.bankAccount || '-';
+                const address = userInfo.address || '-';
+                const businessName = userInfo.businessName || '-';
+                const businessType = userInfo.businessType || '-';
+                
+                const profileText = `*PROFIL JURAGAN* 👤\n\n` +
+                    `• Nama Lengkap: *${userInfo.name || '-'}*\n` +
+                    `• Nama Usaha: *${businessName}*\n` +
+                    `• Jenis Usaha: *${businessType}*\n` +
+                    `• No. Telepon: *+${phoneNumber}*\n` +
+                    `• Alamat Kebun/Gudang: *${address}*\n\n` +
+                    `*INFORMASI REKENING BANK*\n` +
+                    `• Nama Bank: *${bankName}*\n` +
+                    `• No. Rekening: *${bankAccount}*\n\n` +
+                    `_Catatan: Informasi profil dan rekening bank dapat diubah oleh Admin TPID melalui dashboard._\n\n` +
+                    `💡 Ketik *MENU* untuk kembali ke menu utama.`;
+                await sendMessage(sender, { text: profileText });
+                return;
             }
-            return;
-        }
 
-        if (cleanText === '5' || cleanText === 'jual' || cleanText === 'tambah') {
-            const sellText = `*DAFTARKAN / JUAL KOMODITAS* ✍️\n\n` +
-                `Silakan kirim detail komoditas yang ingin Juragan tawarkan dalam bentuk pesan teks biasa ke saya.\n\n` +
-                `*Contoh pesan yang bisa Juragan ketik:*\n` +
-                `_"Saya mau jual cabai merah 100 kg harga 30000 per kg dari Banyumas"_\n\n` +
-                `Asisten AI kami akan membaca detail pesan Juragan secara otomatis. Setelah itu, silakan sertakan foto produk agar pembeli lebih berminat. 📸\n\n` +
-                `💡 Ketik *MENU* untuk kembali ke menu utama.`;
-            await sendMessage(sender, { text: sellText });
-            return;
-        }
+            if (cleanText === '2' || cleanText === 'saldo') {
+                const balance = userInfo.balance || 0;
+                const balanceText = `*SALDO JURAGAN* 💰\n\n` +
+                    `Nama Mitra: *${userInfo.name}*\n` +
+                    `Saldo Aktif: *Rp ${balance.toLocaleString('id-ID')}*\n\n` +
+                    `_Catatan: Dana QRIS Escrow penjualan otomatis dicairkan ke Saldo Juragan setelah pembeli menyatakan barang sampai (status selesai)._\n\n` +
+                    `💡 Ketik *MENU* untuk kembali ke menu utama.`;
+                await sendMessage(sender, { text: balanceText });
+                return;
+            }
 
-        if (cleanText === '6' || cleanText === 'bantuan' || cleanText === 'cs') {
-            const helpText = `*BANTUAN & LAYANAN PELANGGAN* 📞\n\n` +
-                `Ada kendala transaksi, pencairan dana, atau penggunaan aplikasi? Hubungi Tim Customer Service Tumbasna:\n\n` +
-                `• WhatsApp CS: *wa.me/6281234567890*\n` +
-                `• Email: *support@tumbasna.id*\n` +
-                `• Operasional: *Senin - Minggu (08:00 - 17:00 WIB)*\n\n` +
-                `Kami siap membantu memajukan usaha tani Juragan! 🌾\n\n` +
-                `💡 Ketik *MENU* untuk kembali ke menu utama.`;
-            await sendMessage(sender, { text: helpText });
+            if (cleanText === '3' || cleanText === 'listing' || cleanText === 'produk') {
+                try {
+                    const result = await apiService.getUserEntries(phoneNumber);
+                    if (result.success && result.data.length > 0) {
+                        let listText = `*DAFTAR KOMODITAS JURAGAN* 📦\n\n`;
+                        result.data.forEach((entry: any, index: number) => {
+                            listText += `${index + 1}. *${entry.commodity.toUpperCase()}* [${entry.status}]\n`;
+                            listText += `   - Stok Awal: *${entry.originalQty} kg*\n`;
+                            listText += `   - Terjual: *${entry.soldQty} kg*\n`;
+                            listText += `   - Sisa Stok: *${entry.remainingQty} kg*\n`;
+                            listText += `   - Harga: *Rp ${entry.price.toLocaleString('id-ID')}/kg*\n`;
+                            listText += `   - Lokasi: ${entry.location}\n\n`;
+                        });
+                        listText += `💡 Ketik *MENU* untuk kembali ke menu utama.`;
+                        await sendMessage(sender, { text: listText });
+                    } else {
+                        await sendMessage(sender, { text: "Juragan belum memiliki catatan penawaran komoditas di sistem kami.\n\n💡 Ketik *MENU* untuk kembali ke menu utama." });
+                    }
+                } catch (error) {
+                    console.error(`❌ [ERROR LIST] Gagal mengambil list:`, error);
+                    await sendMessage(sender, { text: "Maaf, saya gagal mengambil daftar komoditas Juragan. Silakan coba lagi nanti." });
+                }
+                return;
+            }
+
+            if (cleanText === '4' || cleanText === 'pesanan' || cleanText === 'order') {
+                try {
+                    const result = await apiService.getSupplierOrders(phoneNumber);
+                    if (result.success && result.data.length > 0) {
+                        let statusText = `*DAFTAR PESANAN MASUK JURAGAN* 🛒\n\n`;
+                        result.data.forEach((order: any, index: number) => {
+                            const itemsText = order.items.map((it: any) => `  - ${it.product.name} (x${it.quantity})`).join('\n');
+                            
+                            const escrowStatus = order.status === 'SELESAI' 
+                                ? 'Escrow Cair (Masuk Saldo)' 
+                                : 'Escrow Ditahan (Dana aman di QRIS Escrow, menunggu barang diterima pembeli)';
+
+                            let trackingInfo = `Kurir: *${order.courier}*`;
+                            if (order.trackingTimeline && Array.isArray(order.trackingTimeline) && order.trackingTimeline.length > 0) {
+                                const latestTimeline = order.trackingTimeline[order.trackingTimeline.length - 1];
+                                const timelineStr = typeof latestTimeline === 'object' ? (latestTimeline.status || latestTimeline.description || JSON.stringify(latestTimeline)) : latestTimeline;
+                                trackingInfo += `\n   Lacak Terakhir: _${timelineStr}_`;
+                            } else {
+                                trackingInfo += `\n   Lacak Terakhir: _Belum ada pergerakan_`;
+                            }
+
+                            statusText += `${index + 1}. *ID Pesanan: ${order.id}*\n`;
+                            statusText += `   Komoditas:\n${itemsText}\n`;
+                            statusText += `   Pengiriman: ${trackingInfo}\n`;
+                            statusText += `   Total Pembayaran: *Rp ${order.totalAmount.toLocaleString('id-ID')}*\n`;
+                            statusText += `   Status: *${order.status}*\n`;
+                            statusText += `   Escrow: *${escrowStatus}*\n\n`;
+                        });
+                        statusText += `💡 Ketik *MENU* untuk kembali ke menu utama.`;
+                        await sendMessage(sender, { text: statusText });
+                    } else {
+                        await sendMessage(sender, { text: "Juragan belum memiliki pesanan masuk di sistem kami.\n\n💡 Ketik *MENU* untuk kembali ke menu utama." });
+                    }
+                } catch (error) {
+                    console.error(`❌ [ERROR ORDERS] Gagal mengambil pesanan:`, error);
+                    await sendMessage(sender, { text: "Maaf, saya gagal mengambil daftar pesanan Juragan. Silakan coba lagi nanti." });
+                }
+                return;
+            }
+
+            if (cleanText === '5' || cleanText === 'jual' || cleanText === 'tambah') {
+                const sellText = `*DAFTARKAN / JUAL KOMODITAS* ✍️\n\n` +
+                    `Silakan kirim detail komoditas yang ingin Juragan tawarkan dalam bentuk pesan teks biasa ke saya.\n\n` +
+                    `*Contoh pesan yang bisa Juragan ketik:*\n` +
+                    `_"Saya mau jual cabai merah 100 kg harga 30000 per kg dari Banyumas"_\n\n` +
+                    `Asisten AI kami akan membaca detail pesan Juragan secara otomatis. Setelah itu, silakan sertakan foto produk agar pembeli lebih berminat. 📸\n\n` +
+                    `💡 Ketik *MENU* untuk kembali ke menu utama.`;
+                await sendMessage(sender, { text: sellText });
+                return;
+            }
+
+            if (cleanText === '6' || cleanText === 'bantuan' || cleanText === 'cs') {
+                const helpText = `*BANTUAN & LAYANAN PELANGGAN* 📞\n\n` +
+                    `Ada kendala transaksi, pencairan dana, atau penggunaan aplikasi? Hubungi Tim Customer Service Tumbasna:\n\n` +
+                    `• WhatsApp CS: *wa.me/6281234567890*\n` +
+                    `• Email: *support@tumbasna.id*\n` +
+                    `• Operasional: *Senin - Minggu (08:00 - 17:00 WIB)*\n\n` +
+                    `Kami siap membantu memajukan usaha tani Juragan! 🌾\n\n` +
+                    `💡 Ketik *MENU* untuk kembali ke menu utama.`;
+                await sendMessage(sender, { text: helpText });
+                return;
+            }
+        } else {
+            // Jika user BELUM terdaftar di database
+            if (menuKeywords.includes(cleanText)) {
+                const registerMenuText = `*SELAMAT DATANG DI MITRA TUMBASNA* 🌾\n\n` +
+                    `Layanan WhatsApp ini digunakan oleh *Mitra Petani/Supplier* untuk memasarkan komoditas pertanian langsung ke pedagang pasar.\n\n` +
+                    `Nomor Anda (*+${phoneNumber}*) belum terdaftar di database kami.\n\n` +
+                    `*Cara Mendaftar (Sangat Mudah):*\n` +
+                    `Ketik pesan teks biasa yang menyebutkan nama Anda dan lokasi gudang/kebun Anda.\n\n` +
+                    `*Contoh pesan pendaftaran:*\n` +
+                    `_"Halo, saya Pak Sugeng dari Wonosobo mau daftar jadi supplier Tumbasna"_\n\n` +
+                    `Asisten AI kami akan langsung mencatat dan mendaftarkan akun Anda secara otomatis! 🤝`;
+                await sendMessage(sender, { text: registerMenuText });
+            } else {
+                const registerHintText = `⚠️ *Nomor Belum Terdaftar*\n\n` +
+                    `Maaf Juragan, Anda belum bisa menggunakan menu transaksi cepat ini karena nomor Anda belum terdaftar di sistem Tumbasna.\n\n` +
+                    `Silakan lakukan pendaftaran terlebih dahulu dengan mengetik pesan biasa menyebutkan nama dan lokasi Anda.\n` +
+                    `*Contoh:* _"Saya Pak Slamet dari Temanggung ingin mendaftar"_`;
+                await sendMessage(sender, { text: registerHintText });
+            }
             return;
         }
     }
@@ -185,19 +216,33 @@ export async function processIncomingMessage(
                 : phoneNumber;
             const name = parsedData.supplier_name || pushName;
             const location = parsedData.supplier_location || '';
+            const bankName = parsedData.bank_name || '';
+            const bankAccount = parsedData.bank_account || '';
 
             if (name && location && phone) {
                 try {
-                    const result = await apiService.registerSupplier({ phone, name, location });
+                    const result = await apiService.registerSupplier({ 
+                        phone, 
+                        name, 
+                        location, 
+                        bankName, 
+                        bankAccount 
+                    });
                     console.log(`✅ [REGISTER] Supplier ${name} berhasil didaftarkan:`, result);
-                    const { saveSessionHistory } = require('../ai/memory');
+                    if (phone !== rawPhoneNumber) {
+                        await saveMetadata(sender, { mappedPhone: phone });
+                    }
+                    const { saveSessionHistory } = await import('../ai/memory');
                     await saveSessionHistory(sender, [], true); // true = delete session
                 } catch (err: any) {
-                    const { saveSessionHistory } = require('../ai/memory');
+                    const { saveSessionHistory } = await import('../ai/memory');
                     if (err?.response?.status !== 409) {
                         console.error(`❌ [REGISTER ERROR] Gagal daftarkan ${name}:`, err.message);
                     } else {
                         console.log(`ℹ️ [REGISTER] Nomor ${phone} sudah terdaftar sebelumnya. Resetting session history.`);
+                        if (phone !== rawPhoneNumber) {
+                            await saveMetadata(sender, { mappedPhone: phone });
+                        }
                         await saveSessionHistory(sender, [], true); // true = delete session
                     }
                 }
@@ -210,6 +255,7 @@ export async function processIncomingMessage(
             (parsedData.status === 'COMPLETE' || parsedData.status === 'WARNING') &&
             parsedData.items.length > 0
         ) {
+            const lastImageUrl = await getLastImageUrl(sender);
             for (const item of parsedData.items) {
                 console.log(`[ITEM] ${item.commodity} | ${item.weight_kg}kg | Rp${item.price} | ${item.location}`);
 
@@ -226,7 +272,7 @@ export async function processIncomingMessage(
                     volume: item.weight_kg,
                     price: item.price,
                     location: item.location,
-                    image: (item as any).image_url || null,
+                    image: (item as any).image_url || lastImageUrl || null,
                     lat: embeddedLat,
                     lng: embeddedLng,
                 };
@@ -244,6 +290,11 @@ export async function processIncomingMessage(
                         if (apiResult.matched.user?.phoneNumber) {
                             matchedPhoneDetails += `\n- ${item.commodity}: wa.me/${apiResult.matched.user.phoneNumber}`;
                         }
+                    }
+
+                    // Clear last image URL if successfully uploaded
+                    if (lastImageUrl) {
+                        await saveMetadata(sender, { lastImageUrl: null });
                     }
                 } catch (error: any) {
                     console.error(`❌ [ERROR API] Gagal mengirim item ${item.commodity}:`, error.message);
@@ -335,6 +386,10 @@ export async function processIncomingMessage(
 
         // ─── Build final reply ───
         let finalReply = parsedData.reply_message;
+
+        if (!finalReply || !finalReply.trim()) {
+            finalReply = "Halo Juragan! Ada yang bisa saya bantu terkait penawaran hasil tani atau pesanan komoditas Anda? 🌾";
+        }
 
         if (anyMatched) {
             finalReply += '\n\n*KABAR BAIK!* Kami langsung menemukan kecocokan yang pas untuk Anda di sistem!';

@@ -2,6 +2,11 @@ import axios from 'axios';
 
 const API_URL = process.env.API_URL || 'http://127.0.0.1:3000';
 
+// Instance axios dengan timeout agar bot tidak gantung jika dashboard bermasalah
+const apiClient = axios.create({
+    timeout: 5000, // 5 detik timeout
+});
+
 export interface ApiPayload {
     phone: string;
     commodity: string;
@@ -16,7 +21,7 @@ export interface ApiPayload {
 export const apiService = {
     async sendSupply(data: ApiPayload) {
         try {
-            const response = await axios.post(`${API_URL}/api/supply`, data);
+            const response = await apiClient.post(`${API_URL}/api/supply`, data);
             return response.data;
         } catch (error: any) {
             console.error(`[API ERROR] Gagal mengirim data SUPPLY:`, error.message);
@@ -26,7 +31,7 @@ export const apiService = {
 
     async sendDemand(data: ApiPayload) {
         try {
-            const response = await axios.post(`${API_URL}/api/demand`, data);
+            const response = await apiClient.post(`${API_URL}/api/demand`, data);
             return response.data;
         } catch (error: any) {
             console.error(`[API ERROR] Gagal mengirim data DEMAND:`, error.message);
@@ -36,7 +41,7 @@ export const apiService = {
 
     async getUserEntries(phone: string) {
         try {
-            const response = await axios.get(`${API_URL}/api/entries`, {
+            const response = await apiClient.get(`${API_URL}/api/entries`, {
                 params: { phone }
             });
             return response.data;
@@ -48,7 +53,7 @@ export const apiService = {
 
     async checkWhitelist(phone: string) {
         try {
-            const response = await axios.get(`${API_URL}/api/user/whitelist`, {
+            const response = await apiClient.get(`${API_URL}/api/user/whitelist`, {
                 params: { phone }
             });
             return response.data;
@@ -59,7 +64,7 @@ export const apiService = {
     },
     async getSupplierOrders(phone: string) {
         try {
-            const response = await axios.get(`${API_URL}/api/orders`, {
+            const response = await apiClient.get(`${API_URL}/api/orders`, {
                 params: { phone }
             });
             return response.data;
@@ -68,9 +73,9 @@ export const apiService = {
             return { success: false, data: [] };
         }
     },
-    async registerSupplier(data: { phone: string; name: string; location: string }) {
+    async registerSupplier(data: { phone: string; name: string; location: string; bankName?: string; bankAccount?: string }) {
         try {
-            const response = await axios.post(`${API_URL}/api/auth/register`, {
+            const response = await apiClient.post(`${API_URL}/api/auth/register`, {
                 phone: data.phone,
                 ownerName: data.name,
                 businessName: data.name,
@@ -78,13 +83,22 @@ export const apiService = {
                 businessType: 'Supplier Pertanian',
                 role: 'PETANI',
                 email: '',
-                bankName: '',
-                bankAccount: '',
+                bankName: data.bankName || '',
+                bankAccount: data.bankAccount || '',
             });
             return response.data;
         } catch (error: any) {
             console.error(`[API ERROR] Gagal registrasi supplier:`, error.message);
             throw error;
+        }
+    },
+    async getSettings() {
+        try {
+            const response = await apiClient.get(`${API_URL}/api/dashboard/settings`);
+            return response.data;
+        } catch (error: any) {
+            console.error(`[API ERROR] Gagal mengambil pengaturan:`, error.message);
+            return null;
         }
     },
 };

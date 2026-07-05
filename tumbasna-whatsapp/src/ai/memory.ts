@@ -41,16 +41,29 @@ export async function getSessionHistory(sender: string): Promise<any[]> {
 export async function saveSessionHistory(sender: string, historyJson: any[], isCompletedOrCancelled: boolean) {
     const phoneNumber = sender.split('@')[0];
     
+    // Ambil history saat ini dari memory fallback untuk mencari metadata
+    const currentHistory = memoryFallback.get(phoneNumber) || [];
+    const metadataList = currentHistory.filter((msg: any) => msg.role === 'metadata');
+    
+    let nextHistory = [...historyJson];
+    
     if (isCompletedOrCancelled) {
-        // Reset memory
-        memoryFallback.delete(phoneNumber);
+        // Jika disuruh hapus, bersihkan semua chat history tetapi pertahankan entri metadata yang memiliki mappedPhone
+        const mappedPhoneMeta = metadataList.find((msg: any) => msg.mappedPhone);
+        nextHistory = mappedPhoneMeta ? [mappedPhoneMeta] : [];
+        memoryFallback.set(phoneNumber, nextHistory);
     } else {
-        // Update in-memory fallback DULU (tidak perlu tunggu DB)
-        memoryFallback.set(phoneNumber, historyJson);
+        // Gabungkan metadata yang ada saat ini ke history baru jika belum ada
+        for (const meta of metadataList) {
+            if (!nextHistory.some((msg: any) => msg.role === 'metadata' && JSON.stringify(msg) === JSON.stringify(meta))) {
+                nextHistory.unshift(meta);
+            }
+        }
+        memoryFallback.set(phoneNumber, nextHistory);
     }
 
     try {
-        if (isCompletedOrCancelled) {
+        if (nextHistory.length === 0) {
             await axios.post(`${dashboardApiUrl}/api/session`, { 
                 phone: phoneNumber, 
                 action: 'DELETE' 
@@ -58,12 +71,67 @@ export async function saveSessionHistory(sender: string, historyJson: any[], isC
         } else {
             await axios.post(`${dashboardApiUrl}/api/session`, { 
                 phone: phoneNumber, 
-                history: historyJson 
+                history: nextHistory 
             }, { timeout: 5000 });
         }
         console.log(`✅ [MEMORY SUCCESS] History updated for ${phoneNumber}`);
     } catch (e: any) {
-        // Tidak fatal — in-memory fallback sudah diupdate
         console.warn(`⚠️ [MEMORY] Gagal simpan ke DB (in-memory aktif): ${e.message}`);
     }
 }
+
+/**
+ * Menyimpan metadata tertentu ke dalam chat history session.
+ */
+export async function saveMetadata(sender: string, metaToUpdate: { mappedPhone?: string; lastImageUrl?: string | null }) {
+    const phoneNumber = sender.split('@')[0];
+    const history = await getSessionHistory(sender);
+    
+    // Cari index metadata yang sudah ada
+    const index = history.findIndex((msg: any) => msg.role === 'metadata');
+    
+    if (index >= 0) {
+        history[index] = {
+            ...history[index],
+            ...metaToUpdate
+        };
+        // Hapus key jika nilainya null untuk kebersihan data
+        if (metaToUpdate.lastImageUrl === null) {
+            delete history[index].lastImageUrl;
+        }
+    } else {
+        const newMeta: any = { role: 'metadata', ...metaToUpdate };
+        if (newMeta.lastImageUrl === null) {
+            delete newMeta.lastImageUrl;
+        }
+        history.unshift(newMeta);
+    }
+    
+    // Simpan history kembali
+    await saveSessionHistory(sender, history, false);
+    console.log(`🔗 [METADATA SAVED] ${phoneNumber}:`, JSON.stringify(metaToUpdate));
+}
+
+/**
+ * Mengambil nomor telepon efektif setelah mapping dari LID.
+ */
+export async function getEffectivePhoneNumber(sender: string): Promise<string> {
+    const phoneNumber = sender.split('@')[0];
+    const history = await getSessionHistory(sender);
+    const metadata = history.find((msg: any) => msg.role === 'metadata');
+    if (metadata && metadata.mappedPhone) {
+        console.log(`🔗 [METADATA ROUTING] JID ${sender} -> Real Phone: ${metadata.mappedPhone}`);
+        return metadata.mappedPhone;
+    }
+    return phoneNumber;
+}
+
+/**
+ * Mengambil URL foto produk terakhir yang diunggah dalam sesi ini.
+ */
+export async function getLastImageUrl(sender: string): Promise<string | null> {
+    const history = await getSessionHistory(sender);
+    const metadata = history.find((msg: any) => msg.role === 'metadata');
+    return metadata?.lastImageUrl || null;
+}
+
