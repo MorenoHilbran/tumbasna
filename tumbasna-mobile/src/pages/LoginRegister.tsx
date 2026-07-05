@@ -41,6 +41,31 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ initialIsLogin = true, on
   const [toastMessage, setToastMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
   const [isGoogleRegister, setIsGoogleRegister] = useState(false);
+  const [locating, setLocating] = useState(false);
+
+  const handleGetCurrentLocation = async () => {
+    setLocating(true);
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000, enableHighAccuracy: true });
+      });
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`);
+      if (!res.ok) throw new Error('Gagal memuat alamat');
+      const data = await res.json();
+      if (data && data.display_name) {
+        setAddress(data.display_name);
+        setToastMessage('Lokasi Anda berhasil dideteksi!');
+        setShowToast(true);
+      } else {
+        setAddress(`${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`);
+      }
+    } catch (err: any) {
+      setToastMessage(`Gagal mendeteksi lokasi: ${err.message || 'Pastikan izin GPS aktif'}`);
+      setShowToast(true);
+    } finally {
+      setLocating(false);
+    }
+  };
 
   // Sync isLogin if initialIsLogin prop changes
   React.useEffect(() => {
