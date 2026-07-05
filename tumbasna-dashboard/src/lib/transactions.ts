@@ -69,7 +69,7 @@ export async function sendOfferToBuyer(matchId: string) {
   const price = match.supplyEntry.price;
   const location = match.supplyEntry.location;
 
-  const message = `Halo Bpk/Ibu ${buyer.name || ''}, kami menemukan pasokan yang Anda cari!\\n\\n📦 ${commodity.toUpperCase()}: ${qty} kg\\n📍 Dari: ${seller.name || 'Petani'} (${location})\\n💰 Harga: Rp ${price.toLocaleString('id-ID')}/kg\\n\\nApakah Anda berminat mengambil pasokan ini?\\nBalas pesan ini dengan ketik:\\nAMBIL ${match.code}`;
+  const message = `Halo Bpk/Ibu ${buyer.name || ''}, kami menemukan pasokan yang Anda cari!\\n\\n📦 ${commodity.toUpperCase()}: ${qty} kg\\n📍 Dari: ${seller.name || 'Petani'} (${location})\\n💰 Harga: Rp ${Number(price).toLocaleString('id-ID')}/kg\\n\\nApakah Anda berminat mengambil pasokan ini?\\nBalas pesan ini dengan ketik:\\nAMBIL ${match.code}`;
 
   await sendFonnteMessage(buyer.phoneNumber, message);
 

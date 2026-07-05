@@ -201,7 +201,7 @@ function BarChart() {
 
 // ─── Status Badge ─────────────────────────────────────────────
 function StatusBadge({ status }: { status: string }) {
-    const map: Record<string, { bg: string; color: string; label: string }> = {
+    const map: Record<string, { bg: string; label: string }> = {
         selesai: { bg: 'bg-emerald-50 text-emerald-600 border-emerald-100/50', label: 'Selesai' },
         proses: { bg: 'bg-emerald-50/50 text-emerald-700 border-emerald-100/30', label: 'Proses' },
         jalan: { bg: 'bg-amber-50 text-amber-600 border-amber-100/50', label: 'Jalan' },
@@ -271,9 +271,8 @@ export default function DashboardPage() {
                                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${kpi.bg}`}>
                                     <Icon className="w-4 h-4" style={{ color: kpi.color }} />
                                 </div>
-                                <div className={`flex items-center gap-0.5 text-[10px] font-bold ${
-                                    kpi.trend === 'up' ? 'text-emerald-600' : 'text-rose-600'
-                                }`}>
+                                <div className={`flex items-center gap-0.5 text-[10px] font-bold ${kpi.trend === 'up' ? 'text-emerald-600' : 'text-rose-600'
+                                    }`}>
                                     {kpi.trend === 'up'
                                         ? <TrendingUp className="w-3.5 h-3.5" />
                                         : <TrendingDown className="w-3.5 h-3.5" />}
@@ -303,7 +302,7 @@ export default function DashboardPage() {
                             Minggu Ini
                         </div>
                     </div>
-                    
+
                     <div className="mt-8">
                         <BarChart />
                     </div>
@@ -402,9 +401,8 @@ export default function DashboardPage() {
                                 <div>
                                     <div className="flex items-center justify-between gap-3 mb-3">
                                         <div className="flex items-center gap-2">
-                                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${
-                                                act.type === 'logistik' ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'
-                                            }`}>
+                                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${act.type === 'logistik' ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'
+                                                }`}>
                                                 {act.type === 'logistik'
                                                     ? <Truck className="w-3.5 h-3.5" />
                                                     : <ShoppingCart className="w-3.5 h-3.5" />}

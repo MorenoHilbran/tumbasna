@@ -50,6 +50,12 @@ const navItems = [
         icon: Truck,
         description: 'Rute & armada kirim',
     },
+    {
+        label: 'Pengguna',
+        href: '/dashboard/pengguna',
+        icon: User,
+        description: 'Supplier & Buyer terdaftar',
+    },
 ];
 
 // ----- Sidebar content (shared between desktop & mobile drawer) -----

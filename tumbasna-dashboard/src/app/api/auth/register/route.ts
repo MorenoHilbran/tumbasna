@@ -15,6 +15,21 @@ export async function POST(req: Request) {
     // Normalize phone: hilangkan +62 / 62, pastikan format 62xxx
     const normalizedPhone = phone.replace(/^\+/, '').replace(/^0/, '62');
 
+    // Cek apakah nama usaha sudah terdaftar oleh pengguna lain
+    if (businessName) {
+      const existingBusiness = await prisma.user.findFirst({
+        where: {
+          businessName: {
+            equals: businessName.trim(),
+            mode: 'insensitive'
+          }
+        }
+      });
+      if (existingBusiness && existingBusiness.phoneNumber !== normalizedPhone) {
+        return NextResponse.json({ error: `Nama usaha "${businessName}" sudah terdaftar oleh pengguna lain` }, { status: 409 });
+      }
+    }
+
     // Cek apakah nomor sudah terdaftar
     const existing = await prisma.user.findUnique({ where: { phoneNumber: normalizedPhone } });
     if (existing) {

@@ -108,7 +108,7 @@ const routeStats = [
 ];
 
 // ─── Status helpers ───────────────────────────────────────────
-const statusMap: Record<string, { bg: string; color: string; label: string }> = {
+const statusMap: Record<string, { bg: string; label: string }> = {
     jalan: { bg: 'bg-emerald-50 text-emerald-700 border-emerald-100/50', label: 'Dalam Perjalanan' },
     selesai: { bg: 'bg-emerald-50 text-emerald-600 border-emerald-100/50', label: 'Selesai' },
     standby: { bg: 'bg-slate-100 text-slate-600 border-slate-200/50', label: 'Standby' },
@@ -187,7 +187,7 @@ export default function LogistikPage() {
 
                 {/* Left Side: Map + Fleet Grid */}
                 <div className="xl:col-span-2 space-y-6">
-                    
+
                     {/* Live Tracking Map Panel */}
                     <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden flex flex-col">
                         <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
@@ -203,7 +203,7 @@ export default function LogistikPage() {
 
                         {/* Interactive map container */}
                         <div className="h-[400px] w-full relative bg-slate-50">
-                            <LogistikMap 
+                            <LogistikMap
                                 armadaData={armadaData}
                                 selectedId={selectedArmada.id}
                                 onSelect={(id) => {
@@ -220,7 +220,7 @@ export default function LogistikPage() {
                             <h2 className="text-base font-bold text-slate-900 tracking-tight">Daftar Armada</h2>
                             <p className="text-xs text-slate-400 font-medium">{armadaData.length} armada terdaftar</p>
                         </div>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {armadaData.map((a) => {
                                 const isSelected = selectedArmada.id === a.id;
@@ -228,17 +228,15 @@ export default function LogistikPage() {
                                     <div
                                         key={a.id}
                                         onClick={() => setSelectedArmada(a)}
-                                        className={`bg-white rounded-2xl p-5 border cursor-pointer transition-all duration-150 ${
-                                            isSelected 
-                                                ? 'border-emerald-600 shadow-md bg-emerald-50/10' 
+                                        className={`bg-white rounded-2xl p-5 border cursor-pointer transition-all duration-150 ${isSelected
+                                                ? 'border-emerald-600 shadow-md bg-emerald-50/10'
                                                 : 'border-slate-200/60 shadow-sm hover:border-slate-300 hover:shadow-md'
-                                        }`}
+                                            }`}
                                     >
                                         <div className="flex items-start justify-between mb-4">
                                             <div className="flex items-center gap-3">
-                                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
-                                                    isSelected ? 'bg-emerald-600 text-white' : 'bg-slate-50 text-slate-500'
-                                                }`}>
+                                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${isSelected ? 'bg-emerald-600 text-white' : 'bg-slate-50 text-slate-500'
+                                                    }`}>
                                                     <Truck className="w-5 h-5" />
                                                 </div>
                                                 <div>

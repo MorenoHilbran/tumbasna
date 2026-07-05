@@ -50,7 +50,7 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ initialIsLogin = true, on
   // Form Fields
   const [phoneOrEmail, setPhoneOrEmail] = useState('');
   const [password, setPassword] = useState('');
-  
+
   const [ownerName, setOwnerName] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [phone, setPhone] = useState('');
@@ -119,12 +119,12 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ initialIsLogin = true, on
           headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
         });
         const userInfo = await userInfoRes.json();
-        
+
         // Populate the registration fields from real Google data
         setOwnerName(userInfo.name || '');
         setEmail(userInfo.email || '');
         setPassword('google-oauth-linked');
-        
+
         setIsGoogleRegister(true);
         setIsLogin(false);
         setToastMessage('Berhasil Otorisasi Google. Silakan lengkapi data usaha Anda.');
@@ -146,8 +146,8 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ initialIsLogin = true, on
     <IonPage>
       {/* Dynamic Header based on Login / Register */}
       <div className="auth-header-bar">
-        <button 
-          className="auth-header-back-btn" 
+        <button
+          className="auth-header-back-btn"
           onClick={() => {
             if (!isLogin) {
               setIsLogin(true);
@@ -367,7 +367,30 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ initialIsLogin = true, on
                 </div>
 
                 <div className="reg-input-group">
-                  <label className="reg-field-label">Alamat Lengkap Usaha</label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <label className="reg-field-label" style={{ margin: 0 }}>Alamat Lengkap Usaha</label>
+                    <button
+                      type="button"
+                      onClick={handleGetCurrentLocation}
+                      disabled={locating}
+                      style={{
+                        background: '#f0fdf4',
+                        color: '#16a34a',
+                        border: '1px solid #dcfce7',
+                        borderRadius: '8px',
+                        padding: '4px 10px',
+                        fontSize: '10px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      {locating ? 'Mencari...' : '📍 Gunakan Lokasi'}
+                    </button>
+                  </div>
                   <div className="reg-input-wrapper">
                     <input
                       type="text"

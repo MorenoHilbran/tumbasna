@@ -15,6 +15,15 @@ export async function GET(req: Request) {
             include: {
                 productEntries: {
                     orderBy: { createdAt: 'desc' },
+                    include: {
+                        orderItems: {
+                            include: {
+                                order: {
+                                    select: { status: true }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         });
@@ -23,9 +32,28 @@ export async function GET(req: Request) {
             return NextResponse.json({ success: true, data: [] });
         }
 
+        const mappedEntries = user.productEntries.map((entry) => {
+            const soldQty = entry.orderItems
+                .filter(item => item.order && ['DIPROSES', 'DIKIRIM', 'SELESAI'].includes(item.order.status))
+                .reduce((sum, item) => sum + Number(item.qty), 0);
+            
+            return {
+                id: entry.id,
+                type: entry.type,
+                commodity: entry.commodity,
+                originalQty: Number(entry.qty),
+                soldQty: soldQty,
+                remainingQty: Math.max(0, Number(entry.qty) - soldQty),
+                price: Number(entry.price),
+                location: entry.location,
+                status: entry.status,
+                createdAt: entry.createdAt
+            };
+        });
+
         return NextResponse.json({
             success: true,
-            data: user.productEntries
+            data: mappedEntries
         });
 
     } catch (error) {

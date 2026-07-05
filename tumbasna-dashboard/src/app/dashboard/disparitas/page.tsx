@@ -51,12 +51,13 @@ export default async function DisparitasPage() {
         if (!regionMap[region]) {
             regionMap[region] = { supplyPrices: [], demandPrices: [], supplyCount: 0, demandCount: 0, commodities: new Set() };
         }
-        if (e.price > 0) {
+        const priceNum = Number(e.price);
+        if (priceNum > 0) {
             if (e.type === 'SUPPLY') {
-                regionMap[region].supplyPrices.push(e.price);
+                regionMap[region].supplyPrices.push(priceNum);
                 regionMap[region].supplyCount++;
             } else {
-                regionMap[region].demandPrices.push(e.price);
+                regionMap[region].demandPrices.push(priceNum);
                 regionMap[region].demandCount++;
             }
         }
@@ -83,12 +84,13 @@ export default async function DisparitasPage() {
     const commodityRegionMap: Record<string, CommodityAcc> = {};
 
     for (const e of entries) {
-        if (e.type !== 'SUPPLY' || e.price <= 0) continue;
+        const priceNum = Number(e.price);
+        if (e.type !== 'SUPPLY' || priceNum <= 0) continue;
         const region = getRegion(e.location);
         const comm = e.commodity.toLowerCase();
         if (!commodityRegionMap[comm]) commodityRegionMap[comm] = {};
         if (!commodityRegionMap[comm][region]) commodityRegionMap[comm][region] = { total: 0, count: 0 };
-        commodityRegionMap[comm][region].total += e.price;
+        commodityRegionMap[comm][region].total += priceNum;
         commodityRegionMap[comm][region].count++;
     }
 

@@ -267,7 +267,7 @@ async function main() {
             const dist = haversine(Number(supply.lat), Number(supply.lng), Number(d.lat), Number(d.lng));
             if (dist > 200) return false; // relaxed to 200 km for seed diversity
             // Price: supply ≤ 115% of demand
-            if (supply.price / d.price > 1.15) return false;
+            if (Number(supply.price) / Number(d.price) > 1.15) return false;
             return true;
         });
 

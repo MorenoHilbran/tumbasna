@@ -192,11 +192,10 @@ export default function KomoditasPage() {
                                         <button
                                             key={k}
                                             onClick={() => setKategoriFilter(k)}
-                                            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
-                                                isAct 
-                                                    ? 'bg-white text-slate-800 shadow-sm' 
+                                            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${isAct
+                                                    ? 'bg-white text-slate-800 shadow-sm'
                                                     : 'text-slate-400 hover:text-slate-700'
-                                            }`}
+                                                }`}
                                         >
                                             {k}
                                         </button>
@@ -226,16 +225,15 @@ export default function KomoditasPage() {
                                             <div className="flex items-center gap-1.5">
                                                 <span>{col.label}</span>
                                                 {col.sortable && (
-                                                    <button 
+                                                    <button
                                                         onClick={() => {
                                                             if (sortBy === col.key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
                                                             else { setSortBy(col.key as any); setSortDir('desc'); }
                                                         }}
                                                         className="p-0.5 hover:bg-slate-100 rounded transition-colors"
                                                     >
-                                                        <ArrowUpDown className={`w-3.5 h-3.5 ${
-                                                            sortBy === col.key ? 'text-emerald-600' : 'text-slate-300'
-                                                        }`} />
+                                                        <ArrowUpDown className={`w-3.5 h-3.5 ${sortBy === col.key ? 'text-emerald-600' : 'text-slate-300'
+                                                            }`} />
                                                     </button>
                                                 )}
                                             </div>
@@ -250,11 +248,10 @@ export default function KomoditasPage() {
                                         <tr
                                             key={c.id}
                                             onClick={() => setSelectedKomoditas(c)}
-                                            className={`cursor-pointer transition-all duration-150 ${
-                                                isSelected 
-                                                    ? 'bg-emerald-50/20 border-l-2 border-l-emerald-600' 
+                                            className={`cursor-pointer transition-all duration-150 ${isSelected
+                                                    ? 'bg-emerald-50/20 border-l-2 border-l-emerald-600'
                                                     : 'hover:bg-slate-50/50 border-l-2 border-l-transparent'
-                                            }`}
+                                                }`}
                                         >
                                             <td className="px-5 py-3">
                                                 <div className="flex items-center gap-3">
@@ -269,9 +266,8 @@ export default function KomoditasPage() {
                                             </td>
                                             <td className="px-5 py-3">
                                                 <p className="text-xs font-bold text-slate-800">Rp {c.harga.toLocaleString('id-ID')}</p>
-                                                <p className={`text-[9px] font-bold flex items-center gap-0.5 mt-0.5 ${
-                                                    c.pctChange > 0 ? 'text-emerald-600' : c.pctChange < 0 ? 'text-emerald-650' : 'text-slate-400'
-                                                }`}>
+                                                <p className={`text-[9px] font-bold flex items-center gap-0.5 mt-0.5 ${c.pctChange > 0 ? 'text-emerald-600' : c.pctChange < 0 ? 'text-emerald-650' : 'text-slate-400'
+                                                    }`}>
                                                     {c.pctChange > 0 ? <TrendingUp className="w-2.5 h-2.5" /> : c.pctChange < 0 ? <TrendingDown className="w-2.5 h-2.5" /> : <Minus className="w-2.5 h-2.5" />}
                                                     {Math.abs(c.pctChange)}%
                                                 </p>
@@ -332,9 +328,8 @@ export default function KomoditasPage() {
                                 </div>
                             </div>
                             <div className="mt-4 pt-3 border-t border-slate-200/40 flex items-center">
-                                <div className={`flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-bold ${
-                                    selectedKomoditas.pctChange > 5 ? 'bg-amber-50 text-amber-600 border border-amber-100/50' : selectedKomoditas.pctChange < 0 ? 'bg-emerald-50/70 text-emerald-700 border border-emerald-100/30' : 'bg-emerald-50 text-emerald-600 border border-emerald-100/50'
-                                }`}>
+                                <div className={`flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-bold ${selectedKomoditas.pctChange > 5 ? 'bg-amber-50 text-amber-600 border border-amber-100/50' : selectedKomoditas.pctChange < 0 ? 'bg-emerald-50/70 text-emerald-700 border border-emerald-100/30' : 'bg-emerald-50 text-emerald-600 border border-emerald-100/50'
+                                    }`}>
                                     {selectedKomoditas.pctChange > 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
                                     {selectedKomoditas.pctChange > 0 ? '+' : ''}{selectedKomoditas.pctChange}% (7 hari)
                                 </div>

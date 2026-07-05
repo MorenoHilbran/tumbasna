@@ -33,7 +33,7 @@ export default async function InflasiPage() {
         commEntries.forEach(e => {
             const diffDays = Math.floor((now.getTime() - e.createdAt.getTime()) / (1000 * 60 * 60 * 24));
             if (diffDays >= 0 && diffDays < 30) {
-                hist[29 - diffDays] += e.qty;
+                hist[29 - diffDays] += Number(e.qty);
             }
         });
 
@@ -68,8 +68,8 @@ export default async function InflasiPage() {
         const reg = getRegion(e.location);
         if (!regionStats[reg]) regionStats[reg] = {};
         if (!regionStats[reg][e.commodity]) regionStats[reg][e.commodity] = { supply: 0, demand: 0 };
-        if (e.type === 'SUPPLY') regionStats[reg][e.commodity].supply += e.qty;
-        else regionStats[reg][e.commodity].demand += e.qty;
+        if (e.type === 'SUPPLY') regionStats[reg][e.commodity].supply += Number(e.qty);
+        else regionStats[reg][e.commodity].demand += Number(e.qty);
     });
 
     const alertRegions: any[] = [];

@@ -29,7 +29,17 @@ export async function GET(req: Request) {
                     { phoneNumber: phone.replace('+', '') }
                 ]
             },
-            select: { id: true, name: true }
+            select: { 
+                id: true, 
+                name: true, 
+                balance: true, 
+                role: true,
+                bankName: true,
+                bankAccount: true,
+                address: true,
+                businessName: true,
+                businessType: true
+            }
         });
 
         if (user) {
@@ -37,7 +47,14 @@ export async function GET(req: Request) {
                 success: true, 
                 isWhitelisted: true, 
                 isRegistered: !!user.name,
-                name: user.name 
+                name: user.name,
+                balance: Number(user.balance),
+                role: user.role,
+                bankName: user.bankName,
+                bankAccount: user.bankAccount,
+                address: user.address,
+                businessName: user.businessName,
+                businessType: user.businessType
             });
         }
 

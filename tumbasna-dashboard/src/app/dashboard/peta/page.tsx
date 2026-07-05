@@ -112,19 +112,17 @@ function DetailPanel({ w, onClose }: { w: typeof wilayahData[0]; onClose: () => 
     return (
         <div className="flex flex-col h-full bg-white text-slate-800">
             {/* Header */}
-            <div className={`p-4 rounded-xl mb-4 border ${
-                isMelimpah ? 'bg-emerald-50/70 border-emerald-100/50' : 'bg-rose-50/70 border-rose-100/50'
-            }`}>
+            <div className={`p-4 rounded-xl mb-4 border ${isMelimpah ? 'bg-emerald-50/70 border-emerald-100/50' : 'bg-rose-50/70 border-rose-100/50'
+                }`}>
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <div className={`w-2 h-2 rounded-full ${isMelimpah ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                        <span className={`text-[10px] font-bold uppercase tracking-widest ${
-                            isMelimpah ? 'text-emerald-600' : 'text-rose-600'
-                        }`}>
+                        <span className={`text-[10px] font-bold uppercase tracking-widest ${isMelimpah ? 'text-emerald-600' : 'text-rose-600'
+                            }`}>
                             Stok {w.status}
                         </span>
                     </div>
-                    <button 
+                    <button
                         onClick={onClose}
                         className="text-slate-400 hover:text-slate-600 transition-colors p-0.5 rounded-lg hover:bg-white/50"
                     >
@@ -252,7 +250,7 @@ export default function PetaPage() {
                     <MapPin className="w-3.5 h-3.5 text-emerald-500" />
                     Pilih Wilayah:
                 </span>
-                
+
                 <div className="flex items-center gap-1.5">
                     {wilayahData.map((w) => {
                         const isSel = selected === w.id;
@@ -260,15 +258,13 @@ export default function PetaPage() {
                             <button
                                 key={w.id}
                                 onClick={() => setSelected(w.id)}
-                                className={`flex items-center gap-2 py-1.5 px-3 rounded-xl transition-all duration-150 border whitespace-nowrap ${
-                                    isSel
+                                className={`flex items-center gap-2 py-1.5 px-3 rounded-xl transition-all duration-150 border whitespace-nowrap ${isSel
                                         ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
                                         : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
-                                }`}
+                                    }`}
                             >
-                                <span className={`w-1.5 h-1.5 rounded-full ${
-                                    w.status === 'melimpah' ? (isSel ? 'bg-white' : 'bg-emerald-500') : (isSel ? 'bg-white' : 'bg-rose-500')
-                                }`} />
+                                <span className={`w-1.5 h-1.5 rounded-full ${w.status === 'melimpah' ? (isSel ? 'bg-white' : 'bg-emerald-500') : (isSel ? 'bg-white' : 'bg-rose-500')
+                                    }`} />
                                 <span className="text-xs font-bold">{w.name}</span>
                                 <span className={`text-[9px] font-medium opacity-70 ${isSel ? 'text-white' : 'text-slate-400'}`}>{w.stok}</span>
                             </button>

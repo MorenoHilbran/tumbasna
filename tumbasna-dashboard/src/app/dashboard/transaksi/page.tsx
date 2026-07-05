@@ -24,7 +24,7 @@ import {
 
 // ─── Status Badge ─────────────────────────────────────────────
 function StatusBadge({ status }: { status: string }) {
-    const map: Record<string, { bg: string; color: string; label: string; Icon: any }> = {
+    const map: Record<string, { bg: string; label: string; Icon: any }> = {
         selesai: { bg: 'bg-emerald-50 text-emerald-600 border-emerald-100/50', label: 'Selesai', Icon: CheckCircle2 },
         proses: { bg: 'bg-teal-50 text-teal-600 border-teal-100/50', label: 'Diproses', Icon: Loader2 },
         menunggu: { bg: 'bg-amber-50 text-amber-600 border-amber-100/50', label: 'Menunggu', Icon: Clock },

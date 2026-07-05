@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     // 1. Find or Create User (Role: PEDAGANG)
     const user = await prisma.user.upsert({
       where: { phoneNumber: phone },
-      update: {}, 
+      update: {},
       create: {
         phoneNumber: phone,
         role: 'PEDAGANG',
@@ -85,7 +85,7 @@ export async function POST(req: Request) {
       // 4. KIRIM PUSH NOTIFICATION VIA WA BOT
       try {
         const messageToBuyer = `🎉 *MATCH FOUND! (Pasokan Ditemukan)*\n\nDitemukan Petani yang menjual ${matchedSupply.commodity}:\n- Volume: ${matchedSupply.qty}kg\n- Harga: Rp${matchedSupply.price}\n- Lokasi: ${matchedSupply.location}\n\nHubungi Petani lewat nomor ini: wa.me/${matchedSupply.user.phoneNumber}`;
-        
+
         const reqBuyer = fetch('http://127.0.0.1:3002/api/send', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -96,7 +96,7 @@ export async function POST(req: Request) {
         }).then(res => res.text()).catch(e => `Gagal reqBuyer: ${e.message}`);
 
         const messageToSeller = `🎉 *MATCH FOUND! (Pembeli Ditemukan)*\n\nAda Pedagang yang butuh ${matchedSupply.commodity} Anda!\n- Volume yg dicari: ${demandEntry.qty}kg\n- Lokasi Pembeli: ${demandEntry.location}\n\nHubungi Pedagang lewat nomor ini: wa.me/${user.phoneNumber}`;
-        
+
         const reqSeller = fetch('http://127.0.0.1:3002/api/send', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

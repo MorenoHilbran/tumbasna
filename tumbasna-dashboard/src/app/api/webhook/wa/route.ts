@@ -2,11 +2,11 @@ import { NextResponse } from 'next/server';
 import { extractMessageData } from '@/lib/gemini';
 import { geocodeLocation } from '@/lib/geocoding';
 import prisma from '@/lib/prisma';
-import { 
-  handleAmbiCommand, 
-  handleConfirmationCommand, 
-  generateTransactionCode, 
-  sendOfferToBuyer 
+import {
+  handleAmbiCommand,
+  handleConfirmationCommand,
+  generateTransactionCode,
+  sendOfferToBuyer
 } from '@/lib/transactions';
 
 export async function POST(req: Request) {
@@ -55,8 +55,8 @@ export async function POST(req: Request) {
         result = await handleConfirmationCommand(sender, trxCode, false);
       }
 
-      return NextResponse.json({ 
-        success: true, 
+      return NextResponse.json({
+        success: true,
         command,
         data: result
       });
@@ -164,8 +164,8 @@ export async function POST(req: Request) {
         if (distanceKm > MAX_DISTANCE_KM) continue;
 
         // 2. Price filter — supply price must not exceed 115% of demand price
-        const supplyPrice  = entry.type === 'SUPPLY' ? entry.price : candidate.price;
-        const demandPrice  = entry.type === 'DEMAND' ? entry.price : candidate.price;
+        const supplyPrice = Number(entry.type === 'SUPPLY' ? entry.price : candidate.price);
+        const demandPrice = Number(entry.type === 'DEMAND' ? entry.price : candidate.price);
 
         if (demandPrice > 0 && supplyPrice / demandPrice > MAX_PRICE_PREMIUM_RATIO) continue;
 
@@ -173,7 +173,7 @@ export async function POST(req: Request) {
         //    Distance score  = normalised against MAX_DISTANCE_KM (0–1)
         //    Price score     = normalised price ratio above 1.0 (0–1 within 15% band)
         const distanceScore = distanceKm / MAX_DISTANCE_KM;
-        const priceScore    = demandPrice > 0
+        const priceScore = demandPrice > 0
           ? Math.max(0, (supplyPrice / demandPrice - 1) / 0.15)
           : 0;
 
@@ -200,10 +200,10 @@ export async function POST(req: Request) {
             status: 'PENDING',
           },
         });
-        
+
         // Tahap 1: Send notification and offer to buyer
         await sendOfferToBuyer(match.id);
-        
+
         matchedOps++;
 
         await prisma.productEntry.update({

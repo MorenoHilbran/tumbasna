@@ -6,17 +6,38 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get('userId');
+    const phone = searchParams.get('phone');
 
     // Jika userId ada dan merupakan UUID valid, filter by buyerUserId. 
-    // Jika userId ada tapi tidak valid (misal user mock), kembalikan array kosong.
-    // Jika userId tidak ada, ambil semua (untuk admin dashboard).
-    let whereClause = {};
+    // Jika phone ada, cari user berdasarkan nomor telepon lalu ambil pesanan milik supplier tersebut.
+    let whereClause: any = {};
     if (userId) {
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       if (!uuidRegex.test(userId)) {
         return NextResponse.json({ success: true, data: [] });
       }
       whereClause = { buyerUserId: userId };
+    } else if (phone) {
+      const normalizedPhone = phone.replace(/^\+/, '').replace(/^0/, '62');
+      const user = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { phoneNumber: normalizedPhone },
+            { phoneNumber: phone },
+          ]
+        }
+      });
+
+      if (!user) {
+        return NextResponse.json({ success: true, data: [] });
+      }
+
+      whereClause = {
+        OR: [
+          { supplierName: user.name || '' },
+          ...(user.businessName ? [{ supplierName: user.businessName }] : [])
+        ]
+      };
     }
 
     const orders = await prisma.order.findMany({
