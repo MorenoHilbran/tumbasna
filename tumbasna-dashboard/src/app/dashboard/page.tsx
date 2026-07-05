@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     TrendingUp,
     TrendingDown,
@@ -159,13 +159,13 @@ const growthStats = [
 ];
 
 // ─── Chart Bar Component ──────────────────────────────────────
-function BarChart() {
-    const max = Math.max(...dailyTransactions.map(d => d.value));
+function BarChart({ transactions }: { transactions: typeof dailyTransactions }) {
+    const max = Math.max(...transactions.map(d => d.value), 1);
     const [hovered, setHovered] = useState<number | null>(null);
 
     return (
         <div className="flex items-end gap-3 h-48 px-2">
-            {dailyTransactions.map((d, i) => {
+            {transactions.map((d, i) => {
                 const heightPct = (d.value / max) * 100;
                 const isHov = hovered === i;
                 return (
@@ -241,6 +241,93 @@ function RouteVisualizer({ from, to }: { from: string; to: string }) {
 
 // ─── Main Dashboard Page ──────────────────────────────────────
 export default function DashboardPage() {
+    const [stats, setStats] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const res = await fetch('/api/dashboard/stats');
+                if (!res.ok) throw new Error('Gagal memuat data statistik');
+                const json = await res.json();
+                if (json.success) {
+                    setStats(json.data);
+                }
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchStats();
+    }, []);
+
+    const activeKpiData = [
+        {
+            id: 'transaksi',
+            label: 'Total Transaksi',
+            value: stats ? stats.kpi.totalTransactions.toLocaleString('id-ID') : '0',
+            change: '+8.2%',
+            trend: 'up',
+            icon: ShoppingCart,
+            color: '#059669',
+            bg: 'bg-emerald-50/70',
+            period: 'real-time',
+        },
+        {
+            id: 'nilai',
+            label: 'Nilai Transaksi',
+            value: stats ? `Rp ${stats.kpi.totalValue.toLocaleString('id-ID')}` : 'Rp 0',
+            change: '+12.5%',
+            trend: 'up',
+            icon: Wallet,
+            color: '#059669',
+            bg: 'bg-emerald-50/70',
+            period: 'real-time',
+        },
+        {
+            id: 'supplier',
+            label: 'Total Supplier',
+            value: stats ? stats.kpi.totalSuppliers.toLocaleString('id-ID') : '0',
+            change: '+4.1%',
+            trend: 'up',
+            icon: Users,
+            color: '#D97706',
+            bg: 'bg-amber-50/70',
+            period: 'real-time',
+        },
+        {
+            id: 'buyer',
+            label: 'Total Buyer',
+            value: stats ? stats.kpi.totalBuyers.toLocaleString('id-ID') : '0',
+            change: '-1.3%',
+            trend: 'down',
+            icon: Users,
+            color: '#475569',
+            bg: 'bg-slate-100/70',
+            period: 'real-time',
+        },
+        {
+            id: 'komoditas',
+            label: 'Komoditas Aktif',
+            value: stats ? stats.kpi.activeCommodities.toLocaleString('id-ID') : '0',
+            change: '+3',
+            trend: 'up',
+            icon: Package,
+            color: '#059669',
+            bg: 'bg-emerald-50/70',
+            period: 'real-time',
+        },
+    ];
+
+    const activeTopCommodities = stats?.topCommodities && stats.topCommodities.length > 0 
+        ? stats.topCommodities 
+        : topCommodities;
+
+    const activeRecentActivities = stats?.recentActivities && stats.recentActivities.length > 0 
+        ? stats.recentActivities 
+        : recentActivities;
+
     return (
         <div className="p-8 space-y-8 bg-[#F8FAFC]">
 
@@ -260,7 +347,7 @@ export default function DashboardPage() {
 
             {/* KPI Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-                {kpiData.map((kpi) => {
+                {activeKpiData.map((kpi) => {
                     const Icon = kpi.icon;
                     return (
                         <div
@@ -304,7 +391,7 @@ export default function DashboardPage() {
                     </div>
 
                     <div className="mt-8">
-                        <BarChart />
+                        <BarChart transactions={stats?.dailyTransactions || dailyTransactions} />
                     </div>
 
                     <div className="mt-6 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-4">
@@ -318,7 +405,7 @@ export default function DashboardPage() {
                                 <span className="text-xs font-semibold text-slate-400">Rata-rata Harian</span>
                             </div>
                         </div>
-                        <span className="text-xs font-bold text-slate-800">Total: 2.846 transaksi</span>
+                        <span className="text-xs font-bold text-slate-800">Total: {stats ? stats.kpi.totalTransactions.toLocaleString('id-ID') : '0'} transaksi</span>
                     </div>
                 </div>
 
@@ -333,7 +420,7 @@ export default function DashboardPage() {
                             <ArrowUpRight className="w-4 h-4 text-slate-400" />
                         </div>
                         <div className="space-y-4">
-                            {topCommodities.map((c, i) => (
+                            {activeTopCommodities.map((c: any, i: number) => (
                                 <div key={c.name} className="space-y-1.5">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
@@ -393,7 +480,7 @@ export default function DashboardPage() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {recentActivities.map((act) => (
+                        {activeRecentActivities.map((act: any) => (
                             <div
                                 key={act.id}
                                 className="bg-white border border-slate-200/70 rounded-2xl p-4 transition-all hover:border-slate-300 hover:shadow-sm flex flex-col justify-between"

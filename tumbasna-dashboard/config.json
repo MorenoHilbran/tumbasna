@@ -1,0 +1,28 @@
+{
+  "buyer": {
+    "midtransActive": true,
+    "codActive": true,
+    "bankTransferActive": true,
+    "maxCodRadius": 20,
+    "minOrderKg": 10,
+    "minOrderAmount": 50000,
+    "adminFee": 2500
+  },
+  "supplier": {
+    "aiBotActive": true,
+    "aiModel": "llama-3.1-8b-instant",
+    "jamKerjaMulai": "08:00",
+    "jamKerjaSelesai": "17:00",
+    "whitelistCommodities": [
+      "Beras",
+      "Jagung",
+      "Tomat",
+      "Cabai Merah",
+      "Cabai Rawit",
+      "Bawang Merah",
+      "Bawang Putih",
+      "Kedelai",
+      "Kentang"
+    ]
+  }
+}

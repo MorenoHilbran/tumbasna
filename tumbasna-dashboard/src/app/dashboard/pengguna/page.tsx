@@ -14,7 +14,9 @@ import {
   Calendar,
   Package,
   ShoppingCart,
-  DollarSign
+  DollarSign,
+  Trash2,
+  Loader2
 } from 'lucide-react';
 
 interface UserCount {
@@ -53,12 +55,37 @@ export default function PenggunaPage() {
   
   const [suppliers, setSuppliers] = useState<User[]>([]);
   const [buyers, setBuyers] = useState<User[]>([]);
+  const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
     totalSuppliers: 0,
     totalBuyers: 0,
     totalAdmins: 0
   });
+
+  const handleDeleteUser = async (id: string, nameOrPhone: string) => {
+    const confirmDelete = window.confirm(`Apakah Anda yakin ingin menghapus pengguna "${nameOrPhone}" beserta seluruh produk, transaksi, dan riwayat chat bot AI mereka secara permanen?`);
+    if (!confirmDelete) return;
+
+    try {
+      setDeleteLoading(id);
+      const res = await fetch(`/api/dashboard/users?id=${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Gagal menghapus pengguna');
+      }
+
+      // Refresh list
+      fetchUsers();
+    } catch (err: any) {
+      alert(`Error: ${err.message}`);
+    } finally {
+      setDeleteLoading(null);
+    }
+  };
 
   const fetchUsers = async () => {
     try {
@@ -232,6 +259,7 @@ export default function PenggunaPage() {
                     {activeTab === 'supplier' ? 'Total Listing' : 'Total Transaksi'}
                   </th>
                   <th className="px-6 py-4 text-right">Terdaftar</th>
+                  <th className="px-6 py-4 text-center">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-xs text-slate-600 font-medium">
@@ -331,6 +359,22 @@ export default function PenggunaPage() {
                           Tumbasna ID
                         </p>
                       </div>
+                    </td>
+
+                    {/* Aksi */}
+                    <td className="px-6 py-4 text-center">
+                      <button
+                        onClick={() => handleDeleteUser(user.id, user.name || user.phoneNumber)}
+                        disabled={deleteLoading === user.id}
+                        className="p-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl transition-all disabled:opacity-50 inline-flex items-center justify-center"
+                        title="Hapus Pengguna & Sesi Bot"
+                      >
+                        {deleteLoading === user.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
+                      </button>
                     </td>
                   </tr>
                 ))}

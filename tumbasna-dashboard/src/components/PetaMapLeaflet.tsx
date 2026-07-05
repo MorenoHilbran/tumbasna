@@ -21,10 +21,21 @@ interface WilayahItem {
     radius: number;
 }
 
+interface ProductPoint {
+    id: string;
+    lat: number;
+    lng: number;
+    type: string;
+    commodity: string;
+    qty: number;
+    location: string;
+}
+
 interface PetaMapLeafletProps {
     wilayahData: WilayahItem[];
     selected: string | null;
     onSelect: (id: string) => void;
+    productPoints?: ProductPoint[];
 }
 
 // ─── Auto-pan to selected marker ─────────────────────────────
@@ -41,7 +52,7 @@ function PanToSelected({ wilayahData, selected }: { wilayahData: WilayahItem[]; 
 }
 
 // ─── Main Map Component ───────────────────────────────────────
-export default function PetaMapLeaflet({ wilayahData, selected, onSelect }: PetaMapLeafletProps) {
+export default function PetaMapLeaflet({ wilayahData, selected, onSelect, productPoints }: PetaMapLeafletProps) {
     // Center: tengah Barlingmascakeb
     const center: [number, number] = [-7.55, 109.25];
 
@@ -143,6 +154,51 @@ export default function PetaMapLeaflet({ wilayahData, selected, onSelect }: Peta
                                             padding: '2px 6px', borderRadius: 20
                                         }}>{k}</span>
                                     ))}
+                                </div>
+                            </div>
+                        </Popup>
+                    </CircleMarker>
+                );
+            })}
+
+            {/* Markers/Pins untuk tiap produk di database */}
+            {productPoints?.map((p) => {
+                const isSupply = p.type === 'SUPPLY';
+                const fillColor = isSupply ? '#10B981' : '#3B82F6'; // Emerald for supply, Blue for demand
+                const strokeColor = isSupply ? '#047857' : '#1D4ED8';
+                
+                return (
+                    <CircleMarker
+                        key={`prod-${p.id}`}
+                        center={[p.lat, p.lng]}
+                        radius={10}
+                        pathOptions={{
+                            color: strokeColor,
+                            weight: 2,
+                            fillColor,
+                            fillOpacity: 0.9,
+                        }}
+                    >
+                        <Popup offset={[0, -5]}>
+                            <div style={{ fontFamily: 'Poppins, sans-serif', minWidth: '150px', padding: '4px' }}>
+                                <div style={{ fontWeight: 700, fontSize: 13, color: '#1F3826', marginBottom: 4 }}>
+                                    {p.commodity}
+                                </div>
+                                <div style={{
+                                    display: 'inline-block',
+                                    background: isSupply ? 'rgba(16,185,129,0.12)' : 'rgba(59,130,246,0.12)',
+                                    color: isSupply ? '#059669' : '#2563EB',
+                                    fontSize: 9, fontWeight: 700,
+                                    padding: '1px 6px', borderRadius: 20,
+                                    marginBottom: 6
+                                }}>
+                                    {isSupply ? 'PENAWARAN (SUPPLY)' : 'PERMINTAAN (DEMAND)'}
+                                </div>
+                                <div style={{ fontSize: 11, color: '#4B5563', margin: '2px 0' }}>
+                                    <strong>Volume:</strong> {p.qty} kg
+                                </div>
+                                <div style={{ fontSize: 11, color: '#4B5563', margin: '2px 0' }}>
+                                    <strong>Lokasi:</strong> {p.location}
                                 </div>
                             </div>
                         </Popup>

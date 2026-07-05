@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     MapPin,
     Package,
@@ -183,6 +183,23 @@ function DetailPanel({ w, onClose }: { w: typeof wilayahData[0]; onClose: () => 
 // ─── Main Peta Page ───────────────────────────────────────────
 export default function PetaPage() {
     const [selected, setSelected] = useState<string | null>('banyumas');
+    const [points, setPoints] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchPoints = async () => {
+            try {
+                const res = await fetch('/api/dashboard');
+                if (!res.ok) throw new Error('Gagal memuat koordinat produk');
+                const json = await res.json();
+                if (json.success && json.data?.points) {
+                    setPoints(json.data.points);
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        };
+        fetchPoints();
+    }, []);
 
     const selectedData = wilayahData.find(w => w.id === selected);
     const melimpahCount = wilayahData.filter(w => w.status === 'melimpah').length;
@@ -197,6 +214,7 @@ export default function PetaPage() {
                     wilayahData={wilayahData}
                     selected={selected}
                     onSelect={setSelected}
+                    productPoints={points}
                 />
             </div>
 
