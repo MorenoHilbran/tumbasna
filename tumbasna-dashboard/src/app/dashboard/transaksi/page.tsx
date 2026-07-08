@@ -187,7 +187,7 @@ export default function TransaksiPage() {
     const totalNilai = transaksiData.filter(t => t.status === 'selesai').reduce((a, t) => a + t.nilai, 0);
 
     return (
-        <div className="p-8 space-y-8 bg-[#F8FAFC]">
+        <div className="p-4 md:p-8 space-y-8 bg-[#F8FAFC]">
 
             {/* Page Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

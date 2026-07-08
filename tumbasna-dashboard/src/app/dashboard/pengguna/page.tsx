@@ -127,7 +127,7 @@ export default function PenggunaPage() {
   };
 
   return (
-    <div className="p-8 space-y-6 max-w-7xl mx-auto">
+    <div className="p-4 md:p-8 space-y-6 max-w-7xl mx-auto">
       {/* Heading */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
