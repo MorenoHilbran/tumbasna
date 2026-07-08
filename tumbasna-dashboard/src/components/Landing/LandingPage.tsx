@@ -103,11 +103,11 @@ const LandingPage = () => {
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 1 }}
-          className="mt-20 w-full max-w-5xl mx-auto p-4 rounded-3xl bg-white border border-[#006837]/10 shadow-2xl relative overflow-hidden"
+          className="mt-12 md:mt-20 w-full max-w-5xl mx-auto p-3 md:p-4 rounded-3xl bg-white border border-[#006837]/10 shadow-2xl relative overflow-hidden"
         >
           <div className="bg-[#FBF9F4] rounded-2xl overflow-hidden border border-[#006837]/5">
-             <div className="p-8 grid grid-cols-12 gap-6">
-                <div className="col-span-12 md:col-span-4 space-y-6">
+             <div className="p-4 md:p-8 grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
+                <div className="col-span-1 md:col-span-4 space-y-4 md:space-y-6">
                    <div className="bg-[#006837] rounded-2xl p-6 relative overflow-hidden shadow-lg shadow-[#006837]/20">
                       <p className="text-[#F7941D] text-[10px] font-bold mb-2 tracking-widest">PESANAN TERDAFTAR</p>
                       <h4 className="text-2xl font-bold text-white mb-4 italic font-serif">12 Pesanan Aktif</h4>
@@ -124,7 +124,7 @@ const LandingPage = () => {
                       </div>
                    </div>
                 </div>
-                 <div className="col-span-12 md:col-span-8 bg-white rounded-2xl p-6 border border-[#006837]/10 shadow-sm relative">
+                 <div className="col-span-1 md:col-span-8 bg-white rounded-2xl p-4 md:p-6 border border-[#006837]/10 shadow-sm relative">
                    <div className="flex justify-between items-center mb-6">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-[#006837] text-[#F7941D] flex items-center justify-center shadow-md">
@@ -147,7 +147,7 @@ const LandingPage = () => {
                       <p className="text-[#5C675F] text-xs leading-relaxed mb-4">
                         Harga Kentang Dieng Super di pasar Banyumas diprediksi naik sebesar 12% dalam 7 hari ke depan karena penurunan pasokan regional di Jawa Tengah. Disarankan mengamankan stok sekarang via supplier terverifikasi.
                       </p>
-                      <button className="w-full bg-[#006837] text-white text-xs font-bold py-2.5 rounded-lg flex justify-center items-center gap-2 hover:bg-[#005b30] transition-colors">
+                      <button className="w-full bg-[#006837] text-white text-[10px] md:text-xs font-bold py-3 md:py-2.5 rounded-lg flex justify-center items-center gap-2 hover:bg-[#005b30] transition-colors">
                         BELI KOMODITAS SEKARANG <ArrowRight className="w-3 h-3" />
                       </button>
                    </div>
