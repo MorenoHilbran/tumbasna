@@ -2,10 +2,11 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, ShieldCheck, Zap, TrendingUp, Users, Activity, Package, Search, Cpu, Truck, Star, Plus, Minus } from 'lucide-react';
+import { ArrowRight, ShieldCheck, Zap, TrendingUp, Users, Activity, Package, Search, Cpu, Truck, Star, Plus, Minus, Menu, X } from 'lucide-react';
 
 const LandingPage = () => {
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-[#FBF9F4] text-[#1a2e1e] font-sans antialiased overflow-x-hidden">
@@ -30,9 +31,32 @@ const LandingPage = () => {
             <a href="#faq" className="hover:text-[#F7941D] transition-colors relative after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-[#F7941D] hover:after:w-full after:transition-all after:duration-300">Bantuan</a>
           </div>
 
+          <div className="md:hidden flex items-center z-10">
+            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-[#006837] focus:outline-none">
+              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+
           <div className="hidden md:block w-[100px] z-10"></div> {/* Invisible spacer to balance the flex layout */}
         </div>
       </motion.nav>
+
+      {/* Mobile Menu Dropdown */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-24 left-0 right-0 mx-auto w-[90%] max-w-sm bg-white rounded-2xl shadow-2xl p-6 z-40 border border-[#006837]/10 flex flex-col gap-4 text-center md:hidden"
+          >
+            <a href="#" onClick={() => setIsMobileMenuOpen(false)} className="font-bold text-[#006837] hover:text-[#F7941D]">Beranda</a>
+            <a href="#cara-kerja" onClick={() => setIsMobileMenuOpen(false)} className="font-bold text-[#006837] hover:text-[#F7941D]">Cara Kerja</a>
+            <a href="#fitur" onClick={() => setIsMobileMenuOpen(false)} className="font-bold text-[#006837] hover:text-[#F7941D]">Fitur AI</a>
+            <a href="#faq" onClick={() => setIsMobileMenuOpen(false)} className="font-bold text-[#006837] hover:text-[#F7941D]">Bantuan</a>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Hero Section */}
       <section className="relative pt-40 pb-20 px-6 flex flex-col items-center">
@@ -46,12 +70,12 @@ const LandingPage = () => {
             transition={{ duration: 0.8 }}
           >
             
-            <h1 className="text-5xl md:text-7xl font-extrabold text-[#006837] leading-[1.1] mb-8 tracking-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold text-[#006837] leading-[1.1] mb-6 md:mb-8 tracking-tight">
               Pasar Digital Terpercaya <br />
               <span className="text-[#F7941D]">di Kabupaten Banyumas</span>
             </h1>
             
-            <p className="text-lg md:text-xl text-[#6B7A6F] mb-12 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg md:text-xl text-[#6B7A6F] mb-10 md:mb-12 max-w-2xl mx-auto leading-relaxed">
               Menghubungkan <strong className="text-[#006837]">Pembeli (UMKM Banyumas)</strong> dan <strong className="text-[#F7941D]">Petani/Supplier Lokal Banyumas</strong> secara langsung. Belanja kolektif bahan pangan segar dengan sistem harga transparan dan logistik cerdas terintegrasi AI.
             </p>
             
@@ -151,7 +175,7 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-20">
              <p className="text-[#F7941D] text-xs font-bold tracking-widest mb-3 uppercase">Alur Proses</p>
-             <h2 className="text-4xl md:text-5xl font-extrabold text-[#006837] tracking-tight">Cara Kerja Tumbasna Banyumas</h2>
+             <h2 className="text-3xl md:text-5xl font-extrabold text-[#006837] tracking-tight">Cara Kerja Tumbasna Banyumas</h2>
           </div>
 
           <div className="grid md:grid-cols-3 gap-12 relative">
@@ -206,7 +230,7 @@ const LandingPage = () => {
               viewport={{ once: true }}
               transition={{ delay: i * 0.15, duration: 0.5 }}
             >
-              <h3 className="text-4xl md:text-5xl font-extrabold text-white mb-3 font-serif italic">{stat.value}</h3>
+              <h3 className="text-3xl md:text-5xl font-extrabold text-white mb-3 font-serif italic">{stat.value}</h3>
               <p className="text-[#8CC63F] font-bold text-xs md:text-sm uppercase tracking-widest">{stat.label}</p>
             </motion.div>
           ))}
@@ -218,7 +242,7 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
              <p className="text-[#F7941D] text-xs font-bold tracking-widest mb-3 uppercase">Fitur Unggulan</p>
-             <h2 className="text-4xl md:text-5xl font-extrabold text-[#006837] tracking-tight">Kekuatan AI Tumbasna</h2>
+             <h2 className="text-3xl md:text-5xl font-extrabold text-[#006837] tracking-tight">Kekuatan AI Tumbasna</h2>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -263,7 +287,7 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
              <p className="text-[#F7941D] text-xs font-bold tracking-widest mb-3 uppercase">Testimoni</p>
-             <h2 className="text-4xl md:text-5xl font-extrabold text-[#006837] tracking-tight">Kisah Sukses UMKM</h2>
+             <h2 className="text-3xl md:text-5xl font-extrabold text-[#006837] tracking-tight">Kisah Sukses UMKM</h2>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
@@ -310,7 +334,7 @@ const LandingPage = () => {
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-16">
              <p className="text-[#F7941D] text-xs font-bold tracking-widest mb-3 uppercase">Tanya Jawab</p>
-             <h2 className="text-4xl md:text-5xl font-extrabold text-[#006837] tracking-tight">Pertanyaan Umum</h2>
+             <h2 className="text-3xl md:text-5xl font-extrabold text-[#006837] tracking-tight">Pertanyaan Umum</h2>
           </div>
           
           <div className="space-y-4">
@@ -360,15 +384,15 @@ const LandingPage = () => {
          <motion.div
            whileInView={{ opacity: [0, 1], scale: [0.95, 1] }}
            viewport={{ once: true }}
-           className="max-w-4xl mx-auto bg-[#006837] rounded-[40px] p-12 md:p-20 shadow-2xl relative overflow-hidden"
+           className="max-w-4xl mx-auto bg-[#006837] rounded-[40px] p-8 md:p-20 shadow-2xl relative overflow-hidden"
          >
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#8CC63F]/30 blur-3xl rounded-full"></div>
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#F7941D]/30 blur-3xl rounded-full"></div>
             
-            <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-6 relative z-10 font-serif italic">
+            <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-6 relative z-10 font-serif italic">
                Pilih Peran Anda
             </h2>
-            <p className="text-lg text-[#EFF8F0]/90 mb-10 max-w-2xl mx-auto relative z-10 font-medium leading-relaxed">
+            <p className="text-base sm:text-lg text-[#EFF8F0]/90 mb-10 max-w-2xl mx-auto relative z-10 font-medium leading-relaxed">
                Sebagai <strong className="text-white">Buyer (UMKM Banyumas)</strong>, nikmati fitur AI (Tren Harga & Supplier Terbaik) dan gabung di Program Beli Bersama di aplikasi Mobile. <br/> Sebagai <strong className="text-[#F7941D]">Supplier Perorangan</strong> (Petani/Pengepul Banyumas), mulai pasarkan stok Anda ke jaringan UMKM kami langsung melalui WhatsApp.
             </p>
             <div className="relative z-10 flex flex-col md:flex-row gap-6 justify-center items-center">
