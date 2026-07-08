@@ -5,7 +5,7 @@ type Params = { params: Promise<{ id: string }> };
 
 // Helper untuk kirim notifikasi via WhatsApp bot
 async function sendWANotification(phone: string, message: string) {
-  const waUrl = process.env.WHATSAPP_BOT_URL || 'http://localhost:3002';
+  const waUrl = process.env.WHATSAPP_BOT_URL || 'http://127.0.0.1:3002';
   const waApiKey = process.env.WHATSAPP_API_KEY || process.env.TUMBASNA_SECRET_KEY || 'tumbasna-rahasia-banget';
   try {
     const res = await fetch(`${waUrl}/api/send`, {
@@ -144,7 +144,7 @@ export async function PATCH(req: Request, { params }: Params) {
           }
 
           if (msg) {
-            await sendWANotification(supplier.phoneNumber, msg);
+            sendWANotification(supplier.phoneNumber, msg);
           }
         }
 
@@ -169,7 +169,7 @@ export async function PATCH(req: Request, { params }: Params) {
           }
 
           if (msg) {
-            await sendWANotification(buyer.phoneNumber, msg);
+            sendWANotification(buyer.phoneNumber, msg);
           }
         }
       } catch (notiErr: any) {

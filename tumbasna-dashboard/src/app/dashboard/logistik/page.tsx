@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Truck,
     MapPin,
@@ -136,12 +136,83 @@ function ProgressBar({ value, status }: { value: number; status: string }) {
 
 // ─── Main Logistik Page ───────────────────────────────────────
 export default function LogistikPage() {
-    const [selectedArmada, setSelectedArmada] = useState(armadaData[0]);
+    const [orders, setOrders] = useState<any[]>([]);
+    const [selectedArmada, setSelectedArmada] = useState<any>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const jalans = armadaData.filter(a => a.status === 'jalan').length;
-    const selesai = armadaData.filter(a => a.status === 'selesai').length;
-    const standbys = armadaData.filter(a => a.status === 'standby').length;
-    const masalahs = armadaData.filter(a => a.status === 'masalah').length;
+    useEffect(() => {
+        fetch('/api/orders')
+            .then(res => res.json())
+            .then(json => {
+                if (json.success) {
+                    setOrders(json.data);
+                }
+            })
+            .catch(console.error)
+            .finally(() => setIsLoading(false));
+    }, []);
+
+    const validCities = ['Banyumas', 'Cilacap', 'Purbalingga', 'Banjarnegara', 'Kebumen'];
+
+    const dbArmada = orders.map((o: any) => {
+        let status = 'standby';
+        let progress = 0;
+        let estimasi = 'Belum berangkat';
+        
+        if (o.status === 'DIKIRIM') {
+            status = 'jalan';
+            progress = 65;
+            estimasi = '40 menit';
+        } else if (o.status === 'SELESAI') {
+            status = 'selesai';
+            progress = 100;
+            estimasi = 'Selesai';
+        } else if (o.status === 'DIBATALKAN') {
+            status = 'masalah';
+            progress = 30;
+            estimasi = 'Tertunda';
+        } else if (o.status === 'DIPROSES') {
+            status = 'standby';
+            progress = 0;
+            estimasi = 'Menyiapkan barang';
+        }
+
+        let dari = 'Banyumas';
+        if (o.supplierLocation) {
+            const parsed = o.supplierLocation.split(',')[0].trim();
+            const matched = validCities.find(c => parsed.toLowerCase().includes(c.toLowerCase()));
+            if (matched) dari = matched;
+        }
+        
+        let ke = 'Cilacap';
+        const matchedKe = validCities.find(c => c !== dari);
+        if (matchedKe) ke = matchedKe;
+
+        const qtyNum = o.items?.[0]?.quantity || 100;
+        const prodName = o.items?.[0]?.product?.name || 'Komoditas';
+
+        return {
+            id: o.id,
+            driver: o.courier || 'Kurir Lokal',
+            plat: `R ${Math.floor(1000 + Math.random() * 9000)} TMB`,
+            rute: { dari, ke },
+            muatan: `${prodName} — ${qtyNum} kg`,
+            status,
+            progress,
+            estimasi,
+            jarak: '42 km',
+            bahan_bakar: '85%',
+            suhu: '24°C',
+        };
+    });
+
+    const combinedArmada = [...dbArmada, ...armadaData];
+    const activeArmada = selectedArmada || combinedArmada[0] || armadaData[0];
+
+    const jalans = combinedArmada.filter(a => a.status === 'jalan').length;
+    const selesai = combinedArmada.filter(a => a.status === 'selesai').length;
+    const standbys = combinedArmada.filter(a => a.status === 'standby').length;
+    const masalahs = combinedArmada.filter(a => a.status === 'masalah').length;
 
     return (
         <div className="p-8 space-y-8 bg-[#F8FAFC]">
@@ -204,10 +275,10 @@ export default function LogistikPage() {
                         {/* Interactive map container */}
                         <div className="h-[400px] w-full relative bg-slate-50">
                             <LogistikMap
-                                armadaData={armadaData}
-                                selectedId={selectedArmada.id}
+                                armadaData={combinedArmada}
+                                selectedId={activeArmada.id}
                                 onSelect={(id) => {
-                                    const match = armadaData.find(a => a.id === id);
+                                    const match = combinedArmada.find(a => a.id === id);
                                     if (match) setSelectedArmada(match);
                                 }}
                             />
@@ -218,12 +289,12 @@ export default function LogistikPage() {
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
                             <h2 className="text-base font-bold text-slate-900 tracking-tight">Daftar Armada</h2>
-                            <p className="text-xs text-slate-400 font-medium">{armadaData.length} armada terdaftar</p>
+                            <p className="text-xs text-slate-400 font-medium">{combinedArmada.length} armada terdaftar</p>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {armadaData.map((a) => {
-                                const isSelected = selectedArmada.id === a.id;
+                            {combinedArmada.map((a) => {
+                                const isSelected = activeArmada.id === a.id;
                                 return (
                                     <div
                                         key={a.id}
@@ -241,7 +312,7 @@ export default function LogistikPage() {
                                                 </div>
                                                 <div>
                                                     <p className="text-sm font-bold text-slate-800">{a.id}</p>
-                                                    <p className="text-[10px] text-slate-400 mt-0.5 font-semibold">{a.driver} • {a.plat}</p>
+                                                    <p className="text-[10px] text-slate-450 mt-0.5 font-semibold">{a.driver} • {a.plat}</p>
                                                 </div>
                                             </div>
                                             <StatusPill status={a.status} />
@@ -299,25 +370,25 @@ export default function LogistikPage() {
                                     <Truck className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <p className="text-sm font-extrabold text-white">{selectedArmada.id}</p>
-                                    <p className="text-[10px] font-semibold text-slate-400 mt-0.5">{selectedArmada.plat}</p>
+                                    <p className="text-sm font-extrabold text-white">{activeArmada.id}</p>
+                                    <p className="text-[10px] font-semibold text-slate-400 mt-0.5">{activeArmada.plat}</p>
                                 </div>
                             </div>
-                            <p className="text-xs font-bold text-slate-200 mb-2">{selectedArmada.driver}</p>
+                            <p className="text-xs font-bold text-slate-200 mb-2">{activeArmada.driver}</p>
                             <div className="flex items-center gap-3">
                                 <span className="text-[9px] font-bold px-2.5 py-0.5 rounded-full bg-slate-800 text-emerald-400 border border-slate-700/50">
-                                    {statusMap[selectedArmada.status].label}
+                                    {statusMap[activeArmada.status]?.label || 'Standby'}
                                 </span>
-                                <span className="text-[10px] text-slate-400 font-semibold">{selectedArmada.estimasi}</span>
+                                <span className="text-[10px] text-slate-400 font-semibold">{activeArmada.estimasi}</span>
                             </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-3">
                             {[
-                                { label: 'Rute', value: `${selectedArmada.rute.dari} → ${selectedArmada.rute.ke}`, icon: Route, color: '#10B981' },
-                                { label: 'Jarak', value: selectedArmada.jarak, icon: Navigation, color: '#10B981' },
-                                { label: 'BBM', value: selectedArmada.bahan_bakar, icon: Fuel, color: '#F59E0B' },
-                                { label: 'Muatan', value: selectedArmada.muatan.split('—')[1]?.trim() ?? '—', icon: Weight, color: '#64748B' },
+                                { label: 'Rute', value: `${activeArmada.rute.dari} → ${activeArmada.rute.ke}`, icon: Route, color: '#10B981' },
+                                { label: 'Jarak', value: activeArmada.jarak, icon: Navigation, color: '#10B981' },
+                                { label: 'BBM', value: activeArmada.bahan_bakar, icon: Fuel, color: '#F59E0B' },
+                                { label: 'Muatan', value: activeArmada.muatan.split('—')[1]?.trim() ?? '—', icon: Weight, color: '#64748B' },
                             ].map(item => (
                                 <div key={item.label} className="rounded-xl p-3 bg-slate-50 border border-slate-100 flex flex-col justify-between">
                                     <div className="flex items-center gap-1.5 mb-2">

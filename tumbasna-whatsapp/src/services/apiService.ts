@@ -101,4 +101,16 @@ export const apiService = {
             return null;
         }
     },
+    async updateOrderStatus(id: string, status: string, trackingTimeline?: any[]) {
+        try {
+            const response = await apiClient.patch(`${API_URL}/api/orders/${id}`, {
+                status,
+                ...(trackingTimeline && { trackingTimeline })
+            });
+            return response.data;
+        } catch (error: any) {
+            console.error(`[API ERROR] Gagal update order status:`, error.message);
+            throw error;
+        }
+    },
 };

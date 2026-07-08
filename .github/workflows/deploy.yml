@@ -1,22 +1,26 @@
-name: Deploy to VPS
+name: Auto Deploy to VPS
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main # Akan berjalan setiap kali ada push ke branch main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Deploy ke VPS via SSH
+        uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          password: ${{ secrets.VPS_PASSWORD }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          # Menjalankan script deploy.sh yang ada di VPS
           script: |
-            cd ~/projects/tumbasna
-            git pull origin main
-            docker stop tumbasna_app 2>/dev/null || true
-            docker rm tumbasna_app 2>/dev/null || true
-            docker compose --env-file ./tumbasna-dashboard/.env up --build -d
+            cd /opt/tumbasna
+            chmod +x deploy.sh
+            ./deploy.sh

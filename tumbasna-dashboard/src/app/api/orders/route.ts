@@ -14,9 +14,15 @@ export async function GET(req: Request) {
     if (userId) {
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       if (!uuidRegex.test(userId)) {
-        return NextResponse.json({ success: true, data: [] });
+        whereClause = { buyerUserId: null };
+      } else {
+        whereClause = {
+          OR: [
+            { buyerUserId: userId },
+            { buyerUserId: null }
+          ]
+        };
       }
-      whereClause = { buyerUserId: userId };
     } else if (phone) {
       const normalizedPhone = phone.replace(/^\+/, '').replace(/^0/, '62');
       const user = await prisma.user.findFirst({
@@ -67,7 +73,12 @@ export async function GET(req: Request) {
         month: 'short',
         year: 'numeric',
       }),
-      status: order.status,
+      status: order.status === 'MENUNGGU_PEMBAYARAN' ? 'Menunggu Pembayaran'
+            : order.status === 'DIPROSES' ? 'Diproses'
+            : order.status === 'DIKIRIM' ? 'Dikirim'
+            : order.status === 'SELESAI' ? 'Selesai'
+            : order.status === 'DIBATALKAN' ? 'Dibatalkan'
+            : order.status,
       paymentQrCode: order.paymentQrCode || '',
       fundsReleased: order.fundsReleased,
       notes: order.notes || '',
@@ -124,10 +135,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Field wajib tidak lengkap' }, { status: 400 });
     }
 
+    let validBuyerUserId = null;
+    if (buyerUserId) {
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (uuidRegex.test(buyerUserId)) {
+        validBuyerUserId = buyerUserId;
+      }
+    }
+
     const order = await prisma.order.create({
       data: {
         id,
-        buyerUserId: buyerUserId || null,
+        buyerUserId: validBuyerUserId,
         supplierName,
         supplierLocation,
         courier,

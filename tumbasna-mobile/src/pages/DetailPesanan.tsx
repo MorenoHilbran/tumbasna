@@ -18,7 +18,11 @@ import {
   chatbubblesOutline
 } from 'ionicons/icons';
 import { useApp } from '../context/AppContext';
+import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 import './DetailPesanan.css';
+
 
 
 interface DetailPesananProps {
@@ -30,12 +34,95 @@ interface DetailPesananProps {
 
 
 
+const locationCoords: Record<string, [number, number]> = {
+  'Banyumas': [-7.5151, 109.2941],
+  'Cilacap': [-7.7150, 108.9767],
+  'Purbalingga': [-7.3884, 109.3641],
+  'Banjarnegara': [-7.3884, 109.6939],
+  'Kebumen': [-7.6701, 109.6524]
+};
+
+const MapResizeTrigger: React.FC = () => {
+  const map = useMap();
+  React.useEffect(() => {
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 150);
+  }, [map]);
+  return null;
+};
+
 const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNavigateToChat }) => {
   const { orders, confirmOrderReceived } = useApp();
   const [showToast, setShowToast] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
 
   const order = orders.find((o) => o.id === orderId);
+
+  // ── Resolve supplier and buyer coordinates ──
+  const getSupplierCoords = (loc: string): [number, number] => {
+    const key = Object.keys(locationCoords).find(k => loc.toLowerCase().includes(k.toLowerCase()));
+    return key ? (locationCoords[key] as [number, number]) : [-7.5151, 109.2941];
+  };
+
+  const supplierLocation: [number, number] = order ? getSupplierCoords(order.supplierLocation) : [-7.5151, 109.2941];
+  const buyerLocation: [number, number] = [supplierLocation[0] - 0.012, supplierLocation[1] + 0.015];
+  const midpoint: [number, number] = [
+    (supplierLocation[0] + buyerLocation[0]) / 2,
+    (supplierLocation[1] + buyerLocation[1]) / 2
+  ];
+
+  // ── Courier Position & Map States ──
+  const [courierCoords, setCourierCoords] = useState<[number, number]>(supplierLocation);
+  const [etaText, setEtaText] = useState('15 Menit');
+  const [statusText, setStatusText] = useState('Kurir menunggu pembayaran...');
+
+  React.useEffect(() => {
+    if (!order) return;
+    
+    if (order.status === 'Menunggu Pembayaran') {
+      setCourierCoords(supplierLocation);
+      setEtaText('Menunggu Bayar');
+      setStatusText('Menunggu pembayaran QRIS dari pembeli.');
+    } else if (order.status === 'Diproses') {
+      setCourierCoords(supplierLocation);
+      setEtaText('Diproses');
+      setStatusText('Supplier sedang menyiapkan barang.');
+    } else if (order.status === 'Selesai') {
+      setCourierCoords(buyerLocation);
+      setEtaText('Tiba');
+      setStatusText('Barang sudah sampai dan diterima pembeli.');
+    } else if (order.status === 'Dibatalkan') {
+      setCourierCoords(supplierLocation);
+      setEtaText('Batal');
+      setStatusText('Pesanan dibatalkan.');
+    } else { // status: 'Dikirim' atau status aktif pengiriman lainnya
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress = (progress + 1) % 101;
+        
+        let lat = supplierLocation[0];
+        let lng = supplierLocation[1];
+        
+        if (progress <= 50) {
+          const pct = progress / 50;
+          lat = supplierLocation[0] + pct * (buyerLocation[0] - supplierLocation[0]);
+          lng = supplierLocation[1];
+        } else {
+          const pct = (progress - 50) / 50;
+          lat = buyerLocation[0];
+          lng = supplierLocation[1] + pct * (buyerLocation[1] - supplierLocation[1]);
+        }
+        
+        setCourierCoords([lat, lng] as [number, number]);
+        const remainingMinutes = Math.max(1, Math.round((100 - progress) * 0.15));
+        setEtaText(`${remainingMinutes} Menit`);
+        setStatusText('Kurir lokal sedang menuju alamat pengiriman.');
+      }, 300);
+      
+      return () => clearInterval(interval);
+    }
+  }, [order?.status]);
 
   if (!order) {
     return (
@@ -57,6 +144,28 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
                 order.courier.toLowerCase().includes('ambil sendiri') ||
                 order.courier.toLowerCase().includes('kurir lokal');
 
+  // Custom divIcons to bypass asset path resolving issues
+  const supplierIcon = L.divIcon({
+    className: 'custom-div-icon',
+    html: `<div style="font-size: 26px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">🏢</div>`,
+    iconSize: [30, 30],
+    iconAnchor: [15, 30]
+  });
+
+  const buyerIcon = L.divIcon({
+    className: 'custom-div-icon',
+    html: `<div style="font-size: 26px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">📍</div>`,
+    iconSize: [30, 30],
+    iconAnchor: [15, 30]
+  });
+
+  const courierIcon = L.divIcon({
+    className: 'custom-div-icon',
+    html: `<div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; background: #006837; color: white; border-radius: 50%; font-size: 16px; border: 2.5px solid white; box-shadow: 0 3px 8px rgba(0,0,0,0.3); animation: pulse-ring 1.5s infinite;">🚚</div>`,
+    iconSize: [34, 34],
+    iconAnchor: [17, 17]
+  });
+
   return (
     <IonPage>
       {/* Header */}
@@ -76,8 +185,51 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
 
       <IonContent className="tracking-content">
 
+        {/* ── Real Leaflet Tracking Map ────────────────────────── */}
+        <div className="simulated-map-container" style={{ height: '240px', position: 'relative' }}>
+          <MapContainer
+            center={midpoint}
+            zoom={12}
+            style={{ width: '100%', height: '100%', zIndex: 1 }}
+            zoomControl={false}
+            dragging={true}
+            doubleClickZoom={false}
+            scrollWheelZoom={false}
+          >
+            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+            <MapResizeTrigger />
+            
+            {/* Dashed Route Path */}
+            <Polyline
+              positions={[supplierLocation, [buyerLocation[0], supplierLocation[1]] as [number, number], buyerLocation]}
+              color="#006837"
+              weight={3}
+              dashArray="6, 6"
+            />
+
+            {/* Supplier Marker */}
+            <Marker position={supplierLocation} icon={supplierIcon} />
+
+            {/* Buyer Marker */}
+            <Marker position={buyerLocation} icon={buyerIcon} />
+
+            {/* Courier Marker */}
+            <Marker position={courierCoords} icon={courierIcon} />
+          </MapContainer>
+
+          {/* Map Status Overlay */}
+          <div className="map-status-overlay" style={{ zIndex: 10 }}>
+            <div className="overlay-top-row">
+              <span className="courier-badge">{order.courier}</span>
+              <span className="courier-eta">{etaText}</span>
+            </div>
+            <h4 className="overlay-address-title">Status Pengiriman</h4>
+            <p className="overlay-address-text">{statusText}</p>
+          </div>
+        </div>
+
         {/* ── Order Summary Card ───────────────────────────── */}
-        <div className="tracking-order-summary-card" style={{ marginTop: 16 }}>
+        <div className="tracking-order-summary-card" style={{ marginTop: 12 }}>
           <div className="summary-header">
             <div>
               <span className="order-id-lbl">ID TRANSAKSI</span>

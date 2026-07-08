@@ -48,11 +48,11 @@ const LandingPage = () => {
             
             <h1 className="text-5xl md:text-7xl font-extrabold text-[#006837] leading-[1.1] mb-8 tracking-tight">
               Pasar Digital Terpercaya <br />
-              <span className="text-[#F7941D]">untuk UMKM Indonesia</span>
+              <span className="text-[#F7941D]">di Kabupaten Banyumas</span>
             </h1>
             
             <p className="text-lg md:text-xl text-[#6B7A6F] mb-12 max-w-2xl mx-auto leading-relaxed">
-              Bagi <strong className="text-[#006837]">Buyer (UMKM)</strong>, gunakan aplikasi mobile untuk belanja kolektif, prediksi tren harga, dan pantau logistik via AI. Bagi <strong className="text-[#F7941D]">Supplier Perorangan</strong>, pasarkan hasil panen Anda langsung ke pembeli cukup melalui WhatsApp.
+              Menghubungkan <strong className="text-[#006837]">Pembeli (UMKM Banyumas)</strong> dan <strong className="text-[#F7941D]">Petani/Supplier Lokal Banyumas</strong> secara langsung. Belanja kolektif bahan pangan segar dengan sistem harga transparan dan logistik cerdas terintegrasi AI.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-5 justify-center items-center">
@@ -118,10 +118,10 @@ const LandingPage = () => {
                    <div className="bg-[#FFF9F3] border border-[#F7941D]/20 rounded-xl p-5">
                       <div className="flex items-center gap-2 mb-3">
                         <TrendingUp className="w-4 h-4 text-[#F7941D]" />
-                        <h6 className="font-bold text-[#006837] text-sm">Prediksi Harga Cabai & Kentang</h6>
+                        <h6 className="font-bold text-[#006837] text-sm">Prediksi Harga Cabai & Kentang di Banyumas</h6>
                       </div>
                       <p className="text-[#5C675F] text-xs leading-relaxed mb-4">
-                        Harga Kentang Dieng Super diprediksi naik sebesar 12% dalam 7 hari ke depan karena penurunan pasokan regional di Jawa Barat. Disarankan mengamankan stok sekarang via supplier terverifikasi.
+                        Harga Kentang Dieng Super di pasar Banyumas diprediksi naik sebesar 12% dalam 7 hari ke depan karena penurunan pasokan regional di Jawa Tengah. Disarankan mengamankan stok sekarang via supplier terverifikasi.
                       </p>
                       <button className="w-full bg-[#006837] text-white text-xs font-bold py-2.5 rounded-lg flex justify-center items-center gap-2 hover:bg-[#005b30] transition-colors">
                         BELI KOMODITAS SEKARANG <ArrowRight className="w-3 h-3" />
@@ -138,10 +138,10 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto px-6">
           <p className="text-center text-xs font-bold text-[#6B7A6F] tracking-widest uppercase mb-8">Telah Dipercaya Oleh</p>
           <div className="flex flex-wrap justify-center gap-12 md:gap-24 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
-             <div className="text-xl font-bold font-serif text-[#006837]">Bank Indonesia</div>
-             <div className="text-xl font-bold font-serif text-[#006837]">TPID Nasional</div>
-             <div className="text-xl font-bold font-serif text-[#006837]">Kemenkop UKM</div>
-             <div className="text-xl font-bold font-serif text-[#006837]">Bulog</div>
+             <div className="text-xl font-bold font-serif text-[#006837]">Pemkab Banyumas</div>
+             <div className="text-xl font-bold font-serif text-[#006837]">TPID Banyumas</div>
+             <div className="text-xl font-bold font-serif text-[#006837]">Dinkop UKM Banyumas</div>
+             <div className="text-xl font-bold font-serif text-[#006837]">BI Purwokerto</div>
           </div>
         </div>
       </section>
@@ -151,7 +151,7 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-20">
              <p className="text-[#F7941D] text-xs font-bold tracking-widest mb-3 uppercase">Alur Proses</p>
-             <h2 className="text-4xl md:text-5xl font-extrabold text-[#006837] tracking-tight">Cara Kerja Tumbasna</h2>
+             <h2 className="text-4xl md:text-5xl font-extrabold text-[#006837] tracking-tight">Cara Kerja Tumbasna Banyumas</h2>
           </div>
 
           <div className="grid md:grid-cols-3 gap-12 relative">
@@ -268,9 +268,9 @@ const LandingPage = () => {
           
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { name: "Budi Santoso", role: "Pemilik Resto Padang", text: "Semenjak pakai Tumbasna, restoran saya tidak pernah kehabisan stok cabai. AI rekomendasinya sangat akurat dan harga selalu bersaing." },
-              { name: "Siti Aminah", role: "Pengusaha Katering", text: "Fitur Beli Bersama benar-benar menyelamatkan margin keuntungan saya. Bisa beli bahan baku lebih murah tanpa harus menimbun banyak stok." },
-              { name: "Hendra Wijaya", role: "Supplier Sayur", text: "Sebagai supplier, Tumbasna membantu saya menemukan pembeli dengan cepat. Tidak ada lagi stok sayur yang membusuk di gudang." }
+              { name: "Budi Santoso", role: "Pemilik Resto Padang Purwokerto", text: "Semenjak pakai Tumbasna, restoran saya di Purwokerto tidak pernah kehabisan stok cabai. AI rekomendasinya sangat akurat dan harga selalu bersaing." },
+              { name: "Siti Aminah", role: "Pengusaha Katering Baturraden", text: "Fitur Beli Bersama benar-benar menyelamatkan margin keuntungan katering saya di Baturraden. Bisa beli bahan baku lebih murah tanpa harus menimbun banyak stok." },
+              { name: "Hendra Wijaya", role: "Petani Sayur Sumbang", text: "Sebagai supplier sayur dari Sumbang Banyumas, Tumbasna membantu saya mendistribusikan hasil panen dengan cepat. Tidak ada lagi sayur segar yang terbuang sia-sia." }
             ].map((testi, i) => (
               <motion.div
                 key={i}
@@ -369,7 +369,7 @@ const LandingPage = () => {
                Pilih Peran Anda
             </h2>
             <p className="text-lg text-[#EFF8F0]/90 mb-10 max-w-2xl mx-auto relative z-10 font-medium leading-relaxed">
-               Sebagai <strong className="text-white">Buyer</strong>, nikmati fitur AI (Tren Harga & Supplier Terbaik) dan gabung di Program Beli Bersama di aplikasi Mobile. <br/> Sebagai <strong className="text-[#F7941D]">Supplier Perorangan</strong> (Petani/Pengepul), mulai pasarkan stok Anda ke jaringan UMKM kami langsung melalui WhatsApp.
+               Sebagai <strong className="text-white">Buyer (UMKM Banyumas)</strong>, nikmati fitur AI (Tren Harga & Supplier Terbaik) dan gabung di Program Beli Bersama di aplikasi Mobile. <br/> Sebagai <strong className="text-[#F7941D]">Supplier Perorangan</strong> (Petani/Pengepul Banyumas), mulai pasarkan stok Anda ke jaringan UMKM kami langsung melalui WhatsApp.
             </p>
             <div className="relative z-10 flex flex-col md:flex-row gap-6 justify-center items-center">
               <a href="#" className="w-full md:w-auto inline-flex items-center justify-center gap-4 bg-white px-10 py-5 rounded-2xl text-lg font-bold text-[#006837] shadow-xl hover:bg-[#FBF9F4] hover:scale-105 transition-all active:scale-95 group">
