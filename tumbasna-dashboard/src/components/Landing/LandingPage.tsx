@@ -37,7 +37,11 @@ const LandingPage = () => {
             </button>
           </div>
 
-          <div className="hidden md:block w-[100px] z-10"></div> {/* Invisible spacer to balance the flex layout */}
+          <div className="hidden md:flex w-[120px] z-10 justify-end">
+             <a href="/dashboard" className="bg-[#006837] text-white px-5 py-2 rounded-full text-xs font-bold hover:bg-[#F7941D] transition-colors shadow-md">
+                Admin Panel
+             </a>
+          </div>
         </div>
       </motion.nav>
 
@@ -54,6 +58,8 @@ const LandingPage = () => {
             <a href="#cara-kerja" onClick={() => setIsMobileMenuOpen(false)} className="font-bold text-[#006837] hover:text-[#F7941D]">Cara Kerja</a>
             <a href="#fitur" onClick={() => setIsMobileMenuOpen(false)} className="font-bold text-[#006837] hover:text-[#F7941D]">Fitur AI</a>
             <a href="#faq" onClick={() => setIsMobileMenuOpen(false)} className="font-bold text-[#006837] hover:text-[#F7941D]">Bantuan</a>
+            <hr className="border-[#006837]/10" />
+            <a href="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="font-bold text-white bg-[#006837] hover:bg-[#F7941D] py-2 rounded-xl transition-colors">Masuk Admin</a>
           </motion.div>
         )}
       </AnimatePresence>
