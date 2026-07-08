@@ -29,3 +29,12 @@ services:
       - NODE_ENV=production
     depends_on:
       - dashboard
+
+  mobile:
+    build:
+      context: ./tumbasna-mobile
+      dockerfile: Dockerfile
+    container_name: tumbasna_mobile
+    restart: unless-stopped
+    ports:
+      - "3001:80"
