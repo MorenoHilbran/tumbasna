@@ -81,7 +81,7 @@ const LandingPage = () => {
             
             <div className="flex flex-col sm:flex-row gap-5 justify-center items-center">
               <a
-                href="#"
+                href="https://mobile.tumbasna.my.id"
                 className="w-full sm:w-auto flex items-center justify-center gap-3 bg-[#006837] text-white px-8 py-4 rounded-xl text-sm md:text-base font-bold hover:bg-[#005b30] hover:scale-[1.02] transition-all active:scale-95 shadow-xl shadow-[#006837]/20"
               >
                 Aplikasi Buyer (Mobile)
@@ -396,8 +396,8 @@ const LandingPage = () => {
                Sebagai <strong className="text-white">Buyer (UMKM Banyumas)</strong>, nikmati fitur AI (Tren Harga & Supplier Terbaik) dan gabung di Program Beli Bersama di aplikasi Mobile. <br/> Sebagai <strong className="text-[#F7941D]">Supplier Perorangan</strong> (Petani/Pengepul Banyumas), mulai pasarkan stok Anda ke jaringan UMKM kami langsung melalui WhatsApp.
             </p>
             <div className="relative z-10 flex flex-col md:flex-row gap-6 justify-center items-center">
-              <a href="#" className="w-full md:w-auto inline-flex items-center justify-center gap-4 bg-white px-10 py-5 rounded-2xl text-lg font-bold text-[#006837] shadow-xl hover:bg-[#FBF9F4] hover:scale-105 transition-all active:scale-95 group">
-                 Unduh Aplikasi Buyer
+              <a href="https://mobile.tumbasna.my.id" className="w-full md:w-auto inline-flex items-center justify-center gap-4 bg-white px-10 py-5 rounded-2xl text-lg font-bold text-[#006837] shadow-xl hover:bg-[#FBF9F4] hover:scale-105 transition-all active:scale-95 group">
+                 Buka Aplikasi Buyer
                  <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
               </a>
               <a href="https://wa.me/6285190859889" target="_blank" rel="noopener noreferrer" className="w-full md:w-auto inline-flex items-center justify-center gap-4 bg-[#F7941D] px-10 py-5 rounded-2xl text-lg font-bold text-white shadow-xl hover:bg-[#d4831b] hover:scale-105 transition-all active:scale-95 group">
