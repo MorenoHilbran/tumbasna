@@ -329,7 +329,7 @@ export default function DashboardPage() {
         : recentActivities;
 
     return (
-        <div className="p-8 space-y-8 bg-[#F8FAFC]">
+        <div className="p-4 md:p-8 space-y-8 bg-[#F8FAFC]">
 
             {/* Page Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -346,7 +346,7 @@ export default function DashboardPage() {
             </div>
 
             {/* KPI Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 {activeKpiData.map((kpi) => {
                     const Icon = kpi.icon;
                     return (
@@ -449,7 +449,7 @@ export default function DashboardPage() {
                 <div className="bg-white rounded-2xl p-6 border border-slate-200/60 shadow-sm">
                     <h2 className="text-base font-bold text-slate-900 tracking-tight">Statistik Pertumbuhan</h2>
                     <p className="text-xs text-slate-400 mt-0.5 mb-5">Performa platform bulan ini</p>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {growthStats.map((stat) => (
                             <div key={stat.label} className="rounded-xl p-4 bg-slate-50 border border-slate-100 flex flex-col justify-between">
                                 <div>
@@ -519,8 +519,8 @@ export default function DashboardPage() {
             </div>
 
             {/* Bottom Info Strip - Minimalist Anchored Bar */}
-            <div className="rounded-2xl p-5 flex flex-wrap items-center justify-between gap-6 bg-slate-900 border border-slate-800">
-                <div className="flex flex-wrap items-center gap-8">
+            <div className="rounded-2xl p-4 sm:p-5 flex flex-wrap items-center justify-between gap-6 bg-slate-900 border border-slate-800">
+                <div className="flex flex-wrap items-center gap-4 sm:gap-8">
                     {[
                         { icon: MapPin, label: 'Wilayah Aktif', value: '5 Kabupaten', color: '#10B981' },
                         { icon: Package, label: 'Stok Melimpah', value: '3 Wilayah', color: '#10B981' },
