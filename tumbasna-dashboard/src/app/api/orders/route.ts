@@ -97,7 +97,17 @@ export async function GET(req: Request) {
           supplierName: item.supplierName,
           supplierLocation: order.supplierLocation,
           supplierRating: 4.8,
-          image: '/image/produk/' + item.commodity.replace(/\s+/g, '').toLowerCase() + '.png',
+          image: (() => {
+            const name = item.commodity.toLowerCase();
+            if (name.includes('beras')) return '/image/produk/beras.png';
+            if (name.includes('jagung')) return '/image/produk/jagung.png';
+            if (name.includes('cabai merah') || name.includes('cabe merah')) return '/image/produk/cabaimerah.png';
+            if (name.includes('cabai rawit') || name.includes('cabe rawit') || name.includes('cabai') || name.includes('cabe')) return '/image/produk/cabaimerah.png';
+            if (name.includes('bawang merah') || name.includes('bawangmerah')) return '/image/produk/bawangmerah.png';
+            if (name.includes('bawang putih') || name.includes('bawangputih')) return '/image/produk/bawangputih.png';
+            if (name.includes('jahe') || name.includes('rempah')) return '/image/produk/jahe.png';
+            return 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80';
+          })(),
           description: `Komoditas ${item.commodity} dari ${order.supplierLocation}.`,
           shippingEstimate: '1-3 Hari',
           category: item.commodity,
