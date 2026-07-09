@@ -61,13 +61,18 @@ const LandingPage = () => {
       </AnimatePresence>
 
       {/* Hero Section */}
-      <section 
-        className="relative pt-40 pb-20 px-6 flex flex-col items-center bg-cover bg-top bg-no-repeat"
-        style={{ backgroundImage: "url('/hero.png')", backgroundSize: "100% auto" }}
-      >
-        <div className="absolute inset-0 bg-[#FBF9F4]/80 backdrop-blur-sm -z-10"></div>
+      <section className="relative pt-32 sm:pt-40 pb-16 sm:pb-20 px-6 flex flex-col items-center overflow-hidden">
+        {/* Background Image Layer */}
+        <div 
+          className="absolute inset-0 z-0 bg-[length:300%_auto] sm:bg-[length:150%_auto] md:bg-cover bg-top md:bg-center bg-no-repeat opacity-15"
+          style={{ backgroundImage: "url('/hero.png')" }}
+        ></div>
+        
+        {/* Gradient Overlay for better text readability */}
+        <div className="absolute inset-0 z-0 bg-gradient-to-b from-[#FBF9F4]/90 via-[#FBF9F4]/70 to-[#FBF9F4]/90"></div>
+
         {/* Soft Background Accents */}
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-[#8CC63F]/20 blur-[120px] rounded-full -z-20"></div>
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[300px] sm:w-[800px] h-[300px] sm:h-[500px] bg-[#8CC63F]/20 blur-[80px] sm:blur-[120px] rounded-full z-0"></div>
         
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <motion.div
@@ -76,13 +81,13 @@ const LandingPage = () => {
             transition={{ duration: 0.8 }}
           >
             
-            <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold text-[#006837] leading-[1.1] mb-6 md:mb-8 tracking-tight">
-              Pasar Digital <span className="font-serif italic font-semibold text-[#8CC63F]">Terpercaya</span> <br />
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#006837] leading-[1.2] mb-6 md:mb-8 tracking-tight max-w-3xl mx-auto">
+              Pasar Digital <span className="font-serif italic font-semibold text-[#8CC63F]">Terpercaya</span>{' '}
               <span className="text-[#F7941D]">di Kabupaten </span>
               <span className="font-serif italic font-semibold text-[#F7941D]">Banyumas</span>
             </h1>
             
-            <p className="text-base sm:text-lg md:text-xl text-[#6B7A6F] mb-10 md:mb-12 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-sm sm:text-base md:text-lg text-[#1a2e1e] font-medium mb-10 md:mb-12 max-w-2xl mx-auto leading-relaxed">
               Menghubungkan <strong className="text-[#006837]">Pembeli (UMKM Banyumas)</strong> dan <strong className="text-[#F7941D]">Petani/Supplier Lokal Banyumas</strong> secara langsung. Belanja kolektif bahan pangan segar dengan sistem harga transparan dan logistik cerdas terintegrasi AI.
             </p>
             
