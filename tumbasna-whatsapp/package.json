@@ -31,6 +31,5 @@
     "@types/qrcode-terminal": "^0.12.2",
     "tsx": "^4.21.0",
     "typescript": "^5.7.0"
-  },
-  "type": "module"
+  }
 }
