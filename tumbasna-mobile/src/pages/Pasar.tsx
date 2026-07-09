@@ -24,6 +24,7 @@ import {
   cubeOutline
 } from 'ionicons/icons';
 import { useApp, Product } from '../context/AppContext';
+import SupplierModal from '../components/SupplierModal';
 import './Pasar.css';
 
 interface PasarProps {
@@ -38,6 +39,10 @@ const Pasar: React.FC<PasarProps> = ({ onSelectProduct }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
   const [userCoords, setUserCoords] = useState<[number, number] | null>(null);
+  
+  // State untuk Modal Profil Penjual
+  const [showSupplierModal, setShowSupplierModal] = useState(false);
+  const [selectedSupplier, setSelectedSupplier] = useState('');
 
   // Fetch user location when "Terdekat" is active
   React.useEffect(() => {
@@ -231,8 +236,16 @@ const Pasar: React.FC<PasarProps> = ({ onSelectProduct }) => {
                     </div>
                   </div>
 
-                  <div className="product-supplier-info">
-                    <h4 className="supplier-name">{product.supplierName}</h4>
+                  <div 
+                    className="product-supplier-info"
+                    onClick={(e) => {
+                      e.stopPropagation(); // Mencegah membuka halaman detail produk
+                      setSelectedSupplier(product.supplierName);
+                      setShowSupplierModal(true);
+                    }}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <h4 className="supplier-name" style={{ color: '#006837', textDecoration: 'underline' }}>{product.supplierName}</h4>
                     <p className="supplier-location">
                       <IonIcon icon={locationOutline} /> {product.supplierLocation}
                     </p>
@@ -268,6 +281,14 @@ const Pasar: React.FC<PasarProps> = ({ onSelectProduct }) => {
           duration={2000}
           position="bottom"
           className="custom-toast"
+        />
+
+        {/* Modal Profil Penjual & Komoditasnya */}
+        <SupplierModal
+          isOpen={showSupplierModal}
+          onClose={() => setShowSupplierModal(false)}
+          supplierName={selectedSupplier}
+          onSelectProduct={onSelectProduct}
         />
       </IonContent>
     </IonPage>

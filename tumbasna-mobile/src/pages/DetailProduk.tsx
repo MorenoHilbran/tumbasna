@@ -29,6 +29,7 @@ import {
   chatbubblesOutline
 } from 'ionicons/icons';
 import { useApp, Product } from '../context/AppContext';
+import SupplierModal from '../components/SupplierModal';
 import './DetailProduk.css';
 
 interface DetailProdukProps {
@@ -36,13 +37,15 @@ interface DetailProdukProps {
   onBack: () => void;
   onNavigateToCart: () => void;
   onNavigateToChat: (supplierName: string, supplierPhone: string) => void;
+  onSelectProduct: (product: Product) => void;
 }
 
-const DetailProduk: React.FC<DetailProdukProps> = ({ product, onBack, onNavigateToCart, onNavigateToChat }) => {
+const DetailProduk: React.FC<DetailProdukProps> = ({ product, onBack, onNavigateToCart, onNavigateToChat, onSelectProduct }) => {
   const { addToCart } = useApp();
   const [quantity, setQuantity] = useState(1);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [showSupplierModal, setShowSupplierModal] = useState(false);
 
   // Find max price for chart scale
   const prices = product.priceHistory.map((p) => p.price);
@@ -212,24 +215,31 @@ const DetailProduk: React.FC<DetailProdukProps> = ({ product, onBack, onNavigate
           <div className="detail-section supplier-profile-section">
             <h3 className="section-subtitle">Profil Supplier</h3>
             <div className="supplier-profile-card">
-              <IonAvatar className="supplier-avatar">
-                <div className="avatar-initial">{product.supplierName.charAt(0)}</div>
-              </IonAvatar>
-              <div className="supplier-profile-info">
-                <h4>{product.supplierName}</h4>
-                <p>{product.supplierLocation}</p>
-                <div className="supplier-badge-row">
-                  <span className="badge-verified">
-                    <IonIcon icon={shieldCheckmarkOutline} /> Verified Supplier
-                  </span>
+              <div 
+                className="supplier-identity-click-zone"
+                onClick={() => setShowSupplierModal(true)}
+                style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, cursor: 'pointer' }}
+              >
+                <IonAvatar className="supplier-avatar">
+                  <div className="avatar-initial">{product.supplierName.charAt(0)}</div>
+                </IonAvatar>
+                <div className="supplier-profile-info">
+                  <h4 style={{ textDecoration: 'underline', color: '#006837', margin: 0 }}>{product.supplierName}</h4>
+                  <p style={{ margin: '4px 0 0 0' }}>{product.supplierLocation}</p>
+                  <div className="supplier-badge-row" style={{ marginTop: '4px' }}>
+                    <span className="badge-verified">
+                      <IonIcon icon={shieldCheckmarkOutline} /> Verified Supplier
+                    </span>
+                  </div>
                 </div>
               </div>
+              
               <button 
                 className="chat-supplier-btn"
                 onClick={() => onNavigateToChat(product.supplierName, product.supplierPhone || '')}
               >
                 <IonIcon icon={chatbubblesOutline} />
-                <span>Chat Penjual</span>
+                <span>Chat</span>
               </button>
             </div>
           </div>
@@ -279,6 +289,14 @@ const DetailProduk: React.FC<DetailProdukProps> = ({ product, onBack, onNavigate
         duration={2500}
         position="bottom"
         className="custom-toast"
+      />
+
+      {/* Modal Profil Penjual & Komoditasnya */}
+      <SupplierModal
+        isOpen={showSupplierModal}
+        onClose={() => setShowSupplierModal(false)}
+        supplierName={product.supplierName}
+        onSelectProduct={onSelectProduct}
       />
     </IonPage>
   );

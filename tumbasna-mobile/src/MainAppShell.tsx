@@ -113,6 +113,7 @@ const MainAppShell: React.FC = () => {
                 setViewState('tabs');
                 setActiveTab('chat');
               }}
+              onSelectProduct={(p) => setSelectedProduct(p)}
             />
           );
         }
