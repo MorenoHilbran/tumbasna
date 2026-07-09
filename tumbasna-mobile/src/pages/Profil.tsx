@@ -97,29 +97,12 @@ const Profil: React.FC = () => {
 
   return (
     <IonPage>
-      {/* Header */}
       <IonHeader className="ion-no-border">
         <IonToolbar className="profile-toolbar">
           <div className="profile-toolbar-inner">
             <div className="profile-logo-row">
               <img src="/logo.png" alt="Tumbasna" className="profile-header-logo-only" />
             </div>
-            <button 
-              className="profile-edit-top-btn" 
-              onClick={() => setShowEditModal(true)}
-              style={{
-                background: '#e2f0d9',
-                color: '#006837',
-                border: 'none',
-                padding: '6px 14px',
-                borderRadius: '20px',
-                fontSize: '13px',
-                fontWeight: 700,
-                cursor: 'pointer'
-              }}
-            >
-              Ubah Profil
-            </button>
           </div>
         </IonToolbar>
       </IonHeader>
