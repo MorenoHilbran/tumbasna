@@ -198,7 +198,15 @@ const Pasar: React.FC<PasarProps> = ({ onSelectProduct }) => {
               >
                 {/* Image Container with Badges */}
                 <div className="product-image-wrapper">
-                  <img src={product.image} alt={product.name} className="product-image" />
+                  <img 
+                    src={product.image} 
+                    alt={product.name} 
+                    className="product-image" 
+                    onError={(e) => {
+                      // Fallback ke gambar default dari Unsplash jika URL rusak/kosong
+                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80';
+                    }}
+                  />
                   <span className="product-category-badge">{product.category}</span>
                   <div className="product-rating-badge">
                     <IonIcon icon={star} />

@@ -55,7 +55,7 @@ Fitur lain setelah terdaftar:
 - supplier_location: Lokasi kebun/gudang dari proses REGISTER
 - bank_name: Nama Bank yang disebutkan user saat pendaftaran
 - bank_account: Nomor Rekening Bank yang disebutkan user saat pendaftaran
-- image_url: Jika input pesan berisi teks pola "URL Foto: [URL]", ekstrak URL tersebut dan masukkan ke dalam field "image_url" di dalam array items. Jika tidak ada, berikan nilai null.
+- image_url: Jika input pesan berisi teks pola "URL Foto: [URL]", ekstrak HANYA URL-nya saja (yang berawalan http/https) dan masukkan ke dalam field "image_url" di dalam array items. JANGAN menyertakan teks "URL Foto:". Jika tidak ada, berikan nilai null.
 
 === VALIDASI STATUS ===
 - "INCOMPLETE": Ada data yang masih kurang, lanjutkan bertanya
