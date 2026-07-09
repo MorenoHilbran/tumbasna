@@ -53,6 +53,7 @@ interface AppContextType {
   confirmOrderReceived: (orderId: string) => Promise<void>;
   sendMessage: (supplierName: string, text: string, supplierPhone?: string) => void;
   refreshOrders: () => Promise<void>;
+  updateProfile: (userData: Partial<User>) => Promise<{ success: boolean; error?: string }>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -614,8 +615,54 @@ Pertanyaan pengguna: ${text}`;
     }
   };
 
+  const updateProfile = async (userData: Partial<User>): Promise<{ success: boolean; error?: string }> => {
+    if (!user?.id) return { success: false, error: 'ID Pengguna tidak ditemukan' };
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: user.id,
+          name: userData.ownerName,
+          businessName: userData.businessName,
+          email: userData.email,
+          address: userData.address,
+          businessType: userData.businessType,
+          bankName: userData.bankName,
+          bankAccount: userData.bankAccount,
+        }),
+      });
+
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        return { success: false, error: json.error || 'Gagal memperbarui profil' };
+      }
+
+      const d = json.data;
+      setUser({
+        ...user,
+        ownerName: d.name || user.ownerName,
+        businessName: d.businessName || user.businessName,
+        email: d.email || user.email,
+        address: d.address || user.address,
+        businessType: d.businessType || user.businessType,
+        bankName: d.bankName || user.bankName,
+        bankAccount: d.bankAccount || user.bankAccount,
+      });
+
+      return { success: true };
+    } catch {
+      console.warn('[AppContext] API offline, mock update profile success.');
+      setUser({
+        ...user,
+        ...userData,
+      } as User);
+      return { success: true };
+    }
+  };
+
   return (
-    <AppContext.Provider value={{ user, products, cart, orders, chats, login, register, logout, addToCart, removeFromCart, updateCartQuantity, clearCart, checkout, payOrder, confirmOrderReceived, sendMessage, refreshOrders }}>
+    <AppContext.Provider value={{ user, products, cart, orders, chats, login, register, logout, addToCart, removeFromCart, updateCartQuantity, clearCart, checkout, payOrder, confirmOrderReceived, sendMessage, refreshOrders, updateProfile }}>
       {children}
     </AppContext.Provider>
   );

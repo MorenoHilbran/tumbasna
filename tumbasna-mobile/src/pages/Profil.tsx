@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   IonContent,
   IonHeader,
   IonPage,
   IonToolbar,
   IonIcon,
-  IonButton
+  IonButton,
+  IonModal,
+  IonToast,
+  IonButtons
 } from '@ionic/react';
 import {
   businessOutline,
@@ -18,15 +21,79 @@ import {
   walletOutline,
   locationOutline,
   storefrontOutline,
-  lockClosedOutline
+  lockClosedOutline,
+  closeOutline,
+  personOutline,
+  mailOutline
 } from 'ionicons/icons';
 import { useApp } from '../context/AppContext';
 import './Profil.css';
 
 const Profil: React.FC = () => {
-  const { user, logout } = useApp();
+  const { user, logout, updateProfile } = useApp();
+
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastColor, setToastColor] = useState<'success' | 'danger'>('success');
+  const [loading, setLoading] = useState(false);
+
+  // States Form
+  const [ownerName, setOwnerName] = useState('');
+  const [businessName, setBusinessName] = useState('');
+  const [businessType, setBusinessType] = useState('');
+  const [email, setEmail] = useState('');
+  const [address, setAddress] = useState('');
+  const [bankName, setBankName] = useState('');
+  const [bankAccount, setBankAccount] = useState('');
+
+  // Prefill data ketika modal dibuka
+  useEffect(() => {
+    if (user) {
+      setOwnerName(user.ownerName || '');
+      setBusinessName(user.businessName || '');
+      setBusinessType(user.businessType || '');
+      setEmail(user.email || '');
+      setAddress(user.address || '');
+      setBankName(user.bankName || '');
+      setBankAccount(user.bankAccount || '');
+    }
+  }, [user, showEditModal]);
 
   if (!user) return null;
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!ownerName.trim()) {
+      setToastMessage('Nama pemilik wajib diisi');
+      setToastColor('danger');
+      setShowToast(true);
+      return;
+    }
+
+    setLoading(true);
+    const res = await updateProfile({
+      ownerName,
+      businessName,
+      businessType,
+      email,
+      address,
+      bankName,
+      bankAccount
+    });
+    setLoading(false);
+
+    if (res.success) {
+      setToastMessage('Profil Anda berhasil diperbarui!');
+      setToastColor('success');
+      setShowToast(true);
+      setShowEditModal(false);
+    } else {
+      setToastMessage(res.error || 'Gagal memperbarui profil');
+      setToastColor('danger');
+      setShowToast(true);
+    }
+  };
 
   return (
     <IonPage>
@@ -37,6 +104,22 @@ const Profil: React.FC = () => {
             <div className="profile-logo-row">
               <img src="/logo.png" alt="Tumbasna" className="profile-header-logo-only" />
             </div>
+            <button 
+              className="profile-edit-top-btn" 
+              onClick={() => setShowEditModal(true)}
+              style={{
+                background: '#e2f0d9',
+                color: '#006837',
+                border: 'none',
+                padding: '6px 14px',
+                borderRadius: '20px',
+                fontSize: '13px',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              Ubah Profil
+            </button>
           </div>
         </IonToolbar>
       </IonHeader>
@@ -58,7 +141,7 @@ const Profil: React.FC = () => {
             
             <div className="profile-header-details">
               <h2 className="profile-user-name">{user.ownerName}</h2>
-              <span className="profile-user-email">{user.email}</span>
+              <span className="profile-user-email">{user.email || 'Belum diatur'}</span>
               <div className="profile-shield-verified">
                 <span>Mitra Prioritas</span>
               </div>
@@ -88,7 +171,7 @@ const Profil: React.FC = () => {
             </div>
             <div className="info-text-col">
               <span className="info-lbl">Nama Usaha / UMKM</span>
-              <span className="info-val">{user.businessName}</span>
+              <span className="info-val">{user.businessName || 'Belum diatur'}</span>
             </div>
           </div>
 
@@ -98,7 +181,7 @@ const Profil: React.FC = () => {
             </div>
             <div className="info-text-col">
               <span className="info-lbl">Jenis Usaha</span>
-              <span className="info-val">{user.businessType}</span>
+              <span className="info-val">{user.businessType || 'Belum diatur'}</span>
             </div>
           </div>
 
@@ -108,7 +191,7 @@ const Profil: React.FC = () => {
             </div>
             <div className="info-text-col">
               <span className="info-lbl">Alamat Pengiriman Usaha</span>
-              <span className="info-val">{user.address}</span>
+              <span className="info-val">{user.address || 'Belum diatur'}</span>
             </div>
           </div>
         </div>
@@ -122,7 +205,7 @@ const Profil: React.FC = () => {
             </div>
             <div className="info-text-col">
               <span className="info-lbl">Nama Bank Rekening</span>
-              <span className="info-val">{user.bankName}</span>
+              <span className="info-val">{user.bankName || 'Belum diatur'}</span>
             </div>
           </div>
 
@@ -132,7 +215,7 @@ const Profil: React.FC = () => {
             </div>
             <div className="info-text-col">
               <span className="info-lbl">Nomor Rekening Tujuan</span>
-              <span className="info-val">{user.bankAccount}</span>
+              <span className="info-val">{user.bankAccount || 'Belum diatur'}</span>
             </div>
           </div>
         </div>
@@ -140,18 +223,18 @@ const Profil: React.FC = () => {
         {/* Settings & Help Center Options */}
         <div className="profile-section-label">Pengaturan & Bantuan</div>
         <div className="profile-menu-list">
-          <button className="profile-menu-item">
+          <button className="profile-menu-item" onClick={() => setShowEditModal(true)}>
             <div className="menu-left">
               <div className="menu-icon-wrapper settings-bg">
-                <IonIcon icon={lockClosedOutline} />
+                <IonIcon icon={settingsOutline} />
               </div>
               <div className="menu-text-col">
-                <span className="menu-title">Akun & Keamanan</span>
-                <span className="menu-subtitle">Atur kata sandi & PIN Transaksi</span>
+                <span className="menu-title">Ubah Profil</span>
+                <span className="menu-subtitle">Ubah info UMKM, alamat & bank</span>
               </div>
             </div>
             <div className="menu-right-col">
-              <span className="menu-badge-green">Aman</span>
+              <span className="menu-badge-green">Atur</span>
               <IonIcon icon={chevronForwardOutline} className="menu-arrow" />
             </div>
           </button>
@@ -186,6 +269,149 @@ const Profil: React.FC = () => {
           <p>© 2026 PT Rantai Pangan Nusantara</p>
         </div>
       </IonContent>
+
+      {/* Modal Edit Profil */}
+      <IonModal isOpen={showEditModal} onDidDismiss={() => setShowEditModal(false)} className="edit-profile-modal">
+        <IonHeader className="ion-no-border">
+          <IonToolbar className="profile-modal-toolbar">
+            <div className="modal-title-header">Ubah Profil Mitra</div>
+            <IonButtons slot="end">
+              <button className="close-modal-btn" onClick={() => setShowEditModal(false)}>
+                <IonIcon icon={closeOutline} />
+              </button>
+            </IonButtons>
+          </IonToolbar>
+        </IonHeader>
+
+        <IonContent className="profile-modal-content-area">
+          <form onSubmit={handleSave} className="edit-profile-form">
+            <div className="form-section-header">Identitas Pemilik & UMKM</div>
+            
+            <div className="edit-input-group">
+              <label>Nama Lengkap Pemilik *</label>
+              <div className="input-with-icon">
+                <IonIcon icon={personOutline} />
+                <input 
+                  type="text" 
+                  value={ownerName} 
+                  onChange={(e) => setOwnerName(e.target.value)} 
+                  placeholder="Contoh: Budi Santoso"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="edit-input-group">
+              <label>Nama Usaha / Toko</label>
+              <div className="input-with-icon">
+                <IonIcon icon={storefrontOutline} />
+                <input 
+                  type="text" 
+                  value={businessName} 
+                  onChange={(e) => setBusinessName(e.target.value)} 
+                  placeholder="Contoh: Toko Sembako Budi"
+                />
+              </div>
+            </div>
+
+            <div className="edit-input-group">
+              <label>Jenis Usaha</label>
+              <div className="input-with-icon">
+                <IonIcon icon={businessOutline} />
+                <input 
+                  type="text" 
+                  value={businessType} 
+                  onChange={(e) => setBusinessType(e.target.value)} 
+                  placeholder="Contoh: Warung Kelontong / Rumah Makan"
+                />
+              </div>
+            </div>
+
+            <div className="edit-input-group">
+              <label>Email</label>
+              <div className="input-with-icon">
+                <IonIcon icon={mailOutline} />
+                <input 
+                  type="email" 
+                  value={email} 
+                  onChange={(e) => setEmail(e.target.value)} 
+                  placeholder="Contoh: budi@gmail.com"
+                />
+              </div>
+            </div>
+
+            <div className="form-section-header">Alamat & Rekening</div>
+
+            <div className="edit-input-group">
+              <label>Alamat Lengkap Pengiriman</label>
+              <div className="input-with-icon textarea-icon">
+                <IonIcon icon={locationOutline} />
+                <textarea 
+                  value={address} 
+                  onChange={(e) => setAddress(e.target.value)} 
+                  placeholder="Contoh: Jl. Diponegoro No. 12, Magelang Tengah"
+                  rows={3}
+                />
+              </div>
+            </div>
+
+            <div className="edit-input-group-row">
+              <div className="edit-input-group flex-1">
+                <label>Nama Bank</label>
+                <div className="input-with-icon">
+                  <IonIcon icon={cardOutline} />
+                  <input 
+                    type="text" 
+                    value={bankName} 
+                    onChange={(e) => setBankName(e.target.value)} 
+                    placeholder="BCA / Mandiri"
+                  />
+                </div>
+              </div>
+
+              <div className="edit-input-group flex-2">
+                <label>Nomor Rekening</label>
+                <div className="input-with-icon">
+                  <IonIcon icon={walletOutline} />
+                  <input 
+                    type="text" 
+                    value={bankAccount} 
+                    onChange={(e) => setBankAccount(e.target.value)} 
+                    placeholder="Nomor rekening"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="edit-form-actions">
+              <button 
+                type="button" 
+                className="cancel-btn" 
+                onClick={() => setShowEditModal(false)}
+                disabled={loading}
+              >
+                Batal
+              </button>
+              <button 
+                type="submit" 
+                className="save-btn"
+                disabled={loading}
+              >
+                {loading ? 'Menyimpan...' : 'Simpan Perubahan'}
+              </button>
+            </div>
+          </form>
+        </IonContent>
+      </IonModal>
+
+      <IonToast
+        isOpen={showToast}
+        onDidDismiss={() => setShowToast(false)}
+        message={toastMessage}
+        duration={3000}
+        color={toastColor}
+        position="bottom"
+      />
     </IonPage>
   );
 };

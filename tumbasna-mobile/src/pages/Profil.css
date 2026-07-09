@@ -404,3 +404,160 @@
   color: #9EA8A2;
   margin: 0;
 }
+
+/* ==========================================
+   Edit Profile Modal & Form Styling
+   ========================================== */
+
+.edit-profile-modal {
+  --height: 90%;
+  --border-radius: 20px 20px 0 0;
+  --box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.15);
+  align-items: flex-end;
+}
+
+.profile-modal-toolbar {
+  --background: #ffffff;
+  --color: #0f172a;
+  --border-width: 0;
+  border-bottom: 1px solid #f1f5f9;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.modal-title-header {
+  font-size: 18px;
+  font-weight: 800;
+  color: #006837;
+  padding-left: 16px;
+}
+
+.profile-modal-content-area {
+  --background: #f8fafc;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.edit-profile-form {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-section-header {
+  font-size: 12px;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-top: 10px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 6px;
+}
+
+.edit-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.edit-input-group label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+}
+
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-with-icon ion-icon {
+  position: absolute;
+  left: 12px;
+  color: #94a3b8;
+  font-size: 18px;
+}
+
+.input-with-icon input,
+.input-with-icon textarea {
+  width: 100%;
+  padding: 12px 12px 12px 40px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 12px;
+  font-size: 14px;
+  color: #1e293b;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  outline: none;
+  background: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.input-with-icon textarea {
+  resize: none;
+}
+
+.input-with-icon.textarea-icon ion-icon {
+  top: 14px;
+}
+
+.input-with-icon input:focus,
+.input-with-icon textarea:focus {
+  border-color: #006837;
+  box-shadow: 0 0 0 3px rgba(0, 104, 55, 0.1);
+}
+
+.edit-input-group-row {
+  display: flex;
+  gap: 12px;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+.flex-2 {
+  flex: 2;
+}
+
+.edit-form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  margin-bottom: 30px;
+}
+
+.edit-form-actions button {
+  flex: 1;
+  padding: 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  transition: all 0.2s ease;
+}
+
+.cancel-btn {
+  background: #f1f5f9;
+  border: 1.5px solid #e2e8f0;
+  color: #64748b;
+}
+
+.cancel-btn:active {
+  background: #e2e8f0;
+}
+
+.save-btn {
+  background: linear-gradient(135deg, #006837 0%, #009245 100%);
+  border: none;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 104, 55, 0.2);
+}
+
+.save-btn:active {
+  transform: scale(0.98);
+  opacity: 0.95;
+}
+
