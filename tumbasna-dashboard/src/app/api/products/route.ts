@@ -44,7 +44,13 @@ export async function GET() {
           }
           return 4.5 + (Math.abs(hash) % 6) * 0.1;
         })(),
-        image: entry.image || getProductImage(entry.commodity),
+        image: (() => {
+          let img = entry.image;
+          if (img && typeof img === 'string') {
+            img = img.replace(/^(URL Foto:\s*|url foto:\s*)/i, '').trim();
+          }
+          return img || getProductImage(entry.commodity);
+        })(),
         description: `Komoditas ${entry.commodity} segar dari ${entry.location}. Kualitas terjamin.`,
         shippingEstimate: '1-3 Hari',
         category: entry.commodity,

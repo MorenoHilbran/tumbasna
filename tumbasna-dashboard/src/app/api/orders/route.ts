@@ -97,7 +97,13 @@ export async function GET(req: Request) {
           supplierName: item.supplierName,
           supplierLocation: order.supplierLocation,
           supplierRating: 4.8,
-          image: '/image/produk/' + item.commodity.replace(/\s+/g, '').toLowerCase() + '.png',
+          image: (() => {
+            let img = item.productEntry?.image;
+            if (img && typeof img === 'string') {
+              img = img.replace(/^(URL Foto:\s*|url foto:\s*)/i, '').trim();
+            }
+            return img || ('/image/produk/' + item.commodity.replace(/\s+/g, '').toLowerCase() + '.png');
+          })(),
           description: `Komoditas ${item.commodity} dari ${order.supplierLocation}.`,
           shippingEstimate: '1-3 Hari',
           category: item.commodity,

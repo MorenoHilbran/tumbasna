@@ -302,13 +302,18 @@ export async function processIncomingMessage(
                     cleanContactPhone = '62' + cleanContactPhone.substring(1);
                 }
 
+                let rawImgUrl = (item as any).image_url || lastImageUrl || null;
+                if (typeof rawImgUrl === 'string') {
+                    rawImgUrl = rawImgUrl.replace(/^(URL Foto:\s*|url foto:\s*)/i, '').trim();
+                }
+
                 const payload = {
                     phone: cleanContactPhone || phoneNumber,
                     commodity: item.commodity,
                     volume: item.weight_kg,
                     price: item.price,
                     location: item.location,
-                    image: (item as any).image_url || lastImageUrl || null,
+                    image: rawImgUrl,
                     lat: embeddedLat,
                     lng: embeddedLng,
                 };
