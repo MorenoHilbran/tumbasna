@@ -243,8 +243,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  // ── Fetch profile terbaru dari Supabase (sinkronisasi multi-device) ──────
+  const refreshProfile = async () => {
+    if (!user?.id) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/profile?userId=${user.id}`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success) {
+          const d = json.data;
+          setUser(prev => prev ? {
+            ...prev,
+            ownerName: d.name || prev.ownerName,
+            businessName: d.businessName || prev.businessName,
+            email: d.email || prev.email,
+            address: d.address || prev.address,
+            businessType: d.businessType || prev.businessType,
+            bankName: d.bankName || prev.bankName,
+            bankAccount: d.bankAccount || prev.bankAccount,
+            balance: d.balance ?? prev.balance,
+            activeOrdersCount: d.activeOrdersCount ?? prev.activeOrdersCount,
+          } : null);
+        }
+      }
+    } catch {
+      console.warn('[AppContext] Gagal sinkronisasi profil terbaru dari API.');
+    }
+  };
+
   useEffect(() => {
     refreshOrders();
+    refreshProfile();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 

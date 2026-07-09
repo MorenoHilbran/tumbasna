@@ -61,9 +61,13 @@ const LandingPage = () => {
       </AnimatePresence>
 
       {/* Hero Section */}
-      <section className="relative pt-40 pb-20 px-6 flex flex-col items-center">
+      <section 
+        className="relative pt-40 pb-20 px-6 flex flex-col items-center bg-cover bg-top bg-no-repeat"
+        style={{ backgroundImage: "url('/hero.png')", backgroundSize: "100% auto" }}
+      >
+        <div className="absolute inset-0 bg-[#FBF9F4]/80 backdrop-blur-sm -z-10"></div>
         {/* Soft Background Accents */}
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-[#8CC63F]/20 blur-[120px] rounded-full -z-10"></div>
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-[#8CC63F]/20 blur-[120px] rounded-full -z-20"></div>
         
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <motion.div
