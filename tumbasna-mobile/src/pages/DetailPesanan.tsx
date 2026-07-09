@@ -14,6 +14,7 @@ import {
   checkmarkCircle,
   shieldCheckmarkOutline,
   alertCircleOutline,
+  logoWhatsapp,
   chatbubblesOutline,
   star,
   starOutline
