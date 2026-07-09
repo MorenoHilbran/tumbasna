@@ -28,7 +28,7 @@ setupIonicReact();
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
 // Client ID Google OAuth (Disiapkan untuk Client ID yang sesungguhnya)
-const GOOGLE_CLIENT_ID = 'GANTI_DENGAN_GOOGLE_CLIENT_ID_ANDA.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'GANTI_DENGAN_GOOGLE_CLIENT_ID_ANDA.apps.googleusercontent.com';
 
 const App: React.FC = () => (
   <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>

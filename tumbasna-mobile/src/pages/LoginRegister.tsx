@@ -22,7 +22,8 @@ import {
   checkmarkCircleOutline,
   eyeOutline,
   eyeOffOutline,
-  helpCircleOutline
+  helpCircleOutline,
+  locationOutline
 } from 'ionicons/icons';
 import { useGoogleLogin } from '@react-oauth/google';
 import { useApp } from '../context/AppContext';
@@ -413,7 +414,12 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ initialIsLogin = true, on
                         transition: 'all 0.2s'
                       }}
                     >
-                      {locating ? 'Mencari...' : '📍 Gunakan Lokasi'}
+                      {locating ? 'Mencari...' : (
+                        <>
+                          <IonIcon icon={locationOutline} style={{ fontSize: '14px' }} />
+                          Gunakan Lokasi
+                        </>
+                      )}
                     </button>
                   </div>
                   <div className="reg-input-wrapper">
