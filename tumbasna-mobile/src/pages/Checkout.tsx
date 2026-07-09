@@ -147,7 +147,13 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
         setBuyerAddressLabel(`Lokasi GPS (${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)})`);
       }
     } catch (err: any) {
-      alert("Gagal mengambil GPS (" + err.message + "). Pastikan izin lokasi aktif.");
+      // Fallback to default coordinates (Magelang) if GPS fails or permission denied
+      console.warn("GPS Error:", err);
+      const fallbackLat = -7.4705;
+      const fallbackLng = 110.2178;
+      setBuyerCoords([fallbackLat, fallbackLng]);
+      setBuyerAddressLabel("Magelang, Jawa Tengah (Lokasi Default karena GPS tidak aktif)");
+      alert("Gagal mengambil GPS perangkat. Pastikan izin lokasi aktif di browser Anda. Menggunakan lokasi perkiraan sementara.");
     } finally {
       setIsGettingGps(false);
     }
