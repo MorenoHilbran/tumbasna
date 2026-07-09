@@ -96,6 +96,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
   // Geocode profile address on mount
   useEffect(() => {
@@ -293,9 +294,16 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
   const totalAmount = itemsTotal + dynamicShippingCost + serviceFee;
 
   const handlePlaceOrder = async () => {
-    const orderId = await checkout(activeShipping.name, dynamicShippingCost);
-    if (orderId) {
-      onOrderCreated(orderId);
+    setIsPlacingOrder(true);
+    try {
+      const orderId = await checkout(activeShipping.name, dynamicShippingCost);
+      if (orderId) {
+        onOrderCreated(orderId);
+      }
+    } catch (err) {
+      console.error('Checkout failed:', err);
+    } finally {
+      setIsPlacingOrder(false);
     }
   };
 
@@ -343,6 +351,26 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
                 />
                 {isSearching && <IonSpinner name="dots" className="search-spinner" />}
               </div>
+
+              {/* Gunakan Lokasi Saat Ini Button */}
+              <button 
+                type="button"
+                className="current-loc-inline-btn"
+                onClick={handleGetGpsAndShowMap}
+                disabled={isGettingGps}
+              >
+                {isGettingGps ? (
+                  <>
+                    <IonSpinner name="crescent" className="btn-spinner" />
+                    <span>Mengambil lokasi GPS...</span>
+                  </>
+                ) : (
+                  <>
+                    <IonIcon icon={locateOutline} />
+                    <span>Gunakan Lokasi Saat Ini (GPS)</span>
+                  </>
+                )}
+              </button>
 
               {searchResults.length > 0 && (
                 <div className="search-results-list-overlay">
@@ -509,9 +537,16 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
             color="tertiary"
             className="pay-qris-btn pulse-button"
             onClick={handlePlaceOrder}
+            disabled={isPlacingOrder}
           >
-            <IonIcon icon={walletOutline} slot="start" />
-            Bayar dengan QRIS
+            {isPlacingOrder ? (
+              <IonSpinner name="crescent" />
+            ) : (
+              <>
+                <IonIcon icon={walletOutline} slot="start" />
+                Bayar dengan QRIS
+              </>
+            )}
           </IonButton>
         </div>
       )}

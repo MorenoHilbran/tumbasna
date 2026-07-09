@@ -253,7 +253,11 @@ const MainAppShell: React.FC = () => {
       {/* Checkout Modal Sheet */}
       <IonModal
         isOpen={viewState === 'checkout'}
-        onDidDismiss={() => setViewState('keranjang')}
+        onDidDismiss={() => {
+          if (viewState === 'checkout') {
+            setViewState('keranjang');
+          }
+        }}
         breakpoints={[0, 0.95, 1]}
         initialBreakpoint={0.95}
         handle={true}

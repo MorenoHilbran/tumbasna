@@ -645,3 +645,34 @@
   background: #F8F7F4;
 }
 
+.current-loc-inline-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 104, 55, 0.12);
+  border-radius: 20px;
+  height: 40px;
+  margin-top: 6px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #006837;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s ease;
+}
+
+.current-loc-inline-btn:active {
+  background: #EFF8F0;
+  transform: scale(0.98);
+}
+
+.current-loc-inline-btn .btn-spinner {
+  width: 16px;
+  height: 16px;
+  color: #006837;
+}
+
