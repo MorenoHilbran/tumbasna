@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { IonApp, IonIcon, IonModal } from '@ionic/react';
+import { IonApp, IonIcon } from '@ionic/react';
 import { 
   homeOutline, home, 
   storefrontOutline, storefront, 
@@ -133,12 +133,12 @@ const MainAppShell: React.FC = () => {
 
       case 'checkout':
         return (
-          <Keranjang
-            onNavigateToPasar={() => {
-              setViewState('tabs');
-              setActiveTab('pasar');
+          <Checkout
+            onBack={() => setViewState('keranjang')}
+            onOrderCreated={(orderId) => {
+              setSelectedOrderId(orderId);
+              setViewState('pembayaran_qris');
             }}
-            onNavigateToCheckout={() => setViewState('checkout')}
           />
         );
 
@@ -237,8 +237,6 @@ const MainAppShell: React.FC = () => {
     }
   };
 
-  const activeTabIndex = TABS.findIndex(t => t.id === activeTab);
-
   return (
     <IonApp style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Active Screen Area */}
@@ -249,27 +247,6 @@ const MainAppShell: React.FC = () => {
       >
         {renderContent()}
       </div>
-
-      {/* Checkout Modal Sheet */}
-      <IonModal
-        isOpen={viewState === 'checkout'}
-        onDidDismiss={() => {
-          if (viewState === 'checkout') {
-            setViewState('keranjang');
-          }
-        }}
-        breakpoints={[0, 0.95, 1]}
-        initialBreakpoint={0.95}
-        handle={true}
-      >
-        <Checkout
-          onBack={() => setViewState('keranjang')}
-          onOrderCreated={(orderId) => {
-            setSelectedOrderId(orderId);
-            setViewState('pembayaran_qris');
-          }}
-        />
-      </IonModal>
 
       {/* Global Cart FAB Overlay (only visible on main home/pasar/profile views when cart has items) */}
       {viewState === 'tabs' && (activeTab === 'beranda' || activeTab === 'pasar') && (
