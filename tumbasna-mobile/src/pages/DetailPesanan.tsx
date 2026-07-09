@@ -14,8 +14,9 @@ import {
   checkmarkCircle,
   shieldCheckmarkOutline,
   alertCircleOutline,
-  logoWhatsapp,
-  chatbubblesOutline
+  chatbubblesOutline,
+  star,
+  starOutline
 } from 'ionicons/icons';
 import { useApp } from '../context/AppContext';
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
@@ -56,6 +57,11 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
   const { orders, confirmOrderReceived } = useApp();
   const [showToast, setShowToast] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
+  
+  // States for Rating & Review
+  const [rating, setRating] = useState(0);
+  const [reviewText, setReviewText] = useState('');
+  const [hasReviewed, setHasReviewed] = useState(false);
 
   const order = orders.find((o) => o.id === orderId);
 
@@ -137,6 +143,17 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
   const handleConfirmReceived = async () => {
     await confirmOrderReceived(orderId);
     setToastMsg('Transaksi selesai! Dana telah diteruskan ke rekening bank supplier.');
+    setShowToast(true);
+  };
+
+  const submitReview = () => {
+    if (rating === 0) {
+      setToastMsg('Silakan pilih bintang penilaian terlebih dahulu.');
+      setShowToast(true);
+      return;
+    }
+    setHasReviewed(true);
+    setToastMsg('Ulasan berhasil dikirim! Terima kasih atas penilaian Anda.');
     setShowToast(true);
   };
 
@@ -332,6 +349,48 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
             ))}
           </div>
         </div>
+
+        {/* ── Rating & Review Card (Tampil jika Selesai) ── */}
+        {order.status === 'Selesai' && (
+          <div style={{ margin: '20px 14px' }}>
+            <div className="section-title-tracking">Beri Nilai Supplier</div>
+            <div className="tracking-order-summary-card" style={{ padding: '20px', textAlign: 'center' }}>
+              {!hasReviewed ? (
+                <>
+                  <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '16px' }}>Bagaimana kualitas komoditas dari {order.supplierName}?</p>
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '16px' }}>
+                    {[1, 2, 3, 4, 5].map((starIdx) => (
+                      <IonIcon 
+                        key={starIdx}
+                        icon={starIdx <= rating ? star : starOutline} 
+                        style={{ fontSize: '32px', color: starIdx <= rating ? '#fbbf24' : '#cbd5e1', cursor: 'pointer', transition: 'color 0.2s' }}
+                        onClick={() => setRating(starIdx)}
+                      />
+                    ))}
+                  </div>
+                  <textarea 
+                    placeholder="Tulis pengalaman belanja Anda di sini..."
+                    value={reviewText}
+                    onChange={(e) => setReviewText(e.target.value)}
+                    style={{ width: '100%', minHeight: '80px', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc', fontSize: '12px', color: '#334155', marginBottom: '16px', outline: 'none' }}
+                  />
+                  <button 
+                    onClick={submitReview}
+                    style={{ width: '100%', background: '#006837', color: 'white', fontWeight: 'bold', padding: '12px', borderRadius: '12px', fontSize: '13px' }}
+                  >
+                    Kirim Ulasan
+                  </button>
+                </>
+              ) : (
+                <div style={{ padding: '10px 0' }}>
+                  <IonIcon icon={checkmarkCircle} style={{ fontSize: '48px', color: '#10b981', marginBottom: '12px' }} />
+                  <h4 style={{ margin: '0 0 4px', fontSize: '14px', fontWeight: 'bold', color: '#0f172a' }}>Ulasan Terkirim</h4>
+                  <p style={{ margin: 0, fontSize: '11px', color: '#64748b' }}>Terima kasih telah membantu menjaga kualitas ekosistem Tumbasna.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         <div style={{ height: '120px' }}></div>
       </IonContent>

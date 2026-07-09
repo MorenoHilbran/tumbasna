@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const API_BASE = 'http://localhost:3000';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://api.tumbasna.my.id';
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
 export interface Product {
