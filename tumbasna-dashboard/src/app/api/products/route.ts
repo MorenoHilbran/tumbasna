@@ -3,16 +3,14 @@ import prisma from '@/lib/prisma';
 
 function getProductImage(commodity: string): string {
   const name = commodity.toLowerCase();
-  if (name.includes('beras')) return 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&q=80';
-  if (name.includes('jagung')) return 'https://images.unsplash.com/photo-1551754655-cd27e38d20f6?w=400&q=80';
-  if (name.includes('tomat')) return 'https://images.unsplash.com/photo-1595855759920-86582396756a?w=400&q=80';
-  if (name.includes('cabai merah') || name.includes('cabe merah')) return 'https://images.unsplash.com/photo-1601004890684-d8cbf643f5f2?w=400&q=80';
-  if (name.includes('cabai rawit') || name.includes('cabe rawit') || name.includes('cabai') || name.includes('cabe')) return 'https://images.unsplash.com/photo-1588252303782-cb80119cb665?w=400&q=80';
-  if (name.includes('bawang merah') || name.includes('bawangmerah')) return 'https://images.unsplash.com/photo-1618220179428-22790b461013?w=400&q=80';
-  if (name.includes('bawang putih') || name.includes('bawangputih')) return 'https://images.unsplash.com/photo-1540148426945-6cf22a6b2383?w=400&q=80';
-  if (name.includes('kedelai')) return 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?w=400&q=80';
-  if (name.includes('kentang')) return 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400&q=80';
-  if (name.includes('minyak')) return 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&q=80';
+  if (name.includes('beras')) return '/image/produk/beras.png';
+  if (name.includes('jagung')) return '/image/produk/jagung.png';
+  if (name.includes('cabai merah') || name.includes('cabe merah')) return '/image/produk/cabaimerah.png';
+  if (name.includes('cabai rawit') || name.includes('cabe rawit') || name.includes('cabai') || name.includes('cabe')) return '/image/produk/cabaimerah.png';
+  if (name.includes('bawang merah') || name.includes('bawangmerah')) return '/image/produk/bawangmerah.png';
+  if (name.includes('bawang putih') || name.includes('bawangputih')) return '/image/produk/bawangputih.png';
+  if (name.includes('jahe') || name.includes('rempah')) return '/image/produk/jahe.png';
+  // Fallback to unsplash only if it's completely unknown
   return 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80';
 }
 
