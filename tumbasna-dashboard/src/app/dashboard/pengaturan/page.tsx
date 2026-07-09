@@ -718,19 +718,29 @@ export default function PengaturanPage() {
                       </div>
 
                       {/* Product Details */}
-                      <div className="flex gap-4 items-start mb-4">
-                        {product.image ? (
+                      <div className="flex gap-4 items-start mb-4 relative">
+                        {product.image && product.image.trim() !== '' ? (
                           <img
                             src={product.image}
                             alt={product.commodity}
                             className="w-16 h-16 rounded-xl object-cover border border-slate-100 bg-slate-50 flex-shrink-0"
+                            onError={(e) => {
+                              // Fallback if image fails to load
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              target.parentElement?.classList.add('fallback-triggered');
+                            }}
                           />
-                        ) : (
-                          <div className="w-16 h-16 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 flex-shrink-0 font-bold text-xs">
-                            No Img
-                          </div>
-                        )}
-                        <div className="min-w-0">
+                        ) : null}
+                        <div className="w-16 h-16 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 flex-shrink-0 font-bold text-xs" style={{ display: product.image && product.image.trim() !== '' ? 'none' : 'flex' }} id="fallback-img">
+                          No Img
+                        </div>
+                        <style jsx>{`
+                          .fallback-triggered #fallback-img {
+                            display: flex !important;
+                          }
+                        `}</style>
+                        <div className="min-w-0 flex-1">
                           <h3 className="text-sm font-bold text-slate-900 truncate uppercase">{product.commodity}</h3>
                           <p className="text-xs text-slate-500 mt-0.5">
                             Harga: <span className="font-bold text-slate-800">Rp {product.price.toLocaleString('id-ID')}/kg</span>
