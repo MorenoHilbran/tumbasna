@@ -1,13 +1,5 @@
 import type { Metadata } from "next";
-import { Poppins } from "next/font/google";
 import "./globals.css";
-
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800", "900"],
-  variable: "--font-poppins",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"),
@@ -58,8 +50,8 @@ export default function RootLayout({
   return (
     <html lang="id">
       <body
-        className={`${poppins.variable} font-sans antialiased`}
-        style={{ background: '#F4F7F2', color: '#1a2e1e', fontFamily: 'Poppins, sans-serif' }}
+        className="font-sans antialiased"
+        style={{ background: '#F4F7F2', color: '#1a2e1e' }}
       >
         {children}
       </body>

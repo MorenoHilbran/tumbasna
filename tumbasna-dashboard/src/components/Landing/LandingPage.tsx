@@ -73,8 +73,9 @@ const LandingPage = () => {
           >
             
             <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold text-[#006837] leading-[1.1] mb-6 md:mb-8 tracking-tight">
-              Pasar Digital Terpercaya <br />
-              <span className="text-[#F7941D]">di Kabupaten Banyumas</span>
+              Pasar Digital <span className="font-serif italic font-semibold text-[#8CC63F]">Terpercaya</span> <br />
+              <span className="text-[#F7941D]">di Kabupaten </span>
+              <span className="font-serif italic font-semibold text-[#F7941D]">Banyumas</span>
             </h1>
             
             <p className="text-base sm:text-lg md:text-xl text-[#6B7A6F] mb-10 md:mb-12 max-w-2xl mx-auto leading-relaxed">
@@ -177,7 +178,9 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-20">
              <p className="text-[#F7941D] text-xs font-bold tracking-widest mb-3 uppercase">Alur Proses</p>
-             <h2 className="text-3xl md:text-5xl font-extrabold text-[#006837] tracking-tight">Cara Kerja Tumbasna Banyumas</h2>
+             <h2 className="text-3xl md:text-5xl font-extrabold text-[#006837] tracking-tight">
+               Cara Kerja <span className="font-serif italic font-semibold text-[#F7941D]">Tumbasna</span> Banyumas
+             </h2>
           </div>
 
           <div className="grid md:grid-cols-3 gap-12 relative">
@@ -244,7 +247,9 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
              <p className="text-[#F7941D] text-xs font-bold tracking-widest mb-3 uppercase">Fitur Unggulan</p>
-             <h2 className="text-3xl md:text-5xl font-extrabold text-[#006837] tracking-tight">Kekuatan AI Tumbasna</h2>
+             <h2 className="text-3xl md:text-5xl font-extrabold text-[#006837] tracking-tight">
+               Kekuatan AI <span className="font-serif italic font-semibold text-[#8CC63F]">Tumbasna</span>
+             </h2>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -289,7 +294,9 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
              <p className="text-[#F7941D] text-xs font-bold tracking-widest mb-3 uppercase">Testimoni</p>
-             <h2 className="text-3xl md:text-5xl font-extrabold text-[#006837] tracking-tight">Kisah Sukses UMKM</h2>
+             <h2 className="text-3xl md:text-5xl font-extrabold text-[#006837] tracking-tight">
+               Kisah Sukses <span className="font-serif italic font-semibold text-[#F7941D]">UMKM</span>
+             </h2>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
@@ -336,7 +343,9 @@ const LandingPage = () => {
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-16">
              <p className="text-[#F7941D] text-xs font-bold tracking-widest mb-3 uppercase">Tanya Jawab</p>
-             <h2 className="text-3xl md:text-5xl font-extrabold text-[#006837] tracking-tight">Pertanyaan Umum</h2>
+             <h2 className="text-3xl md:text-5xl font-extrabold text-[#006837] tracking-tight">
+               Pertanyaan <span className="font-serif italic font-semibold text-[#F7941D]">Umum</span>
+             </h2>
           </div>
           
           <div className="space-y-4">

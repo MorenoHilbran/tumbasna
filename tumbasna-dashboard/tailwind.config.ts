@@ -9,7 +9,8 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["Poppins", "sans-serif"],
+        sans: ["'Plus Jakarta Sans'", "Poppins", "sans-serif"],
+        serif: ["'Playfair Display'", "Georgia", "serif"],
         poppins: ["Poppins", "sans-serif"],
       },
       colors: {
