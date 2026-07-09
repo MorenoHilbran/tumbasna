@@ -74,11 +74,11 @@ const MapController = ({ center, onMoveEnd }: { center: [number, number], onMove
 const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
   const { cart, user, checkout } = useApp();
   
-  // Workflow States
-  const [step, setStep] = useState<'prompt' | 'map' | 'summary'>('prompt');
+  // Workflow States (Skip prompt, go straight to map)
+  const [step, setStep] = useState<'map' | 'summary'>('map');
   
   // Location States
-  const [buyerCoords, setBuyerCoords] = useState<[number, number]>([-7.4705, 110.2178]); // Default mock (Magelang)
+  const [buyerCoords, setBuyerCoords] = useState<[number, number]>([-7.4244, 109.2300]); // Default to Purwokerto/Banyumas
   const [buyerAddressLabel, setBuyerAddressLabel] = useState('');
   const [isGettingGps, setIsGettingGps] = useState(false);
 
@@ -87,14 +87,34 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
   const [dynamicShippingCost, setDynamicShippingCost] = useState(SHIPPING_METHODS[0].price);
   const [isCalculatingOngkir, setIsCalculatingOngkir] = useState(false);
   
-  // COD Radius States
+  // COD Radius / Distance States
   const [codAvailable, setCodAvailable] = useState(true);
   const [distanceInfo, setDistanceInfo] = useState('Mendeteksi jarak lokasi...');
+  const [distance, setDistance] = useState<number>(10); // Default 10km fallback
 
   // Search States
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+
+  // Geocode profile address on mount
+  useEffect(() => {
+    if (user && user.address) {
+      setBuyerAddressLabel(user.address);
+      const geocodeProfileAddress = async () => {
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(user.address)}`);
+          const data = await res.json();
+          if (data && data.length > 0) {
+            setBuyerCoords([parseFloat(data[0].lat), parseFloat(data[0].lon)]);
+          }
+        } catch (err) {
+          console.warn('Geocoding profile address failed, using default coords.', err);
+        }
+      };
+      geocodeProfileAddress();
+    }
+  }, [user]);
 
   if (!user || cart.length === 0) return null;
 
@@ -105,13 +125,6 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
   // 1. LOCATION STEP HANDLERS
   // =================================================================
 
-  const handleUseProfileAddress = () => {
-    setBuyerAddressLabel(`${user.businessName} (${user.address})`);
-    // Mock coord based on profile
-    setBuyerCoords([-7.4705, 110.2178]); 
-    setStep('summary');
-  };
-
   const handleGetGpsAndShowMap = async () => {
     setIsGettingGps(true);
     try {
@@ -119,16 +132,39 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000, enableHighAccuracy: true });
       });
       setBuyerCoords([position.coords.latitude, position.coords.longitude]);
+      
+      // Reverse geocode GPS location
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`);
+        const data = await res.json();
+        if (data && data.display_name) {
+          setBuyerAddressLabel(data.display_name);
+        } else {
+          setBuyerAddressLabel(`Lokasi GPS (${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)})`);
+        }
+      } catch {
+        setBuyerAddressLabel(`Lokasi GPS (${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)})`);
+      }
     } catch (err: any) {
       alert("Gagal mengambil GPS (" + err.message + "). Pastikan izin lokasi aktif.");
     } finally {
       setIsGettingGps(false);
-      setStep('map');
     }
   };
 
-  const handleConfirmMapLocation = () => {
-    setBuyerAddressLabel('Lokasi Peta (Pin yang dipilih)');
+  const handleConfirmMapLocation = async () => {
+    // Reverse geocode buyerCoords for final confirmation
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${buyerCoords[0]}&lon=${buyerCoords[1]}`);
+      const data = await res.json();
+      if (data && data.display_name) {
+        setBuyerAddressLabel(data.display_name);
+      } else {
+        setBuyerAddressLabel(`Pin Peta (${buyerCoords[0].toFixed(4)}, ${buyerCoords[1].toFixed(4)})`);
+      }
+    } catch {
+      setBuyerAddressLabel(`Pin Peta (${buyerCoords[0].toFixed(4)}, ${buyerCoords[1].toFixed(4)})`);
+    }
     setStep('summary');
   };
 
@@ -149,12 +185,27 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
   const handleSelectSearchResult = (res: any) => {
     setBuyerCoords([parseFloat(res.lat), parseFloat(res.lon)]);
     setBuyerAddressLabel(res.display_name);
-    setStep('map');
+    setSearchResults([]);
+    setSearchQuery('');
   };
 
   // =================================================================
-  // 2. CHECKOUT SUMMARY EFFECTS
+  // 2. CHECKOUT SUMMARY EFFECTS & SHIPPING CALCULATIONS
   // =================================================================
+
+  const getMethodPrice = (methodId: string) => {
+    const totalWeightGrams = cart.reduce((acc, item) => acc + (item.quantity * 1000), 0);
+    const weightKg = Math.max(1, Math.ceil(totalWeightGrams / 1000));
+    if (methodId === 'kurir-lokal') {
+      return Math.max(10000, Math.round(distance * 2000));
+    } else if (methodId === 'cod') {
+      return Math.max(15000, Math.round(distance * 2500));
+    } else if (methodId === 'ekspedisi') {
+      if (selectedCourier === 'ekspedisi') return dynamicShippingCost;
+      return 25000 + (weightKg * 5000);
+    }
+    return 0;
+  };
 
   useEffect(() => {
     if (step !== 'summary') return;
@@ -172,6 +223,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
           const supplierLng = parseFloat(geoData[0].lon);
 
           const dist = haversineKm(buyerCoords[0], buyerCoords[1], supplierLat, supplierLng);
+          setDistance(dist);
           
           if (dist <= 20) {
             setCodAvailable(true);
@@ -184,10 +236,14 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
             }
           }
         } else {
-          setDistanceInfo('Gagal melacak lokasi supplier.');
+          setDistance(12.5);
+          setCodAvailable(true);
+          setDistanceInfo('Jarak ke supplier: ~12.5 km (Estimasi)');
         }
       } catch (err) {
-        setDistanceInfo('Gagal menghitung jarak.');
+        setDistance(12.5);
+        setCodAvailable(true);
+        setDistanceInfo('Jarak ke supplier: ~12.5 km (Estimasi)');
       }
     };
     checkDistance();
@@ -197,29 +253,41 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
     if (step !== 'summary') return;
 
     const fetchShipping = async () => {
-      setIsCalculatingOngkir(true);
-      try {
-        const totalWeightGrams = cart.reduce((acc, item) => acc + (item.quantity * 1000), 0);
-        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-        const res = await fetch(`${API_URL}/api/shipping/cost`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ courier: selectedCourier, weight: totalWeightGrams })
-        });
-        const data = await res.json();
-        if (data.success) {
-          setDynamicShippingCost(data.cost);
-        } else {
-          setDynamicShippingCost(activeShipping.price);
+      if (selectedCourier === 'ekspedisi') {
+        setIsCalculatingOngkir(true);
+        try {
+          const totalWeightGrams = cart.reduce((acc, item) => acc + (item.quantity * 1000), 0);
+          const weightKg = Math.max(1, Math.ceil(totalWeightGrams / 1000));
+          const API_URL = import.meta.env.VITE_API_URL || 'https://api.tumbasna.my.id';
+          const res = await fetch(`${API_URL}/api/shipping/cost`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              courier: selectedCourier, 
+              weight: totalWeightGrams,
+              originId: '501',
+              destinationId: '114' 
+            })
+          });
+          const data = await res.json();
+          if (data.success) {
+            setDynamicShippingCost(data.cost);
+          } else {
+            setDynamicShippingCost(25000 + (weightKg * 5000));
+          }
+        } catch {
+          const totalWeightGrams = cart.reduce((acc, item) => acc + (item.quantity * 1000), 0);
+          const weightKg = Math.max(1, Math.ceil(totalWeightGrams / 1000));
+          setDynamicShippingCost(25000 + (weightKg * 5000));
+        } finally {
+          setIsCalculatingOngkir(false);
         }
-      } catch {
-        setDynamicShippingCost(activeShipping.price);
-      } finally {
-        setIsCalculatingOngkir(false);
+      } else {
+        setDynamicShippingCost(getMethodPrice(selectedCourier));
       }
     };
     fetchShipping();
-  }, [selectedCourier, cart, activeShipping.price, step]);
+  }, [selectedCourier, cart, step, distance]);
 
   const serviceFee = 2000;
   const totalAmount = itemsTotal + dynamicShippingCost + serviceFee;
@@ -240,15 +308,14 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
         <IonToolbar className="checkout-toolbar">
           <div className="checkout-toolbar-inner">
             <button className="checkout-back-btn" onClick={() => {
-              if (step === 'map') setStep('prompt');
-              else if (step === 'summary') setStep('prompt');
-              else onBack();
+              if (step === 'map') onBack();
+              else if (step === 'summary') setStep('map');
             }}>
               <IonIcon icon={arrowBackOutline} />
             </button>
             <div className="checkout-logo-row">
               <h2 className="checkout-header-title">
-                {step === 'prompt' ? 'Pilih Lokasi' : step === 'map' ? 'Titik Lokasi' : 'Checkout'}
+                {step === 'map' ? 'Pilih Lokasi' : 'Checkout'}
               </h2>
             </div>
             <div style={{width: 32}}></div>
@@ -259,67 +326,36 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
       <IonContent className={`checkout-content ${step === 'map' ? 'no-scroll' : ''}`}>
         
         {/* ==================================================== */}
-        {/* VIEW 1: LOCATION PROMPT / SEARCH                     */}
-        {/* ==================================================== */}
-        {step === 'prompt' && (
-          <div className="loc-search-container">
-            
-            <div className="search-bar-wrapper">
-              <IonIcon icon={searchOutline} className="search-icon" />
-              <input 
-                type="text" 
-                placeholder="Tulis nama jalan/tempat" 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearchLocation()}
-                className="loc-search-input"
-              />
-              {isSearching && <IonSpinner name="dots" className="search-spinner" />}
-            </div>
-
-            {searchResults.length > 0 ? (
-              <div className="search-results-list">
-                {searchResults.map((res, idx) => (
-                  <div key={idx} className="search-result-item" onClick={() => handleSelectSearchResult(res)}>
-                    <IonIcon icon={locationOutline} className="result-icon" />
-                    <span>{res.display_name}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="loc-options-list">
-                <div className="loc-option-item" onClick={handleGetGpsAndShowMap}>
-                  <div className="loc-option-icon">
-                    <IonIcon icon={navigateOutline} />
-                  </div>
-                  <div className="loc-option-text">
-                    <strong>Gunakan Lokasi Saat Ini</strong>
-                    <p>Izinkan Penggunaan Lokasi</p>
-                  </div>
-                </div>
-
-                <div className="loc-option-item" onClick={handleUseProfileAddress}>
-                  <div className="loc-option-icon">
-                    <IonIcon icon={mapOutline} />
-                  </div>
-                  <div className="loc-option-text">
-                    <strong>Gunakan Alamat di Profil</strong>
-                    <p>{user.businessName}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ==================================================== */}
-        {/* VIEW 2: MAP PICKER                                   */}
+        {/* VIEW 1: MAP PICKER WITH SEARCH OVERLAY & GPS FAB    */}
         {/* ==================================================== */}
         {step === 'map' && (
           <div className="map-picker-wrapper">
-            <div className="map-picker-instruction">
-              Geser peta untuk menentukan titik akurat pengiriman Anda.
+            <div className="map-search-overlay">
+              <div className="search-bar-wrapper">
+                <IonIcon icon={searchOutline} className="search-icon" />
+                <input 
+                  type="text" 
+                  placeholder="Cari jalan atau area di Banyumas..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearchLocation()}
+                  className="loc-search-input"
+                />
+                {isSearching && <IonSpinner name="dots" className="search-spinner" />}
+              </div>
+
+              {searchResults.length > 0 && (
+                <div className="search-results-list-overlay">
+                  {searchResults.map((res, idx) => (
+                    <div key={idx} className="search-result-item" onClick={() => handleSelectSearchResult(res)}>
+                      <IonIcon icon={locationOutline} className="result-icon" />
+                      <span>{res.display_name}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
+
             <div className="map-container-box" style={{ position: 'relative' }}>
               <MapContainer 
                 center={buyerCoords} 
@@ -344,24 +380,34 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
               }}>
                 📍
               </div>
+
+              {/* GPS FAB Button */}
+              <button 
+                className="gps-fab"
+                onClick={handleGetGpsAndShowMap}
+                disabled={isGettingGps}
+              >
+                {isGettingGps ? <IonSpinner name="crescent" style={{ width: 20, height: 20 }} /> : <IonIcon icon={locateOutline} />}
+              </button>
             </div>
+            
             <div className="map-picker-footer">
               <IonButton expand="block" className="loc-btn-primary" onClick={handleConfirmMapLocation}>
                 <IonIcon icon={checkmarkCircle} slot="start" />
-                Konfirmasi Lokasi
+                Konfirmasi Lokasi Pengiriman
               </IonButton>
             </div>
           </div>
         )}
 
         {/* ==================================================== */}
-        {/* VIEW 3: CHECKOUT SUMMARY                             */}
+        {/* VIEW 2: CHECKOUT SUMMARY                             */}
         {/* ==================================================== */}
         {step === 'summary' && (
           <>
             {/* Shipping Address */}
             <div className="checkout-section-title">Alamat Pengiriman</div>
-            <div className="checkout-address-card" onClick={() => setStep('prompt')}>
+            <div className="checkout-address-card" onClick={() => setStep('map')}>
               <div className="address-icon-bg">
                 <IonIcon icon={locationOutline} />
               </div>
@@ -393,7 +439,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
                         <p className="shipping-method-desc">{method.desc}</p>
                       </div>
                       <div className="shipping-info-right">
-                        <span className="shipping-method-price">Rp {method.price.toLocaleString('id-ID')}</span>
+                        <span className="shipping-method-price">Rp {getMethodPrice(method.id).toLocaleString('id-ID')}</span>
                         <IonRadio value={method.id} className="custom-radio" />
                       </div>
                     </div>

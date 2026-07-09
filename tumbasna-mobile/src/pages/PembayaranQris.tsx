@@ -18,7 +18,8 @@ import {
   downloadOutline,
   copyOutline,
   alertCircleOutline,
-  phonePortraitOutline
+  phonePortraitOutline,
+  arrowBackOutline
 } from 'ionicons/icons';
 import { QRCodeSVG } from 'qrcode.react';
 import { useApp } from '../context/AppContext';
@@ -128,7 +129,11 @@ const PembayaranQris: React.FC<PembayaranQrisProps> = ({
       <IonHeader className="ion-no-border">
         <IonToolbar className="qris-toolbar">
           <div className="qris-toolbar-inner">
+            <button className="qris-back-btn" onClick={onNavigateToPesanan}>
+              <IonIcon icon={arrowBackOutline} />
+            </button>
             <h2 className="qris-header-title">Pembayaran</h2>
+            <div style={{ width: 32 }}></div>
           </div>
         </IonToolbar>
       </IonHeader>

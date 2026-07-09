@@ -12,7 +12,7 @@ Pastikan Anda sudah membuat **4 Record** ini di DNS Management Rumahweb:
 | `www` | **A** | `202.155.13.225` | WWW Domain |
 | `dashboard` | **A** | `202.155.13.225` | Subdomain Dashboard |
 | `api` | **A** | `202.155.13.225` | Subdomain API |
-| `mobile` | **A** | `202.155.13.225` | Subdomain Mobile Web |
+| `app` | **A** | `202.155.13.225` | Subdomain Mobile Web |
 
 *(Simpan semua dan tunggu beberapa menit agar tersambung).*
 
@@ -64,7 +64,7 @@ Kita akan mengatur agar Nginx meneruskan kunjungan dari domain utama maupun subd
    # Konfigurasi khusus untuk Web App Mobile (Port 3001)
    server {
        listen 80;
-       server_name mobile.tumbasna.my.id;
+       server_name app.tumbasna.my.id;
 
        location / {
            proxy_pass http://localhost:3001;
@@ -111,7 +111,7 @@ Sekarang kita pasang gembok hijau untuk semua domain dan subdomain Anda sekaligu
 
 2. Hasilkan sertifikat SSL untuk **SEMUA** alamat Anda sekaligus. Jalankan perintah ini:
    ```bash
-   sudo certbot --nginx -d tumbasna.my.id -d www.tumbasna.my.id -d dashboard.tumbasna.my.id -d api.tumbasna.my.id -d mobile.tumbasna.my.id
+   sudo certbot --nginx -d tumbasna.my.id -d www.tumbasna.my.id -d dashboard.tumbasna.my.id -d api.tumbasna.my.id -d app.tumbasna.my.id
    ```
 
 3. Saat proses berjalan:
