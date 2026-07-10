@@ -156,7 +156,7 @@ export default function LogistikPage() {
             .finally(() => setIsLoading(false));
     }, []);
 
-    const validCities = ['Banyumas', 'Cilacap', 'Purbalingga', 'Banjarnegara', 'Kebumen'];
+    const validCities = ['Banyumas', 'Cilacap', 'Purbalingga', 'Banjarnegara', 'Kebumen', 'Tegal'];
 
     const dbArmada = orders.map((o: any) => {
         let status = 'standby';
@@ -189,8 +189,14 @@ export default function LogistikPage() {
         }
         
         let ke = 'Cilacap';
-        const matchedKe = validCities.find(c => c !== dari);
-        if (matchedKe) ke = matchedKe;
+        if (o.buyerAddress) {
+            const parsedKe = o.buyerAddress.split(',')[0].trim();
+            const matchedKe = validCities.find(c => parsedKe.toLowerCase().includes(c.toLowerCase()));
+            if (matchedKe) ke = matchedKe;
+        } else {
+            const matchedKe = validCities.find(c => c !== dari);
+            if (matchedKe) ke = matchedKe;
+        }
 
         const qtyNum = o.items?.[0]?.quantity || 100;
         const prodName = o.items?.[0]?.product?.name || 'Komoditas';

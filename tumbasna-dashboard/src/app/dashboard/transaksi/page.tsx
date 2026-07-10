@@ -85,7 +85,7 @@ export default function TransaksiPage() {
 
                         return {
                             id: o.id,
-                            buyer: o.items?.[0]?.product?.name ? 'Toko ' + o.supplierName.split(' ')[0] : 'Toko Tani',
+                            buyer: o.buyerName || 'Pedagang Tumbasna',
                             supplier: o.supplierName,
                             produk: o.items?.[0]?.product?.name || 'Komoditas',
                             qty: (o.items?.[0]?.quantity || 100) + ' kg',

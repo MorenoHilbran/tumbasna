@@ -50,6 +50,7 @@ export async function GET(req: Request) {
       where: whereClause,
       orderBy: { createdAt: 'desc' },
       include: {
+        buyer: true,
         items: {
           include: {
             productEntry: {
@@ -65,6 +66,8 @@ export async function GET(req: Request) {
       id: order.id,
       supplierName: order.supplierName,
       supplierLocation: order.supplierLocation,
+      buyerName: order.buyer?.name || order.buyer?.businessName || 'Pedagang Tumbasna',
+      buyerAddress: order.buyer?.address || '',
       courier: order.courier,
       shippingCost: Number(order.shippingCost),
       totalAmount: Number(order.totalAmount),
