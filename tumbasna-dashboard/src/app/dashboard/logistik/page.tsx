@@ -137,6 +137,32 @@ function ProgressBar({ value, status }: { value: number; status: string }) {
     );
 }
 
+// Helper to resolve subdistricts to their regencies
+function resolveRegency(address: string): string | null {
+    if (!address) return null;
+    const addr = address.toLowerCase();
+    
+    if (addr.includes('banyumas') || addr.includes('pekuncen') || addr.includes('sokaraja') || addr.includes('purwokerto') || addr.includes('baturraden')) {
+        return 'Banyumas';
+    }
+    if (addr.includes('cilacap') || addr.includes('majenang') || addr.includes('sidareja') || addr.includes('kroya')) {
+        return 'Cilacap';
+    }
+    if (addr.includes('purbalingga') || addr.includes('bobotsari') || addr.includes('bukateja')) {
+        return 'Purbalingga';
+    }
+    if (addr.includes('banjarnegara') || addr.includes('dieng') || addr.includes('klampok')) {
+        return 'Banjarnegara';
+    }
+    if (addr.includes('kebumen') || addr.includes('gombong') || addr.includes('karanganyar')) {
+        return 'Kebumen';
+    }
+    if (addr.includes('tegal') || addr.includes('slawi') || addr.includes('aderna')) {
+        return 'Tegal';
+    }
+    return null;
+}
+
 // ─── Main Logistik Page ───────────────────────────────────────
 export default function LogistikPage() {
     const [orders, setOrders] = useState<any[]>([]);
@@ -183,16 +209,26 @@ export default function LogistikPage() {
 
         let dari = 'Banyumas';
         if (o.supplierLocation) {
-            const parsed = o.supplierLocation.split(',')[0].trim();
-            const matched = validCities.find(c => parsed.toLowerCase().includes(c.toLowerCase()));
-            if (matched) dari = matched;
+            const resolved = resolveRegency(o.supplierLocation);
+            if (resolved) {
+                dari = resolved;
+            } else {
+                const parsed = o.supplierLocation.split(',')[0].trim();
+                const matched = validCities.find(c => parsed.toLowerCase().includes(c.toLowerCase()));
+                if (matched) dari = matched;
+            }
         }
         
         let ke = 'Cilacap';
         if (o.buyerAddress) {
-            const parsedKe = o.buyerAddress.split(',')[0].trim();
-            const matchedKe = validCities.find(c => parsedKe.toLowerCase().includes(c.toLowerCase()));
-            if (matchedKe) ke = matchedKe;
+            const resolved = resolveRegency(o.buyerAddress);
+            if (resolved) {
+                ke = resolved;
+            } else {
+                const parsedKe = o.buyerAddress.split(',')[0].trim();
+                const matchedKe = validCities.find(c => parsedKe.toLowerCase().includes(c.toLowerCase()));
+                if (matchedKe) ke = matchedKe;
+            }
         } else {
             const matchedKe = validCities.find(c => c !== dari);
             if (matchedKe) ke = matchedKe;
