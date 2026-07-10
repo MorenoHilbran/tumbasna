@@ -61,8 +61,8 @@ export async function POST(req: Request) {
         const distanceKm = await getRoadDistanceKm([originLat, originLng], [destinationLat, destinationLng]);
 
         // ─── 1. Calculate Self-Delivery (Armada Mandiri Supplier) ───
-        // Base cost Rp 50.000 + Rp 5.000 / km
-        const selfCost = 50000 + Math.round(distanceKm * 5000);
+        // Flat Rp 5.000 / km
+        const selfCost = Math.round(distanceKm * 5000);
         const selfEta = distanceKm <= 50 ? '3-6 Jam' : '1 Hari';
 
         // ─── 2. Get Commercial Rates (Biteship API or Mock) ───

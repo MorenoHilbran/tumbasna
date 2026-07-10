@@ -219,7 +219,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
     const totalWeightGrams = cart.reduce((acc, item) => acc + (item.quantity * 1000), 0);
     const weightKg = Math.max(1, Math.ceil(totalWeightGrams / 1000));
     if (methodId === 'kurir-lokal') {
-      return Math.max(10000, Math.round(distance * 2000));
+      return Math.round(distance * 5000);
     } else if (methodId === 'cod') {
       return Math.max(15000, Math.round(distance * 2500));
     } else if (methodId === 'ekspedisi') {
