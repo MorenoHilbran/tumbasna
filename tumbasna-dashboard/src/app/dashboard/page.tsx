@@ -241,6 +241,20 @@ function RouteVisualizer({ from, to }: { from: string; to: string }) {
     );
 }
 
+// Helper to format Rupiah compactly
+function formatRupiahCompact(value: number): string {
+    if (value >= 1_000_000_000) {
+        return `Rp ${(value / 1_000_000_000).toFixed(1).replace('.', ',')}M`;
+    }
+    if (value >= 1_000_000) {
+        return `Rp ${(value / 1_000_000).toFixed(1).replace('.', ',')} Jt`;
+    }
+    if (value >= 1_000) {
+        return `Rp ${(value / 1_000).toFixed(0)} Rb`;
+    }
+    return `Rp ${value}`;
+}
+
 // ─── Main Dashboard Page ──────────────────────────────────────
 export default function DashboardPage() {
     const [stats, setStats] = useState<any>(null);
@@ -297,6 +311,7 @@ export default function DashboardPage() {
             id: 'transaksi',
             label: 'Total Transaksi',
             value: stats ? stats.kpi.totalTransactions.toLocaleString('id-ID') : '0',
+            title: stats ? `${stats.kpi.totalTransactions.toLocaleString('id-ID')} Transaksi` : '0 Transaksi',
             change: '+8.2%',
             trend: 'up',
             icon: ShoppingCart,
@@ -307,7 +322,8 @@ export default function DashboardPage() {
         {
             id: 'nilai',
             label: 'Nilai Transaksi',
-            value: stats ? `Rp ${stats.kpi.totalValue.toLocaleString('id-ID')}` : 'Rp 0',
+            value: stats ? formatRupiahCompact(stats.kpi.totalValue) : 'Rp 0',
+            title: stats ? `Rp ${stats.kpi.totalValue.toLocaleString('id-ID')}` : 'Rp 0',
             change: '+12.5%',
             trend: 'up',
             icon: Wallet,
@@ -319,6 +335,7 @@ export default function DashboardPage() {
             id: 'supplier',
             label: 'Total Supplier',
             value: stats ? stats.kpi.totalSuppliers.toLocaleString('id-ID') : '0',
+            title: stats ? `${stats.kpi.totalSuppliers.toLocaleString('id-ID')} Supplier` : '0 Supplier',
             change: '+4.1%',
             trend: 'up',
             icon: Users,
@@ -330,6 +347,7 @@ export default function DashboardPage() {
             id: 'buyer',
             label: 'Total Buyer',
             value: stats ? stats.kpi.totalBuyers.toLocaleString('id-ID') : '0',
+            title: stats ? `${stats.kpi.totalBuyers.toLocaleString('id-ID')} Buyer` : '0 Buyer',
             change: '-1.3%',
             trend: 'down',
             icon: Users,
@@ -341,6 +359,7 @@ export default function DashboardPage() {
             id: 'komoditas',
             label: 'Komoditas Aktif',
             value: stats ? stats.kpi.activeCommodities.toLocaleString('id-ID') : '0',
+            title: stats ? `${stats.kpi.activeCommodities.toLocaleString('id-ID')} Komoditas Aktif` : '0 Komoditas Aktif',
             change: '+3',
             trend: 'up',
             icon: Package,
@@ -382,7 +401,8 @@ export default function DashboardPage() {
                     return (
                         <div
                             key={kpi.id}
-                            className="bg-white rounded-2xl p-5 border border-slate-200/60 shadow-sm transition-all hover:shadow-md hover:border-slate-300/80 group"
+                            className="bg-white rounded-2xl p-5 border border-slate-200/60 shadow-sm transition-all hover:shadow-md hover:border-slate-300/80 group cursor-pointer"
+                            title={kpi.title}
                         >
                             <div className="flex items-center justify-between mb-4">
                                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${kpi.bg}`}>
