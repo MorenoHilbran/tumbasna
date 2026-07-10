@@ -41,7 +41,13 @@ const locationCoords: Record<string, [number, number]> = {
   'Cilacap': [-7.7150, 108.9767],
   'Purbalingga': [-7.3884, 109.3641],
   'Banjarnegara': [-7.3884, 109.6939],
-  'Kebumen': [-7.6701, 109.6524]
+  'Kebumen': [-7.6701, 109.6524],
+  'Tegal': [-6.8694, 109.1250],
+  'Brebes': [-6.8703, 109.0378],
+  'Magelang': [-7.4797, 110.2178],
+  'Boyolali': [-7.5306, 110.5964],
+  'Cianjur': [-6.8224, 107.1394],
+  'Karo': [3.1167, 98.5000]
 };
 
 const MapResizeTrigger: React.FC = () => {
@@ -54,8 +60,20 @@ const MapResizeTrigger: React.FC = () => {
   return null;
 };
 
+const MapBoundsController: React.FC<{ supplierLoc: [number, number], buyerLoc: [number, number] }> = ({ supplierLoc, buyerLoc }) => {
+  const map = useMap();
+  React.useEffect(() => {
+    if (supplierLoc && buyerLoc) {
+      setTimeout(() => {
+        map.fitBounds([supplierLoc, buyerLoc], { padding: [40, 40] });
+      }, 200);
+    }
+  }, [map, supplierLoc, buyerLoc]);
+  return null;
+};
+
 const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNavigateToChat }) => {
-  const { orders, confirmOrderReceived } = useApp();
+  const { user, orders, confirmOrderReceived } = useApp();
   const [showToast, setShowToast] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
   
@@ -67,13 +85,47 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
   const order = orders.find((o) => o.id === orderId);
 
   // ── Resolve supplier and buyer coordinates ──
-  const getSupplierCoords = (loc: string): [number, number] => {
+  const getCoordsByLocationName = (loc: string): [number, number] | null => {
+    if (!loc) return null;
     const key = Object.keys(locationCoords).find(k => loc.toLowerCase().includes(k.toLowerCase()));
-    return key ? (locationCoords[key] as [number, number]) : [-7.5151, 109.2941];
+    return key ? (locationCoords[key] as [number, number]) : null;
   };
 
-  const supplierLocation: [number, number] = order ? getSupplierCoords(order.supplierLocation) : [-7.5151, 109.2941];
-  const buyerLocation: [number, number] = [supplierLocation[0] - 0.012, supplierLocation[1] + 0.015];
+  let supplierLocation: [number, number] = [-7.5151, 109.2941]; // Default Banyumas
+  let buyerLocation: [number, number] = [-7.4244, 109.2300]; // Default Purwokerto
+
+  // Try to parse coordinates from notes, or fallback to profile/city defaults
+  let hasParsedFromNotes = false;
+  if (order && order.notes) {
+    try {
+      const parsed = JSON.parse(order.notes);
+      if (parsed.supplierCoords && Array.isArray(parsed.supplierCoords) && parsed.supplierCoords.length === 2) {
+        supplierLocation = parsed.supplierCoords as [number, number];
+        hasParsedFromNotes = true;
+      }
+      if (parsed.buyerCoords && Array.isArray(parsed.buyerCoords) && parsed.buyerCoords.length === 2) {
+        buyerLocation = parsed.buyerCoords as [number, number];
+        hasParsedFromNotes = true;
+      }
+    } catch (e) {
+      // notes is not JSON or has different format
+    }
+  }
+
+  if (!hasParsedFromNotes && order) {
+    const resolvedSupplier = getCoordsByLocationName(order.supplierLocation);
+    if (resolvedSupplier) {
+      supplierLocation = resolvedSupplier;
+    }
+
+    const resolvedBuyer = user?.address ? getCoordsByLocationName(user.address) : null;
+    if (resolvedBuyer) {
+      buyerLocation = resolvedBuyer;
+    } else {
+      buyerLocation = [supplierLocation[0] - 0.012, supplierLocation[1] + 0.015];
+    }
+  }
+
   const midpoint: [number, number] = [
     (supplierLocation[0] + buyerLocation[0]) / 2,
     (supplierLocation[1] + buyerLocation[1]) / 2
@@ -216,6 +268,7 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
           >
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
             <MapResizeTrigger />
+            <MapBoundsController supplierLoc={supplierLocation} buyerLoc={buyerLocation} />
             
             {/* Dashed Route Path */}
             <Polyline

@@ -48,7 +48,7 @@ interface AppContextType {
   removeFromCart: (productId: string) => void;
   updateCartQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
-  checkout: (courier: string, shippingCost: number) => Promise<string>;
+  checkout: (courier: string, shippingCost: number, buyerCoords?: [number, number], supplierCoords?: [number, number]) => Promise<string>;
   payOrder: (orderId: string) => Promise<void>;
   confirmOrderReceived: (orderId: string) => Promise<void>;
   sendMessage: (supplierName: string, text: string, supplierPhone?: string) => void;
@@ -408,7 +408,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const clearCart = () => setCart([]);
 
   // ── Checkout — simpan order ke Supabase ──────────────────────────────────
-  const checkout = async (courier: string, shippingCost: number): Promise<string> => {
+  const checkout = async (
+    courier: string, 
+    shippingCost: number, 
+    buyerCoords?: [number, number], 
+    supplierCoords?: [number, number]
+  ): Promise<string> => {
     if (cart.length === 0) return '';
     const orderId = `TRX-${Math.floor(100000 + Math.random() * 900000)}`;
     const itemsTotal = cart.reduce((acc, i) => acc + i.product.price * i.quantity, 0);
@@ -425,6 +430,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       { title: 'Pengiriman & Tracking', description: 'Menunggu penjemputan logistik.', time: 'Belum', done: false },
     ];
 
+    const notesObj = { buyerCoords, supplierCoords };
+    const notesStr = JSON.stringify(notesObj);
+
     const newOrder: Order = {
       id: orderId, items: [...cart], supplierName, supplierLocation, courier,
       shippingCost, totalAmount,
@@ -432,6 +440,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status: 'Menunggu Pembayaran',
       paymentQrCode: `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=tumbasna-qris-${orderId}`,
       fundsReleased: false, paymentCountdown: 300, trackingTimeline,
+      notes: notesStr,
     };
 
     // Simpan ke Supabase
@@ -446,6 +455,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           shippingCost, totalAmount,
           trackingTimeline,
           paymentQrCode: newOrder.paymentQrCode,
+          notes: notesStr,
           items: cart.map((i) => ({
             productEntryId: i.product.id.startsWith('prod-') ? null : i.product.id,
             commodity: i.product.category || i.product.name,

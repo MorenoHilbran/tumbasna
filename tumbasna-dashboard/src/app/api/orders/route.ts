@@ -135,6 +135,7 @@ export async function POST(req: Request) {
       items,             // Array<{ productEntryId?, commodity, price, qty, supplierName }>
       trackingTimeline,
       paymentQrCode,
+      notes,
     } = body;
 
     if (!id || !supplierName || !courier || !items?.length) {
@@ -162,6 +163,7 @@ export async function POST(req: Request) {
         paymentQrCode: paymentQrCode || null,
         fundsReleased: false,
         trackingTimeline: trackingTimeline || [],
+        notes: notes || null,
         items: {
           create: items.map((item: any) => ({
             productEntryId: item.productEntryId || null,
