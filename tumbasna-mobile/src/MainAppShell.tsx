@@ -39,11 +39,18 @@ const TABS: { id: TabState; label: string; iconActive: string; iconInactive: str
 ];
 
 const MainAppShell: React.FC = () => {
-  const { user } = useApp();
+  const { user, refreshProducts } = useApp();
 
   // Navigation State
   const [activeTab, setActiveTab] = useState<TabState>('beranda');
   const [viewState, setViewState] = useState<ViewState>('tabs');
+  
+  // Refetch products when entering Pasar to ensure up-to-date stock information
+  useEffect(() => {
+    if (activeTab === 'pasar') {
+      refreshProducts();
+    }
+  }, [activeTab]);
   
   // Selected Data State
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);

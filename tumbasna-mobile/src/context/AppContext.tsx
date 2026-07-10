@@ -53,6 +53,7 @@ interface AppContextType {
   confirmOrderReceived: (orderId: string) => Promise<void>;
   sendMessage: (supplierName: string, text: string, supplierPhone?: string) => void;
   refreshOrders: () => Promise<void>;
+  refreshProducts: () => Promise<void>;
   updateProfile: (userData: Partial<User>) => Promise<{ success: boolean; error?: string }>;
 }
 
@@ -214,19 +215,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   // ── Fetch products dari dashboard API ────────────────────────────────────
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/api/products`);
-        if (res.ok) {
-          const json = await res.json();
-          if (json.success && json.data?.length > 0) setProducts(json.data);
-        }
-      } catch {
-        console.warn('[AppContext] Dashboard offline, pakai fallback products.');
+  const refreshProducts = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/products`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.data?.length > 0) setProducts(json.data);
       }
-    };
-    fetchProducts();
+    } catch {
+      console.warn('[AppContext] Dashboard offline atau gagal refresh products.');
+    }
+  };
+
+  useEffect(() => {
+    refreshProducts();
   }, []);
 
   // ── Fetch orders dari Supabase via API (saat user login) ─────────────────
@@ -483,6 +485,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'DIPROSES', trackingTimeline: updatedTimeline }),
       });
+      await refreshProducts();
     } catch { console.warn('[payOrder] Gagal update status ke Supabase.'); }
   };
 
@@ -508,6 +511,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'SELESAI', fundsReleased: true }),
       });
+      await refreshProducts();
     } catch { console.warn('[confirmOrderReceived] Gagal update ke Supabase.'); }
   };
 
@@ -691,7 +695,7 @@ Pertanyaan pengguna: ${text}`;
   };
 
   return (
-    <AppContext.Provider value={{ user, products, cart, orders, chats, login, register, logout, addToCart, removeFromCart, updateCartQuantity, clearCart, checkout, payOrder, confirmOrderReceived, sendMessage, refreshOrders, updateProfile }}>
+    <AppContext.Provider value={{ user, products, cart, orders, chats, login, register, logout, addToCart, removeFromCart, updateCartQuantity, clearCart, checkout, payOrder, confirmOrderReceived, sendMessage, refreshOrders, refreshProducts, updateProfile }}>
       {children}
     </AppContext.Provider>
   );
