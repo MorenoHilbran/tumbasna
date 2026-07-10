@@ -789,10 +789,10 @@ export default function TransaksiPage() {
                             </div>
                             <p className="text-sm font-bold text-slate-700">Pilih Transaksi</p>
                             <p className="text-xs text-slate-400 mt-1 max-w-[200px] mx-auto font-medium">Klik salah satu baris transaksi untuk melihat detail lengkap</p>
-                        </div>
                     )}
                 </div>
-            )}
-        </div>
-    );
+            </div>
+        )}
+    </div>
+);
 }
