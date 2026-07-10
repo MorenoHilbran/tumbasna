@@ -238,6 +238,8 @@ export default function LogistikPage() {
         let waybillImageUrl = null;
         let supplierCoords: [number, number] | null = null;
         let buyerCoords: [number, number] | null = null;
+        let notesSupplierAddress: string | null = null;
+        let notesBuyerAddress: string | null = null;
 
         if (o.notes) {
             try {
@@ -245,6 +247,8 @@ export default function LogistikPage() {
                 waybillNumber = parsed.waybillNumber || null;
                 waybillCourier = parsed.waybillCourier || null;
                 waybillImageUrl = parsed.waybillImageUrl || null;
+                notesSupplierAddress = parsed.supplierAddress || null;
+                notesBuyerAddress = parsed.buyerAddress || null;
 
                 if (parsed.supplierCoords) {
                     if (Array.isArray(parsed.supplierCoords) && parsed.supplierCoords.length >= 2) {
@@ -299,11 +303,16 @@ export default function LogistikPage() {
         }
 
         // Coordinate-based location override to map custom pins back to closest regency labels
-        if (supplierCoords) {
+        if (notesSupplierAddress) {
+            dari = notesSupplierAddress;
+        } else if (supplierCoords) {
             const closest = findClosestCity(supplierCoords[0], supplierCoords[1]);
             if (closest) dari = closest;
         }
-        if (buyerCoords) {
+
+        if (notesBuyerAddress) {
+            ke = notesBuyerAddress;
+        } else if (buyerCoords) {
             const closest = findClosestCity(buyerCoords[0], buyerCoords[1]);
             if (closest) ke = closest;
         }

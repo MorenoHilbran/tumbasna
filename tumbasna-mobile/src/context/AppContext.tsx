@@ -412,7 +412,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     courier: string, 
     shippingCost: number, 
     buyerCoords?: [number, number], 
-    supplierCoords?: [number, number]
+    supplierCoords?: [number, number],
+    buyerAddress?: string,
+    supplierAddress?: string
   ): Promise<string> => {
     if (cart.length === 0) return '';
     const orderId = `TRX-${Math.floor(100000 + Math.random() * 900000)}`;
@@ -430,7 +432,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       { title: 'Pengiriman & Tracking', description: 'Menunggu penjemputan logistik.', time: 'Belum', done: false },
     ];
 
-    const notesObj = { buyerCoords, supplierCoords };
+    const notesObj = { buyerCoords, supplierCoords, buyerAddress, supplierAddress };
     const notesStr = JSON.stringify(notesObj);
 
     const newOrder: Order = {

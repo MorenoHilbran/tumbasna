@@ -324,11 +324,24 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
   const handlePlaceOrder = async () => {
     setIsPlacingOrder(true);
     try {
+      const getCityLabel = (fullAddress: string) => {
+        if (!fullAddress) return '';
+        const parts = fullAddress.split(',');
+        const match = parts.find(p => p.toLowerCase().includes('kabupaten') || p.toLowerCase().includes('kota'));
+        if (match) return match.replace(/kabupaten|kota/gi, '').trim();
+        return parts[0].trim();
+      };
+
+      const bAddrLabel = getCityLabel(buyerAddressLabel);
+      const sLocLabel = getCityLabel(cart[0]?.product.supplierLocation || '');
+
       const orderId = await checkout(
         activeShipping.name, 
         dynamicShippingCost, 
         buyerCoords, 
-        supplierCoords || undefined
+        supplierCoords || undefined,
+        bAddrLabel,
+        sLocLabel
       );
       if (orderId) {
         onOrderCreated(orderId);
