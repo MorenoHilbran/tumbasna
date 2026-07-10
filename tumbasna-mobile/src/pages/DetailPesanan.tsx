@@ -386,7 +386,48 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
             <span>Total Pembayaran</span>
             <strong>Rp {order.totalAmount.toLocaleString('id-ID')}</strong>
           </div>
+
+          {/* Bukti Resi / Foto Pengiriman */}
+          {(waybillNumber || (() => { try { return JSON.parse(order.notes || '{}').waybillImageUrl; } catch { return null; } })()) && (
+            <div style={{
+              margin: '12px 0 0',
+              padding: '12px 14px',
+              background: 'linear-gradient(135deg, #f0fdf4, #ecfdf5)',
+              borderRadius: 14,
+              border: '1px solid #bbf7d0'
+            }}>
+              <p style={{ fontSize: 10, fontWeight: 800, color: '#059669', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+                📦 Bukti Pengiriman
+              </p>
+              {waybillNumber && (
+                <div style={{ marginBottom: 8 }}>
+                  <p style={{ fontSize: 10, color: '#6b7280', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Nomor Resi</p>
+                  <p style={{ fontSize: 13, fontWeight: 800, color: '#111827', fontFamily: 'monospace', marginTop: 2 }}>{waybillNumber}</p>
+                  {waybillCourier && (
+                    <p style={{ fontSize: 10, fontWeight: 700, color: '#059669', marginTop: 2, textTransform: 'uppercase' }}>{waybillCourier}</p>
+                  )}
+                </div>
+              )}
+              {(() => {
+                try {
+                  const imgUrl = JSON.parse(order.notes || '{}').waybillImageUrl;
+                  if (!imgUrl) return null;
+                  return (
+                    <div>
+                      <p style={{ fontSize: 10, color: '#6b7280', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>Foto Bukti Resi</p>
+                      <img
+                        src={imgUrl}
+                        alt="Foto Bukti Resi"
+                        style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 10, border: '1px solid #d1fae5' }}
+                      />
+                    </div>
+                  );
+                } catch { return null; }
+              })()}
+            </div>
+          )}
         </div>
+
 
         {/* ── COD: Hubungi Supplier via in-app Chat ─────────── */}
         {isCOD && (

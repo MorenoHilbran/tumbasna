@@ -92,7 +92,8 @@ export default function TransaksiPage() {
                             wilayah: o.supplierLocation.split(',')[0] || 'Cilacap',
                             metode: 'QRIS',
                             dbStatus: o.status,
-                            trackingTimeline: o.trackingTimeline || []
+                            trackingTimeline: o.trackingTimeline || [],
+                            rawNotes: o.notes || null,
                         };
                     });
                     setTransaksiData(mapped);
@@ -595,11 +596,44 @@ export default function TransaksiPage() {
                                     )}
                                 </div>
                             )}
-                            {selectedTrx.dbStatus === 'DIKIRIM' && (
-                                <div className="mt-6 text-center text-xs font-bold text-slate-500 bg-slate-50 border border-slate-200 py-3 rounded-xl">
-                                    Barang Sedang Dikirim. Menunggu Konfirmasi Pembeli.
-                                </div>
-                            )}
+                            {selectedTrx.dbStatus === 'DIKIRIM' && (() => {
+                                let notesObj: any = {};
+                                try { notesObj = JSON.parse(selectedTrx.rawNotes || '{}'); } catch {}
+                                return (
+                                    <div className="mt-6 space-y-3">
+                                        <div className="p-4 rounded-xl border border-teal-200 bg-teal-50/30 space-y-3">
+                                            <p className="text-[10px] font-bold text-teal-700 uppercase tracking-widest">Bukti Pengiriman</p>
+                                            {notesObj.waybillNumber && (
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Nomor Resi</p>
+                                                        <p className="text-xs font-extrabold text-slate-800 font-mono mt-0.5">{notesObj.waybillNumber}</p>
+                                                        {notesObj.waybillCourier && (
+                                                            <p className="text-[9px] text-teal-600 font-bold mt-0.5 uppercase">{notesObj.waybillCourier}</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {notesObj.waybillImageUrl ? (
+                                                <div>
+                                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Foto Bukti Resi</p>
+                                                    <img
+                                                        src={notesObj.waybillImageUrl}
+                                                        alt="Foto Bukti Resi"
+                                                        className="w-full max-h-48 object-cover rounded-lg border border-slate-200"
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <p className="text-xs text-slate-500 font-medium">Foto bukti resi belum tersedia. Supplier belum mengirimkan foto resi.</p>
+                                            )}
+                                        </div>
+                                        <div className="text-center text-xs font-bold text-slate-500 bg-slate-50 border border-slate-200 py-2.5 rounded-xl">
+                                            Menunggu Konfirmasi Penerimaan dari Pembeli
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+
                         </div>
                     ) : (
                         <div className="h-full flex flex-col items-center justify-center text-center py-12">

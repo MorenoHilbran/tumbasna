@@ -189,20 +189,38 @@ export async function connectWhatsApp() {
                 console.log(`🖼️ [IMAGE] Gambar diterima dari ${sender}`);
                 try {
                     const buffer = await downloadMediaMessage(msg, 'buffer', {}) as Buffer;
-                    const filename = `product_${Date.now()}.jpg`;
-                    imageUrl = await uploadImageToStorage(buffer, filename);
-                    if (imageUrl) {
-                        const { saveMetadata } = await import('../ai/memory');
-                        await saveMetadata(sender, { lastImageUrl: imageUrl });
+
+                    // Deteksi apakah ini foto RESI (caption mengandung pola KIRIM TRX-...)
+                    const isWaybillPhoto = /^kirim\s+TRX-/i.test(imageCaption.trim());
+
+                    if (isWaybillPhoto) {
+                        // Upload sebagai foto bukti resi pengiriman
+                        const filename = `resi_${Date.now()}.jpg`;
+                        imageUrl = await uploadImageToStorage(buffer, filename);
+                        console.log(`📦 [RESI FOTO] Foto resi dari ${sender}, URL: ${imageUrl}`);
+                        // Gabungkan perintah KIRIM + URL foto resi dalam satu teks khusus
+                        const resiText = `[RESI FOTO] ${imageCaption.trim()}${imageUrl ? ` | URL Foto Resi: ${imageUrl}` : ''}`;
+                        await processIncomingMessage(sender, pushName, resiText, sendFn);
+                    } else {
+                        // Foto produk biasa
+                        const filename = `product_${Date.now()}.jpg`;
+                        imageUrl = await uploadImageToStorage(buffer, filename);
+                        if (imageUrl) {
+                            const { saveMetadata } = await import('../ai/memory');
+                            await saveMetadata(sender, { lastImageUrl: imageUrl });
+                        }
+                        const combinedText = imageCaption
+                            ? `[Supplier mengirim foto produk] Keterangan: ${imageCaption}${imageUrl ? ` | URL Foto: ${imageUrl}` : ''}`
+                            : `[Supplier mengirim foto produk tanpa keterangan. Tolong tanyakan nama komoditas, berat, dan harga.]`;
+                        await processIncomingMessage(sender, pushName, combinedText, sendFn);
                     }
                 } catch (err: any) {
                     console.error('[IMAGE ERROR] Gagal download gambar:', err.message);
+                    const combinedText = imageCaption
+                        ? `[Supplier mengirim foto] Keterangan: ${imageCaption}`
+                        : `[Supplier mengirim foto tanpa keterangan.]`;
+                    await processIncomingMessage(sender, pushName, combinedText, sendFn);
                 }
-                const combinedText = imageCaption
-                    ? `[Supplier mengirim foto produk] Keterangan: ${imageCaption}${imageUrl ? ` | URL Foto: ${imageUrl}` : ''}`
-                    : `[Supplier mengirim foto produk tanpa keterangan. Tolong tanyakan nama komoditas, berat, dan harga.]`;
-
-                await processIncomingMessage(sender, pushName, combinedText, sendFn);
                 continue;
             }
 

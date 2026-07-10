@@ -101,16 +101,28 @@ export const apiService = {
             return null;
         }
     },
-    async updateOrderStatus(id: string, status: string, trackingTimeline?: any[]) {
+    async updateOrderStatus(id: string, status: string, trackingTimeline?: any[], waybillInfo?: { waybillNumber?: string; waybillCourier?: string; waybillImageUrl?: string }) {
         try {
             const response = await apiClient.patch(`${API_URL}/api/orders/${id}`, {
                 status,
-                ...(trackingTimeline && { trackingTimeline })
+                ...(trackingTimeline && { trackingTimeline }),
+                ...(waybillInfo?.waybillNumber && { waybillNumber: waybillInfo.waybillNumber }),
+                ...(waybillInfo?.waybillCourier && { waybillCourier: waybillInfo.waybillCourier }),
+                ...(waybillInfo?.waybillImageUrl && { waybillImageUrl: waybillInfo.waybillImageUrl }),
             });
             return response.data;
         } catch (error: any) {
             console.error(`[API ERROR] Gagal update order status:`, error.message);
             throw error;
+        }
+    },
+    async getOrderById(id: string) {
+        try {
+            const response = await apiClient.get(`${API_URL}/api/orders/${id}`);
+            return response.data;
+        } catch (error: any) {
+            console.error(`[API ERROR] Gagal mengambil detail order ${id}:`, error.message);
+            return null;
         }
     },
 };

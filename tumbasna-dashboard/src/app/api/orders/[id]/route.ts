@@ -31,7 +31,7 @@ export async function PATCH(req: Request, { params }: Params) {
   try {
     const { id } = await params;
     const body = await req.json();
-    const { status, trackingTimeline, fundsReleased, waybillNumber, waybillCourier } = body;
+    const { status, trackingTimeline, fundsReleased, waybillNumber, waybillCourier, waybillImageUrl } = body;
 
     if (!status) {
       return NextResponse.json({ error: 'Status wajib diisi' }, { status: 400 });
@@ -55,13 +55,14 @@ export async function PATCH(req: Request, { params }: Params) {
 
     // Merge waybill info ke dalam notes (JSON) jika ada
     let mergedNotes: string | null = existingOrder.notes as string | null;
-    if (waybillNumber) {
+    if (waybillNumber || waybillImageUrl) {
       let notesObj: Record<string, any> = {};
       try {
         if (mergedNotes) notesObj = JSON.parse(mergedNotes);
       } catch {}
-      notesObj.waybillNumber = waybillNumber;
-      notesObj.waybillCourier = waybillCourier || 'jne';
+      if (waybillNumber) notesObj.waybillNumber = waybillNumber;
+      if (waybillCourier) notesObj.waybillCourier = waybillCourier;
+      if (waybillImageUrl) notesObj.waybillImageUrl = waybillImageUrl; // URL foto bukti resi
       mergedNotes = JSON.stringify(notesObj);
     }
 
