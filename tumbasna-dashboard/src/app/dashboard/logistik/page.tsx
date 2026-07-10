@@ -17,6 +17,9 @@ import {
     Weight,
     Activity,
     TrendingUp,
+    ExternalLink,
+    Eye,
+    X,
 } from 'lucide-react';
 
 // ─── Dynamic Import for Leaflet Map ──────────────────────────
@@ -139,6 +142,7 @@ export default function LogistikPage() {
     const [orders, setOrders] = useState<any[]>([]);
     const [selectedArmada, setSelectedArmada] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [previewImage, setPreviewImage] = useState<string | null>(null);
 
     useEffect(() => {
         fetch('/api/orders')
@@ -191,6 +195,18 @@ export default function LogistikPage() {
         const qtyNum = o.items?.[0]?.quantity || 100;
         const prodName = o.items?.[0]?.product?.name || 'Komoditas';
 
+        let waybillNumber = null;
+        let waybillCourier = null;
+        let waybillImageUrl = null;
+        if (o.notes) {
+            try {
+                const parsed = JSON.parse(o.notes);
+                waybillNumber = parsed.waybillNumber || null;
+                waybillCourier = parsed.waybillCourier || null;
+                waybillImageUrl = parsed.waybillImageUrl || null;
+            } catch (_) {}
+        }
+
         return {
             id: o.id,
             driver: o.courier || 'Kurir Lokal',
@@ -203,6 +219,10 @@ export default function LogistikPage() {
             jarak: '42 km',
             bahan_bakar: '85%',
             suhu: '24°C',
+            waybillNumber,
+            waybillCourier,
+            waybillImageUrl,
+            courier: o.courier,
         };
     });
 
@@ -399,6 +419,53 @@ export default function LogistikPage() {
                                 </div>
                             ))}
                         </div>
+
+                        {/* Waybill / Shipping Receipt Evidence section */}
+                        {(activeArmada.waybillNumber || activeArmada.waybillImageUrl || ['jne', 'pos', 'tiki'].includes(activeArmada.courier?.toLowerCase())) && (
+                            <div className="mt-5 pt-5 border-t border-slate-100 space-y-3 animate-in fade-in duration-200">
+                                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-widest">Informasi Resi & Pengiriman</h3>
+                                
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between text-xs bg-slate-50 border border-slate-200/60 rounded-xl p-3 shadow-sm">
+                                        <div>
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase">No. Resi ({activeArmada.waybillCourier || activeArmada.courier || 'Ekspedisi'})</p>
+                                            <p className="font-mono font-bold text-slate-800 mt-0.5">{activeArmada.waybillNumber || 'Menunggu Input Supplier'}</p>
+                                        </div>
+                                        {activeArmada.waybillNumber && (
+                                            <a
+                                                href={`https://results.cekresi.com/?noresi=${activeArmada.waybillNumber}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-[10px] font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1.5 rounded-lg border border-emerald-200 transition-colors flex items-center gap-1"
+                                            >
+                                                <ExternalLink className="w-3 h-3" />
+                                                Lacak
+                                            </a>
+                                        )}
+                                    </div>
+
+                                    {activeArmada.waybillImageUrl && (
+                                        <div className="border border-slate-200/60 rounded-xl p-3 bg-white space-y-2 shadow-sm">
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase">Foto Bukti Resi</p>
+                                            <div className="relative rounded-lg overflow-hidden group border border-slate-100 aspect-[4/3] bg-slate-50 flex items-center justify-center">
+                                                <img 
+                                                    src={activeArmada.waybillImageUrl} 
+                                                    alt="Bukti Resi" 
+                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                                />
+                                                <button 
+                                                    onClick={() => setPreviewImage(activeArmada.waybillImageUrl)}
+                                                    className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white font-bold text-xs"
+                                                >
+                                                    <Eye className="w-4 h-4" />
+                                                    Lihat Foto
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Route Stats */}
@@ -442,6 +509,36 @@ export default function LogistikPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Photo Lightbox Modal */}
+            {previewImage && (
+                <div 
+                    className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200"
+                    onClick={() => setPreviewImage(null)}
+                >
+                    <div 
+                        className="relative bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] p-3 shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex items-center justify-between px-3 py-2 border-b border-slate-100">
+                            <h3 className="text-sm font-bold text-slate-800">Pratinjau Bukti Pengiriman</h3>
+                            <button 
+                                onClick={() => setPreviewImage(null)}
+                                className="p-1 rounded-lg text-slate-400 hover:bg-slate-50 hover:text-slate-650 transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-auto bg-slate-50 flex items-center justify-center p-2 rounded-xl mt-2">
+                            <img 
+                                src={previewImage} 
+                                alt="Pratinjau Bukti Pengiriman" 
+                                className="max-w-full max-h-[60vh] object-contain rounded-lg shadow-sm"
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
