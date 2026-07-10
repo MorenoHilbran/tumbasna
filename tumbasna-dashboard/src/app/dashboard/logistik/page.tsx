@@ -195,6 +195,8 @@ export default function LogistikPage() {
     const [selectedArmada, setSelectedArmada] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [previewImage, setPreviewImage] = useState<string | null>(null);
+    const [filterTime, setFilterTime] = useState<'today' | 'week' | 'all'>('today');
+    const [filterActiveOnly, setFilterActiveOnly] = useState<boolean>(true);
 
     useEffect(() => {
         fetch('/api/orders')
@@ -210,7 +212,22 @@ export default function LogistikPage() {
 
     const validCities = ['Banyumas', 'Cilacap', 'Purbalingga', 'Banjarnegara', 'Kebumen', 'Tegal'];
 
-    const dbArmada = orders.map((o: any) => {
+    const filteredOrders = orders.filter((o: any) => {
+        if (!o.createdAt) return true;
+        const orderDate = new Date(o.createdAt);
+        const today = new Date();
+        
+        if (filterTime === 'today') {
+            return orderDate.toDateString() === today.toDateString();
+        } else if (filterTime === 'week') {
+            const diffTime = Math.abs(today.getTime() - orderDate.getTime());
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays <= 7;
+        }
+        return true;
+    });
+
+    const dbArmada = filteredOrders.map((o: any) => {
         let status = 'standby';
         let progress = 0;
         let estimasi = 'Belum berangkat';
@@ -343,13 +360,34 @@ export default function LogistikPage() {
         };
     });
 
-    const combinedArmada = [...dbArmada, ...armadaData];
+    const unfilteredCombined = [...dbArmada, ...armadaData];
+
+    // Reset selectedArmada if it gets filtered out
+    useEffect(() => {
+        if (selectedArmada) {
+            const stillExists = unfilteredCombined.some(a => {
+                if (filterActiveOnly) {
+                    return a.id === selectedArmada.id && (a.status === 'jalan' || a.status === 'standby' || a.status === 'masalah');
+                }
+                return a.id === selectedArmada.id;
+            });
+            if (!stillExists) {
+                setSelectedArmada(null);
+            }
+        }
+    }, [filterActiveOnly, filterTime, orders, selectedArmada]);
+
+    // Active only filter
+    const combinedArmada = filterActiveOnly 
+        ? unfilteredCombined.filter(a => a.status === 'jalan' || a.status === 'standby' || a.status === 'masalah')
+        : unfilteredCombined;
+
     const activeArmada = selectedArmada || combinedArmada[0] || armadaData[0];
 
-    const jalans = combinedArmada.filter(a => a.status === 'jalan').length;
-    const selesai = combinedArmada.filter(a => a.status === 'selesai').length;
-    const standbys = combinedArmada.filter(a => a.status === 'standby').length;
-    const masalahs = combinedArmada.filter(a => a.status === 'masalah').length;
+    const jalans = unfilteredCombined.filter(a => a.status === 'jalan').length;
+    const selesai = unfilteredCombined.filter(a => a.status === 'selesai').length;
+    const standbys = unfilteredCombined.filter(a => a.status === 'standby').length;
+    const masalahs = unfilteredCombined.filter(a => a.status === 'masalah').length;
 
     return (
         <div className="p-8 space-y-8 bg-[#F8FAFC]">
@@ -365,6 +403,45 @@ export default function LogistikPage() {
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-600 border border-emerald-100/50 self-start md:self-auto">
                     <Navigation className="w-4 h-4" />
                     {jalans} Armada Aktif
+                </div>
+            </div>
+
+            {/* Filters Row */}
+            <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200/60 shadow-sm">
+                <div className="flex items-center gap-3">
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Waktu Transaksi:</span>
+                    <div className="flex rounded-lg bg-slate-100 p-0.5 border border-slate-200/30">
+                        <button
+                            onClick={() => setFilterTime('today')}
+                            className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${filterTime === 'today' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400 hover:text-slate-650'}`}
+                        >
+                            Hari Ini
+                        </button>
+                        <button
+                            onClick={() => setFilterTime('week')}
+                            className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${filterTime === 'week' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400 hover:text-slate-650'}`}
+                        >
+                            7 Hari Terakhir
+                        </button>
+                        <button
+                            onClick={() => setFilterTime('all')}
+                            className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${filterTime === 'all' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400 hover:text-slate-650'}`}
+                        >
+                            Semua Riwayat
+                        </button>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                        <input
+                            type="checkbox"
+                            checked={filterActiveOnly}
+                            onChange={(e) => setFilterActiveOnly(e.target.checked)}
+                            className="w-4 h-4 rounded text-emerald-600 border-slate-300 focus:ring-emerald-500 focus:ring-offset-0 cursor-pointer"
+                        />
+                        <span className="text-xs font-bold text-slate-600">Hanya Tampilkan Armada Aktif (Sedang Dikirim)</span>
+                    </label>
                 </div>
             </div>
 
