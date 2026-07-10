@@ -163,6 +163,32 @@ function resolveRegency(address: string): string | null {
     return null;
 }
 
+// Helper to find closest registered city from coordinate coordinates
+function findClosestCity(lat: number, lng: number): string | null {
+    const cities: Record<string, [number, number]> = {
+        'Banyumas': [-7.5151, 109.2941],
+        'Cilacap': [-7.7150, 108.9767],
+        'Purbalingga': [-7.3884, 109.3641],
+        'Banjarnegara': [-7.3884, 109.6939],
+        'Kebumen': [-7.6701, 109.6524],
+        'Tegal': [-6.8676, 109.1384]
+    };
+    
+    let closestCity: string | null = null;
+    let minDistance = Infinity;
+    
+    for (const [cityName, coords] of Object.entries(cities)) {
+        const dLat = lat - coords[0];
+        const dLng = lng - coords[1];
+        const dist = dLat * dLat + dLng * dLng;
+        if (dist < minDistance) {
+            minDistance = dist;
+            closestCity = cityName;
+        }
+    }
+    return closestCity;
+}
+
 // ─── Main Logistik Page ───────────────────────────────────────
 export default function LogistikPage() {
     const [orders, setOrders] = useState<any[]>([]);
@@ -207,36 +233,6 @@ export default function LogistikPage() {
             estimasi = 'Menyiapkan barang';
         }
 
-        let dari = 'Banyumas';
-        if (o.supplierLocation) {
-            const resolved = resolveRegency(o.supplierLocation);
-            if (resolved) {
-                dari = resolved;
-            } else {
-                const parsed = o.supplierLocation.split(',')[0].trim();
-                const matched = validCities.find(c => parsed.toLowerCase().includes(c.toLowerCase()));
-                if (matched) dari = matched;
-            }
-        }
-        
-        let ke = 'Cilacap';
-        if (o.buyerAddress) {
-            const resolved = resolveRegency(o.buyerAddress);
-            if (resolved) {
-                ke = resolved;
-            } else {
-                const parsedKe = o.buyerAddress.split(',')[0].trim();
-                const matchedKe = validCities.find(c => parsedKe.toLowerCase().includes(c.toLowerCase()));
-                if (matchedKe) ke = matchedKe;
-            }
-        } else {
-            const matchedKe = validCities.find(c => c !== dari);
-            if (matchedKe) ke = matchedKe;
-        }
-
-        const qtyNum = o.items?.[0]?.quantity || 100;
-        const prodName = o.items?.[0]?.product?.name || 'Komoditas';
-
         let waybillNumber = null;
         let waybillCourier = null;
         let waybillImageUrl = null;
@@ -274,6 +270,46 @@ export default function LogistikPage() {
                 }
             } catch (_) {}
         }
+
+        let dari = 'Banyumas';
+        if (o.supplierLocation) {
+            const resolved = resolveRegency(o.supplierLocation);
+            if (resolved) {
+                dari = resolved;
+            } else {
+                const parsed = o.supplierLocation.split(',')[0].trim();
+                const matched = validCities.find(c => parsed.toLowerCase().includes(c.toLowerCase()));
+                if (matched) dari = matched;
+            }
+        }
+        
+        let ke = 'Cilacap';
+        if (o.buyerAddress) {
+            const resolved = resolveRegency(o.buyerAddress);
+            if (resolved) {
+                ke = resolved;
+            } else {
+                const parsedKe = o.buyerAddress.split(',')[0].trim();
+                const matchedKe = validCities.find(c => parsedKe.toLowerCase().includes(c.toLowerCase()));
+                if (matchedKe) ke = matchedKe;
+            }
+        } else {
+            const matchedKe = validCities.find(c => c !== dari);
+            if (matchedKe) ke = matchedKe;
+        }
+
+        // Coordinate-based location override to map custom pins back to closest regency labels
+        if (supplierCoords) {
+            const closest = findClosestCity(supplierCoords[0], supplierCoords[1]);
+            if (closest) dari = closest;
+        }
+        if (buyerCoords) {
+            const closest = findClosestCity(buyerCoords[0], buyerCoords[1]);
+            if (closest) ke = closest;
+        }
+
+        const qtyNum = o.items?.[0]?.quantity || 100;
+        const prodName = o.items?.[0]?.product?.name || 'Komoditas';
 
         return {
             id: o.id,
