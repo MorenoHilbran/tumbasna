@@ -245,6 +245,27 @@ function RouteVisualizer({ from, to }: { from: string; to: string }) {
 export default function DashboardPage() {
     const [stats, setStats] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [currentTime, setCurrentTime] = useState<string>('');
+
+    useEffect(() => {
+        const updateTime = () => {
+            const date = new Date();
+            const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            
+            const dayName = days[date.getDay()];
+            const dayNum = date.getDate();
+            const monthName = months[date.getMonth()];
+            const year = date.getFullYear();
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            
+            setCurrentTime(`${dayName}, ${dayNum} ${monthName} ${year} — ${hours}:${minutes} WIB`);
+        };
+        updateTime();
+        const interval = setInterval(updateTime, 60000);
+        return () => clearInterval(interval);
+    }, []);
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -263,6 +284,13 @@ export default function DashboardPage() {
         };
         fetchStats();
     }, []);
+
+    const activeGrowthStats = [
+        { label: 'Transaksi Harian', value: stats?.growth ? `${stats.growth.avgDailyTx}` : '423', suffix: 'tx/hari', change: '+8%', color: '#059669' },
+        { label: 'Nilai Rata-rata', value: stats?.growth ? `Rp ${Math.round(stats.growth.avgOrderValue / 1000)}K` : 'Rp 327K', suffix: '/transaksi', change: '+5.2%', color: '#10B981' },
+        { label: 'Supplier Aktif', value: stats?.growth ? `${stats.growth.activeSupplierPct}%` : '87%', suffix: 'dari total', change: '+2%', color: '#F59E0B' },
+        { label: 'Rate Selesai', value: stats?.growth ? `${stats.growth.completionRate}%` : '94.2%', suffix: 'berhasil', change: '+1.1%', color: '#0F172A' },
+    ];
 
     const activeKpiData = [
         {
@@ -343,7 +371,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex items-center gap-2.5 px-4 py-2 bg-white rounded-xl text-xs font-bold text-slate-600 border border-slate-200/60 shadow-sm self-start md:self-auto">
                     <Calendar className="w-4 h-4 text-emerald-600" />
-                    Sabtu, 6 Juni 2026 — 18:00 WIB
+                    {currentTime || 'Sabtu, 6 Juni 2026 — 18:00 WIB'}
                 </div>
             </div>
 
@@ -491,7 +519,7 @@ export default function DashboardPage() {
                     <h2 className="text-base font-bold text-slate-900 tracking-tight">Statistik Pertumbuhan</h2>
                     <p className="text-xs text-slate-400 mt-0.5 mb-5">Performa platform bulan ini</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {growthStats.map((stat) => (
+                        {activeGrowthStats.map((stat) => (
                             <div key={stat.label} className="rounded-xl p-4 bg-slate-50 border border-slate-100 flex flex-col justify-between">
                                 <div>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{stat.label}</p>
@@ -563,10 +591,10 @@ export default function DashboardPage() {
             <div className="rounded-2xl p-4 sm:p-5 flex flex-wrap items-center justify-between gap-6 bg-slate-900 border border-slate-800">
                 <div className="flex flex-wrap items-center gap-4 sm:gap-8">
                     {[
-                        { icon: MapPin, label: 'Wilayah Aktif', value: '5 Kabupaten', color: '#10B981' },
-                        { icon: Package, label: 'Stok Melimpah', value: '3 Wilayah', color: '#10B981' },
-                        { icon: AlertCircle, label: 'Stok Menipis', value: '2 Wilayah', color: '#F59E0B' },
-                        { icon: CheckCircle2, label: 'Transaksi Hari Ini', value: '423 Selesai', color: '#059669' },
+                        { icon: MapPin, label: 'Wilayah Aktif', value: stats?.bottomStrip ? `${stats.bottomStrip.activeRegionsCount} Kabupaten` : '6 Kabupaten', color: '#10B981' },
+                        { icon: Package, label: 'Stok Melimpah', value: stats?.bottomStrip ? `${stats.bottomStrip.abundantRegionsCount} Wilayah` : '4 Wilayah', color: '#10B981' },
+                        { icon: AlertCircle, label: 'Stok Menipis', value: stats?.bottomStrip ? `${stats.bottomStrip.scarceRegionsCount} Wilayah` : '2 Wilayah', color: '#F59E0B' },
+                        { icon: CheckCircle2, label: 'Transaksi Hari Ini', value: stats?.bottomStrip ? `${stats.bottomStrip.todayTransactionsCount} Selesai` : '0 Selesai', color: '#059669' },
                     ].map((item) => (
                         <div key={item.label} className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-slate-800/80">
