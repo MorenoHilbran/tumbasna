@@ -59,6 +59,9 @@ export default function TransaksiPage() {
     const [selectedShipping, setSelectedShipping] = useState<any | null>(null);
     const [shippingLoading, setShippingLoading] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [waybillNumber, setWaybillNumber] = useState('');
+    const [waybillCourier, setWaybillCourier] = useState('jne');
+    const [showWaybillForm, setShowWaybillForm] = useState(false);
     const perPage = 8;
 
     useEffect(() => {
@@ -104,13 +107,20 @@ export default function TransaksiPage() {
         try {
             const body: any = { status: newStatus };
             
-            // Jika admin klik "Kirim Barang", kita update timeline trackingnya untuk mobile
+            // Jika admin klik "Kirim Barang", sertakan nomor resi dan update timeline
             if (newStatus === 'DIKIRIM' && selectedTrx) {
+                if (!waybillNumber.trim()) {
+                    alert('Masukkan nomor resi ekspedisi terlebih dahulu!');
+                    return;
+                }
+                body.waybillNumber = waybillNumber.trim();
+                body.waybillCourier = waybillCourier;
+
                 const updatedTimeline = [...(selectedTrx.trackingTimeline || [])];
                 const currentTime = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
                 if (updatedTimeline.length >= 4) {
                     updatedTimeline[2] = { ...updatedTimeline[2], done: true, time: currentTime };
-                    updatedTimeline[3] = { ...updatedTimeline[3], time: 'Sedang Berjalan', description: 'Barang telah dijemput kurir logistik dan dalam perjalanan ke lokasi Anda.' };
+                    updatedTimeline[3] = { ...updatedTimeline[3], time: 'Sedang Berjalan', description: `Barang dijemput kurir ${waybillCourier.toUpperCase()}. Nomor resi: ${waybillNumber.trim()}` };
                     body.trackingTimeline = updatedTimeline;
                 }
             }
@@ -122,6 +132,8 @@ export default function TransaksiPage() {
             });
             
             if (res.ok) {
+                setShowWaybillForm(false);
+                setWaybillNumber('');
                 fetchOrders();
                 alert(`Status transaksi ${id} berhasil diubah menjadi ${newStatus}`);
             }
@@ -525,16 +537,62 @@ export default function TransaksiPage() {
                                 </div>
                             </div>
                             
-                            {/* Action Button */}
+                            {/* Action Button - Input Resi */}
                             {selectedTrx.dbStatus === 'DIPROSES' && (
-                                <div className="mt-6">
-                                    <button
-                                        onClick={() => handleUpdateStatus(selectedTrx.id, 'DIKIRIM')}
-                                        className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
-                                    >
-                                        <CheckCircle2 className="w-4 h-4" />
-                                        Kirim Barang Sekarang (Update Resi)
-                                    </button>
+                                <div className="mt-6 space-y-3">
+                                    {!showWaybillForm ? (
+                                        <button
+                                            onClick={() => setShowWaybillForm(true)}
+                                            className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
+                                        >
+                                            <CheckCircle2 className="w-4 h-4" />
+                                            Kirim Barang — Input Nomor Resi
+                                        </button>
+                                    ) : (
+                                        <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50/30 space-y-3">
+                                            <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">Input Resi Ekspedisi</p>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Kurir</label>
+                                                <select
+                                                    value={waybillCourier}
+                                                    onChange={e => setWaybillCourier(e.target.value)}
+                                                    className="mt-1 w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none"
+                                                >
+                                                    <option value="jne">JNE</option>
+                                                    <option value="tiki">TIKI</option>
+                                                    <option value="pos">POS Indonesia</option>
+                                                    <option value="jnt">J&T Express</option>
+                                                    <option value="sicepat">SiCepat</option>
+                                                    <option value="anteraja">AnterAja</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Nomor Resi</label>
+                                                <input
+                                                    type="text"
+                                                    value={waybillNumber}
+                                                    onChange={e => setWaybillNumber(e.target.value)}
+                                                    placeholder="Contoh: JNE0012345678"
+                                                    className="mt-1 w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none placeholder-slate-300"
+                                                />
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => { setShowWaybillForm(false); setWaybillNumber(''); }}
+                                                    className="flex-1 py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-lg transition-all"
+                                                >
+                                                    Batal
+                                                </button>
+                                                <button
+                                                    onClick={() => handleUpdateStatus(selectedTrx.id, 'DIKIRIM')}
+                                                    className="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5"
+                                                >
+                                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                                    Konfirmasi Kirim
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                             {selectedTrx.dbStatus === 'DIKIRIM' && (

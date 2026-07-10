@@ -136,6 +136,17 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
   const [etaText, setEtaText] = useState('15 Menit');
   const [statusText, setStatusText] = useState('Kurir menunggu pembayaran...');
 
+  // Parse waybill info dari notes order
+  let waybillNumber: string | null = null;
+  let waybillCourier: string = 'jne';
+  if (order && order.notes) {
+    try {
+      const parsedNotes = JSON.parse(order.notes);
+      waybillNumber = parsedNotes.waybillNumber || null;
+      waybillCourier = parsedNotes.waybillCourier || 'jne';
+    } catch {}
+  }
+
   React.useEffect(() => {
     if (!order) return;
     
@@ -155,33 +166,65 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
       setCourierCoords(supplierLocation);
       setEtaText('Batal');
       setStatusText('Pesanan dibatalkan.');
-    } else { // status: 'Dikirim' atau status aktif pengiriman lainnya
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress = (progress + 1) % 101;
+    } else {
+      // Status: 'Dikirim'
+      if (waybillNumber) {
+        // Mode riil: fetch posisi dari RajaOngkir tracking API
+        const fetchTracking = async () => {
+          try {
+            const API_BASE = (import.meta as any).env?.VITE_API_URL || 'https://dashboard.tumbasna.id';
+            const res = await fetch(`${API_BASE}/api/shipping/track?waybill=${waybillNumber}&courier=${waybillCourier}`);
+            const data = await res.json();
+            if (data.success && data.lastCity) {
+              const cityCoords = (() => {
+                const key = Object.keys(locationCoords).find(k => data.lastCity.toLowerCase().includes(k.toLowerCase()));
+                return key ? locationCoords[key] : null;
+              })();
+              if (cityCoords) {
+                setCourierCoords(cityCoords as [number, number]);
+              }
+              const lastManifest = data.manifests?.[data.manifests.length - 1];
+              const lastDesc = lastManifest?.description || data.statusDescription || 'Dalam perjalanan.';
+              setStatusText(`[${waybillCourier.toUpperCase()}] Resi: ${waybillNumber} — ${lastDesc}`);
+              setEtaText(data.status === 'DELIVERED' ? 'Tiba' : 'Dalam Perjalanan');
+            } else {
+              setStatusText(`Resi ${waybillNumber} (${waybillCourier.toUpperCase()}) — Dalam perjalanan.`);
+              setEtaText('Dalam Perjalanan');
+            }
+          } catch {
+            setStatusText(`Resi ${waybillNumber} — Tidak dapat memuat status saat ini.`);
+          }
+        };
+        fetchTracking();
+      } else {
+        // Mode simulasi animasi (tidak ada resi)
+        let progress = 0;
+        const interval = setInterval(() => {
+          progress = (progress + 1) % 101;
+          
+          let lat = supplierLocation[0];
+          let lng = supplierLocation[1];
+          
+          if (progress <= 50) {
+            const pct = progress / 50;
+            lat = supplierLocation[0] + pct * (buyerLocation[0] - supplierLocation[0]);
+            lng = supplierLocation[1];
+          } else {
+            const pct = (progress - 50) / 50;
+            lat = buyerLocation[0];
+            lng = supplierLocation[1] + pct * (buyerLocation[1] - supplierLocation[1]);
+          }
+          
+          setCourierCoords([lat, lng] as [number, number]);
+          const remainingMinutes = Math.max(1, Math.round((100 - progress) * 0.15));
+          setEtaText(`${remainingMinutes} Menit`);
+          setStatusText('Kurir lokal sedang menuju alamat pengiriman.');
+        }, 300);
         
-        let lat = supplierLocation[0];
-        let lng = supplierLocation[1];
-        
-        if (progress <= 50) {
-          const pct = progress / 50;
-          lat = supplierLocation[0] + pct * (buyerLocation[0] - supplierLocation[0]);
-          lng = supplierLocation[1];
-        } else {
-          const pct = (progress - 50) / 50;
-          lat = buyerLocation[0];
-          lng = supplierLocation[1] + pct * (buyerLocation[1] - supplierLocation[1]);
-        }
-        
-        setCourierCoords([lat, lng] as [number, number]);
-        const remainingMinutes = Math.max(1, Math.round((100 - progress) * 0.15));
-        setEtaText(`${remainingMinutes} Menit`);
-        setStatusText('Kurir lokal sedang menuju alamat pengiriman.');
-      }, 300);
-      
-      return () => clearInterval(interval);
+        return () => clearInterval(interval);
+      }
     }
-  }, [order?.status]);
+  }, [order?.status, waybillNumber]);
 
   if (!order) {
     return (

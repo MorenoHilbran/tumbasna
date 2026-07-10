@@ -31,7 +31,7 @@ export async function PATCH(req: Request, { params }: Params) {
   try {
     const { id } = await params;
     const body = await req.json();
-    const { status, trackingTimeline, fundsReleased } = body;
+    const { status, trackingTimeline, fundsReleased, waybillNumber, waybillCourier } = body;
 
     if (!status) {
       return NextResponse.json({ error: 'Status wajib diisi' }, { status: 400 });
@@ -53,12 +53,25 @@ export async function PATCH(req: Request, { params }: Params) {
       shouldReleaseFunds = true;
     }
 
+    // Merge waybill info ke dalam notes (JSON) jika ada
+    let mergedNotes: string | null = existingOrder.notes as string | null;
+    if (waybillNumber) {
+      let notesObj: Record<string, any> = {};
+      try {
+        if (mergedNotes) notesObj = JSON.parse(mergedNotes);
+      } catch {}
+      notesObj.waybillNumber = waybillNumber;
+      notesObj.waybillCourier = waybillCourier || 'jne';
+      mergedNotes = JSON.stringify(notesObj);
+    }
+
     // 2. Lakukan update order
     const updatedOrder = await prisma.order.update({
       where: { id },
       data: {
         status,
         ...(trackingTimeline !== undefined && { trackingTimeline }),
+        ...(mergedNotes !== existingOrder.notes && { notes: mergedNotes }),
         fundsReleased: shouldReleaseFunds ? true : (fundsReleased !== undefined ? fundsReleased : existingOrder.fundsReleased),
       },
     });
