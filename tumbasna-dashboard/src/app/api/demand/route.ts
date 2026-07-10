@@ -84,11 +84,17 @@ export async function POST(req: Request) {
 
       // 4. KIRIM PUSH NOTIFICATION VIA WA BOT
       try {
+        const waUrl = process.env.WHATSAPP_BOT_URL || 'http://127.0.0.1:3002';
+        const waApiKey = process.env.WHATSAPP_API_KEY || process.env.TUMBASNA_SECRET_KEY || 'tumbasna-rahasia-banget';
+
         const messageToBuyer = `🎉 *MATCH FOUND! (Pasokan Ditemukan)*\n\nDitemukan Petani yang menjual ${matchedSupply.commodity}:\n- Volume: ${matchedSupply.qty}kg\n- Harga: Rp${matchedSupply.price}\n- Lokasi: ${matchedSupply.location}\n\nHubungi Petani lewat nomor ini: wa.me/${matchedSupply.user.phoneNumber}`;
 
-        const reqBuyer = fetch('http://127.0.0.1:3002/api/send', {
+        const reqBuyer = fetch(`${waUrl}/api/send`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-secret-key': waApiKey
+          },
           body: JSON.stringify({
             phone: phone, // nomor si Pedagang
             message: messageToBuyer
@@ -97,9 +103,12 @@ export async function POST(req: Request) {
 
         const messageToSeller = `🎉 *MATCH FOUND! (Pembeli Ditemukan)*\n\nAda Pedagang yang butuh ${matchedSupply.commodity} Anda!\n- Volume yg dicari: ${demandEntry.qty}kg\n- Lokasi Pembeli: ${demandEntry.location}\n\nHubungi Pedagang lewat nomor ini: wa.me/${user.phoneNumber}`;
 
-        const reqSeller = fetch('http://127.0.0.1:3002/api/send', {
+        const reqSeller = fetch(`${waUrl}/api/send`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-secret-key': waApiKey
+          },
           body: JSON.stringify({
             phone: matchedSupply.user.phoneNumber, // nomor si Petani
             message: messageToSeller
