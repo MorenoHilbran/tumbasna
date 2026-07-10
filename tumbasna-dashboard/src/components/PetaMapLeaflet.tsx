@@ -53,13 +53,13 @@ function PanToSelected({ wilayahData, selected }: { wilayahData: WilayahItem[]; 
 
 // ─── Main Map Component ───────────────────────────────────────
 export default function PetaMapLeaflet({ wilayahData, selected, onSelect, productPoints }: PetaMapLeafletProps) {
-    // Center: tengah Barlingmascakeb
-    const center: [number, number] = [-7.55, 109.25];
+    // Center: tengah Barlingmascakeb & Tegal
+    const center: [number, number] = [-7.25, 109.30];
 
     return (
         <MapContainer
             center={center}
-            zoom={9}
+            zoom={8}
             maxBounds={[[-12.0, 94.0], [8.0, 142.5]]}
             maxBoundsViscosity={1.0}
             minZoom={5}
