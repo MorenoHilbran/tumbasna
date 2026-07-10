@@ -17,6 +17,7 @@ import {
     TrendingUp,
     ShoppingCart,
     Users,
+    ArrowLeft,
 } from 'lucide-react';
 
 // ─── Mock Data ────────────────────────────────────────────────
@@ -62,6 +63,8 @@ export default function TransaksiPage() {
     const [waybillNumber, setWaybillNumber] = useState('');
     const [waybillCourier, setWaybillCourier] = useState('jne');
     const [showWaybillForm, setShowWaybillForm] = useState(false);
+    const [viewMode, setViewMode] = useState<'list' | 'supplier'>('list');
+    const [selectedSupplier, setSelectedSupplier] = useState<string | null>(null);
     const perPage = 8;
 
     useEffect(() => {
@@ -186,13 +189,45 @@ export default function TransaksiPage() {
 
     }, [selectedTrx]);
 
+    const groupedBySupplier = transaksiData.reduce((acc: Record<string, {
+        supplierName: string;
+        transactions: any[];
+        totalValue: number;
+        completedCount: number;
+        pendingCount: number;
+        batalCount: number;
+    }>, trx) => {
+        const name = trx.supplier || 'Supplier Umum';
+        if (!acc[name]) {
+            acc[name] = {
+                supplierName: name,
+                transactions: [],
+                totalValue: 0,
+                completedCount: 0,
+                pendingCount: 0,
+                batalCount: 0
+            };
+        }
+        acc[name].transactions.push(trx);
+        if (trx.status === 'selesai') {
+            acc[name].totalValue += trx.nilai;
+            acc[name].completedCount += 1;
+        } else if (trx.status === 'batal') {
+            acc[name].batalCount += 1;
+        } else {
+            acc[name].pendingCount += 1;
+        }
+        return acc;
+    }, {});
+
     const filtered = transaksiData.filter(t =>
         (t.id.toLowerCase().includes(search.toLowerCase()) ||
          t.buyer.toLowerCase().includes(search.toLowerCase()) ||
          t.supplier.toLowerCase().includes(search.toLowerCase()) ||
          t.produk.toLowerCase().includes(search.toLowerCase())) &&
         (statusFilter === 'Semua' || t.status === statusFilter) &&
-        (wilayahFilter === 'Semua' || t.wilayah === wilayahFilter)
+        (wilayahFilter === 'Semua' || t.wilayah === wilayahFilter) &&
+        (!selectedSupplier || t.supplier === selectedSupplier)
     );
 
     const totalPages = Math.ceil(filtered.length / perPage);
@@ -236,6 +271,36 @@ export default function TransaksiPage() {
                         </div>
                     </div>
                 ))}
+            </div>
+
+            {/* View Mode Tabs */}
+            <div className="flex gap-2 border-b border-slate-200 pb-px">
+                <button
+                    onClick={() => {
+                        setViewMode('list');
+                        setSelectedSupplier(null);
+                    }}
+                    className={`pb-3 px-4 text-xs font-bold transition-all relative ${
+                        viewMode === 'list' && !selectedSupplier
+                            ? 'text-slate-905 border-b-2 border-emerald-600 text-emerald-700'
+                            : 'text-slate-400 hover:text-slate-700'
+                    }`}
+                >
+                    Semua Transaksi ({transaksiData.length})
+                </button>
+                <button
+                    onClick={() => {
+                        setViewMode('supplier');
+                        setSelectedSupplier(null);
+                    }}
+                    className={`pb-3 px-4 text-xs font-bold transition-all relative ${
+                        viewMode === 'supplier' || selectedSupplier
+                            ? 'text-slate-905 border-b-2 border-emerald-600 text-emerald-700'
+                            : 'text-slate-400 hover:text-slate-700'
+                    }`}
+                >
+                    Kelompokkan per Supplier ({Object.keys(groupedBySupplier).length})
+                </button>
             </div>
 
             {/* Filters */}
@@ -295,16 +360,98 @@ export default function TransaksiPage() {
                 </div>
             </div>
 
-            {/* Table + Detail */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            {/* Conditional Views */}
+            {viewMode === 'supplier' && !selectedSupplier ? (
+                /* ── Supplier Grouped Grid View ── */
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-200">
+                    {Object.values(groupedBySupplier)
+                        .filter(group => group.supplierName.toLowerCase().includes(search.toLowerCase()))
+                        .map((group) => {
+                            const totalVolume = group.transactions.reduce((sum, t) => sum + (parseInt(t.qty) || 0), 0);
+                            return (
+                                <div 
+                                    key={group.supplierName}
+                                    className="bg-white rounded-2xl border border-slate-200/60 p-5 shadow-sm hover:shadow-md hover:border-slate-350 transition-all flex flex-col justify-between"
+                                >
+                                    <div>
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center font-bold text-base flex-shrink-0">
+                                                {group.supplierName.charAt(0).toUpperCase()}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <h3 className="font-extrabold text-slate-850 text-sm truncate">{group.supplierName}</h3>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase mt-0.5">{group.transactions.length} Transaksi</p>
+                                            </div>
+                                        </div>
 
-                {/* Table */}
-                <div className="xl:col-span-2 bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden flex flex-col justify-between">
-                    <div>
-                        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-                            <h2 className="text-sm font-extrabold text-slate-800 tracking-tight">Daftar Transaksi</h2>
-                            <p className="text-xs text-slate-400 font-semibold">{filtered.length} transaksi ditemukan</p>
-                        </div>
+                                        <div className="space-y-2 mb-5">
+                                            <div className="flex justify-between text-xs">
+                                                <span className="text-slate-400 font-medium">Total Volume</span>
+                                                <span className="font-bold text-slate-700">{totalVolume.toLocaleString('id-ID')} kg</span>
+                                            </div>
+                                            <div className="flex justify-between text-xs">
+                                                <span className="text-slate-400 font-medium">Omset Sukses</span>
+                                                <span className="font-extrabold text-emerald-600">Rp {group.totalValue.toLocaleString('id-ID')}</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-wrap gap-1.5 pt-3 border-t border-slate-100">
+                                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">
+                                                {group.completedCount} Selesai
+                                            </span>
+                                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-100">
+                                                {group.pendingCount} Pending
+                                            </span>
+                                            {group.batalCount > 0 && (
+                                                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-100">
+                                                    {group.batalCount} Batal
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        onClick={() => {
+                                            setSelectedSupplier(group.supplierName);
+                                            setCurrentPage(1);
+                                            const match = group.transactions[0];
+                                            if (match) setSelectedTrx(match);
+                                        }}
+                                        className="mt-5 w-full py-2.5 bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 border border-slate-200 hover:border-emerald-300 text-slate-650 text-xs font-bold rounded-xl transition-all"
+                                    >
+                                        Lihat Rincian Transaksi
+                                    </button>
+                                </div>
+                            );
+                        })}
+                </div>
+            ) : (
+                /* ── Table + Detail Split View ── */
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 animate-in fade-in duration-200">
+                    {/* Table */}
+                    <div className="xl:col-span-2 bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden flex flex-col justify-between">
+                        <div>
+                            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                                {selectedSupplier ? (
+                                    <div className="flex items-center gap-3">
+                                        <button 
+                                            onClick={() => setSelectedSupplier(null)}
+                                            className="p-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors"
+                                        >
+                                            <ArrowLeft className="w-4 h-4" />
+                                        </button>
+                                        <div>
+                                            <h2 className="text-sm font-extrabold text-slate-800 tracking-tight">{selectedSupplier}</h2>
+                                            <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Daftar transaksi khusus supplier ini</p>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <h2 className="text-sm font-extrabold text-slate-800 tracking-tight">Daftar Transaksi</h2>
+                                        <p className="text-xs text-slate-400 font-semibold">{filtered.length} transaksi ditemukan</p>
+                                    </>
+                                )}
+                            </div>
                         <div className="overflow-x-auto">
                             <table className="w-full">
                                 <thead>
@@ -645,7 +792,7 @@ export default function TransaksiPage() {
                         </div>
                     )}
                 </div>
-            </div>
+            )}
         </div>
     );
 }
