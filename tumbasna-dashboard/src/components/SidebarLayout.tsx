@@ -16,6 +16,7 @@ import {
     Settings,
     LogOut,
     User,
+    Wallet,
 } from 'lucide-react';
 
 // ----- Navigation items -----
@@ -55,6 +56,12 @@ const navItems = [
         href: '/dashboard/pengguna',
         icon: User,
         description: 'Supplier & Buyer terdaftar',
+    },
+    {
+        label: 'Saldo Escrow',
+        href: '/dashboard/saldo',
+        icon: Wallet,
+        description: 'Pencairan dana supplier',
     },
 ];
 
