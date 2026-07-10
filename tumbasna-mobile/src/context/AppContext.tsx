@@ -48,7 +48,14 @@ interface AppContextType {
   removeFromCart: (productId: string) => void;
   updateCartQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
-  checkout: (courier: string, shippingCost: number, buyerCoords?: [number, number], supplierCoords?: [number, number]) => Promise<string>;
+  checkout: (
+    courier: string, 
+    shippingCost: number, 
+    buyerCoords?: [number, number], 
+    supplierCoords?: [number, number],
+    buyerAddress?: string,
+    supplierAddress?: string
+  ) => Promise<string>;
   payOrder: (orderId: string) => Promise<void>;
   confirmOrderReceived: (orderId: string) => Promise<void>;
   sendMessage: (supplierName: string, text: string, supplierPhone?: string) => void;
