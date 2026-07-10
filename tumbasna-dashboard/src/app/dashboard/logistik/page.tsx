@@ -240,12 +240,38 @@ export default function LogistikPage() {
         let waybillNumber = null;
         let waybillCourier = null;
         let waybillImageUrl = null;
+        let supplierCoords: [number, number] | null = null;
+        let buyerCoords: [number, number] | null = null;
+
         if (o.notes) {
             try {
                 const parsed = JSON.parse(o.notes);
                 waybillNumber = parsed.waybillNumber || null;
                 waybillCourier = parsed.waybillCourier || null;
                 waybillImageUrl = parsed.waybillImageUrl || null;
+
+                if (parsed.supplierCoords) {
+                    if (Array.isArray(parsed.supplierCoords) && parsed.supplierCoords.length >= 2) {
+                        supplierCoords = [Number(parsed.supplierCoords[0]), Number(parsed.supplierCoords[1])];
+                    } else if (typeof parsed.supplierCoords === 'object') {
+                        const lt = parsed.supplierCoords.lat ?? parsed.supplierCoords.latitude;
+                        const lg = parsed.supplierCoords.lng ?? parsed.supplierCoords.longitude;
+                        if (lt !== undefined && lg !== undefined) {
+                            supplierCoords = [Number(lt), Number(lg)];
+                        }
+                    }
+                }
+                if (parsed.buyerCoords) {
+                    if (Array.isArray(parsed.buyerCoords) && parsed.buyerCoords.length >= 2) {
+                        buyerCoords = [Number(parsed.buyerCoords[0]), Number(parsed.buyerCoords[1])];
+                    } else if (typeof parsed.buyerCoords === 'object') {
+                        const lt = parsed.buyerCoords.lat ?? parsed.buyerCoords.latitude;
+                        const lg = parsed.buyerCoords.lng ?? parsed.buyerCoords.longitude;
+                        if (lt !== undefined && lg !== undefined) {
+                            buyerCoords = [Number(lt), Number(lg)];
+                        }
+                    }
+                }
             } catch (_) {}
         }
 
@@ -265,6 +291,10 @@ export default function LogistikPage() {
             waybillCourier,
             waybillImageUrl,
             courier: o.courier,
+            supplierLocation: o.supplierLocation || '',
+            buyerAddress: o.buyerAddress || '',
+            supplierCoords,
+            buyerCoords,
         };
     });
 
