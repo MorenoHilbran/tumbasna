@@ -78,7 +78,12 @@ const PembayaranQris: React.FC<PembayaranQrisProps> = ({
         setMidtransOrderId(data.midtransOrderId || null);
       }
     } catch (err: any) {
-      setQrError(err.message || 'Gagal memuat QRIS');
+      if (paymentMode !== 'midtrans') {
+        // Fallback: Jika offline atau backend bermasalah, tetap tampilkan QR demo
+        setQrString(`TUMBASNA-DEMO-${order.id}-Rp${order.totalAmount}`);
+      } else {
+        setQrError(err.message || 'Gagal memuat QRIS');
+      }
     } finally {
       setIsLoading(false);
     }
