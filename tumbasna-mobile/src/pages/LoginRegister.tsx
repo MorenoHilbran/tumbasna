@@ -146,7 +146,22 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ initialIsLogin = true, on
         });
         const userInfo = await userInfoRes.json();
 
-        // Populate the registration fields from real Google data
+        // Cek apakah user dengan email ini sudah terdaftar
+        const loginRes = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: userInfo.email }),
+        });
+
+        if (loginRes.ok) {
+          // User sudah terdaftar → langsung login
+          const loginData = await loginRes.json();
+          localStorage.setItem('tumbasna_user', JSON.stringify(loginData.data));
+          window.location.reload();
+          return;
+        }
+
+        // User belum terdaftar → arahkan ke form Register dengan data Google
         setOwnerName(userInfo.name || '');
         setEmail(userInfo.email || '');
         setPassword('google-oauth-linked');

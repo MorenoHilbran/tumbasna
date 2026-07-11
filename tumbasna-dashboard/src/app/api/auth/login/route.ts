@@ -12,28 +12,31 @@ function normalizePhone(raw: string): string {
 }
 
 // POST /api/auth/login
-// Body: { phone }  — mobile login pakai nomor HP (no password system)
+// Body: { phone } atau { email } — mobile login pakai nomor HP atau email Google
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { phone } = body;
+    const { phone, email } = body;
 
-    if (!phone) {
-      return NextResponse.json({ error: 'Nomor HP wajib diisi' }, { status: 400 });
+    if (!phone && !email) {
+      return NextResponse.json({ error: 'Nomor HP atau Email wajib diisi' }, { status: 400 });
     }
 
-    // Normalize phone
-    const normalizedPhone = normalizePhone(phone);
-
-    const user = await prisma.user.findUnique({
-      where: { phoneNumber: normalizedPhone },
-      include: {
-        orders: {
-          where: { status: { notIn: ['SELESAI', 'DIBATALKAN'] } },
-          select: { id: true },
-        },
+    // Cari user berdasarkan phone atau email
+    const include = {
+      orders: {
+        where: { status: { notIn: ['SELESAI', 'DIBATALKAN'] } },
+        select: { id: true },
       },
-    });
+    };
+
+    let user;
+    if (phone) {
+      const normalizedPhone = normalizePhone(phone);
+      user = await prisma.user.findUnique({ where: { phoneNumber: normalizedPhone }, include });
+    } else if (email) {
+      user = await prisma.user.findUnique({ where: { email: email.trim().toLowerCase() }, include });
+    }
 
     if (!user) {
       return NextResponse.json({ error: 'Akun tidak ditemukan. Silakan daftar terlebih dahulu.' }, { status: 404 });
