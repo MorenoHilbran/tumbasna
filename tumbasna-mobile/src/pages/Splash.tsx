@@ -62,12 +62,6 @@ const Splash: React.FC = () => {
               <div className="splash-logo-glow" />
             </div>
 
-            {/* Brand Name */}
-            <h1 className="splash-brand-text">
-              <span className="splash-brand-tumbas">Tumbas</span>
-              <span className="splash-brand-na">Na</span>
-            </h1>
-
             {/* Ornamental Divider */}
             <div className="splash-divider">
               <div className="splash-divider-line" />

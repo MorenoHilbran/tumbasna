@@ -14,110 +14,140 @@ function normalizePhone(raw: string): string {
 /**
  * GET /api/auth/cleanup-duplicates
  * 
- * Endpoint satu kali pakai untuk:
- * 1. Mendeteksi user dengan nomor HP yang secara logis sama tapi berbeda format di DB
- * 2. Menghapus user duplikat yang tidak memiliki nama (data tidak lengkap)
- * 3. Menormalkan ulang nomor HP semua user ke format 62xxx
- * 
- * AMAN: Tidak menghapus user yang memiliki nama, pesanan, atau saldo.
+ * Endpoint untuk membersihkan & menggabungkan (merge) akun duplikat:
+ * 1. Mendeteksi user dengan nomor HP serupa tapi berbeda format.
+ * 2. Memilih 1 User Utama (Primary) untuk dipertahankan.
+ * 3. Memindahkan seluruh relasi data (orders, product entries, chats) dari user duplikat ke User Utama.
+ * 4. Menghapus user duplikat setelah datanya aman dimigrasikan.
+ * 5. Menormalkan nomor HP User Utama ke format '62xxx'.
  */
 export async function GET() {
   try {
     const allUsers = await prisma.user.findMany({
-      select: {
-        id: true,
-        phoneNumber: true,
-        name: true,
-        balance: true,
-        _count: { select: { orders: true } },
+      include: {
+        _count: {
+          select: {
+            orders: true,
+            productEntries: true,
+            chatMessages: true,
+          }
+        }
       },
       orderBy: { createdAt: 'asc' },
     });
 
-    const report: Record<string, string[]> = {};
-    const toDelete: string[] = [];
-    const toNormalize: { id: string; oldPhone: string; newPhone: string }[] = [];
-
-    // Kelompokkan user berdasarkan nomor yang sudah dinormalisasi
-    const grouped: Record<string, typeof allUsers> = {};
+    // Kelompokkan user berdasarkan nomor HP yang sudah dinormalisasi
+    const groups: Record<string, typeof allUsers> = {};
     for (const u of allUsers) {
       const normalized = normalizePhone(u.phoneNumber);
-      if (!grouped[normalized]) grouped[normalized] = [];
-      grouped[normalized].push(u);
+      if (!groups[normalized]) {
+        groups[normalized] = [];
+      }
+      groups[normalized].push(u);
     }
 
-    // Proses setiap grup
-    for (const [normalizedPhone, users] of Object.entries(grouped)) {
-      // Tandai nomor yang perlu dinormalisasi
-      for (const u of users) {
-        if (u.phoneNumber !== normalizedPhone) {
-          toNormalize.push({ id: u.id, oldPhone: u.phoneNumber, newPhone: normalizedPhone });
-        }
-      }
+    const mergeLogs: string[] = [];
+    let totalMergedCount = 0;
+    let normalizedCount = 0;
 
-      // Jika ada lebih dari 1 user dengan nomor yang sama setelah normalisasi
+    // Lakukan pembersihan untuk setiap grup nomor HP
+    for (const [normalizedPhone, users] of Object.entries(groups)) {
+      // Jika ada duplikasi akun
       if (users.length > 1) {
-        report[normalizedPhone] = users.map(u => `${u.id} (nama: ${u.name || 'kosong'}, orders: ${u._count.orders}, saldo: ${u.balance})`);
+        // Tentukan Primary User (Prioritas: yang punya pesanan, saldo, atau yang format nomornya sudah benar)
+        const sorted = [...users].sort((a, b) => {
+          const scoreA = (a._count.orders * 10) + (a._count.productEntries * 5) + Number(a.balance) + (a.phoneNumber === normalizedPhone ? 2 : 0);
+          const scoreB = (b._count.orders * 10) + (b._count.productEntries * 5) + Number(b.balance) + (b.phoneNumber === normalizedPhone ? 2 : 0);
+          return scoreB - scoreA; // Urutkan dari skor tertinggi
+        });
 
-        // Tandai duplikat yang aman dihapus: tidak punya nama, tidak punya pesanan, tidak punya saldo
-        const safeDuplicates = users.filter(
-          u => !u.name && u._count.orders === 0 && Number(u.balance) === 0
-        );
+        const primaryUser = sorted[0];
+        const duplicateUsers = sorted.slice(1);
 
-        // Sisakan satu user (yang paling lengkap), hapus sisanya
-        const keepUser = users.find(u => u.name) || users[0];
-        for (const u of safeDuplicates) {
-          if (u.id !== keepUser.id) {
-            toDelete.push(u.id);
+        mergeLogs.push(`Merging group [${normalizedPhone}]: Primary is ${primaryUser.name || 'No Name'} (${primaryUser.id})`);
+
+        for (const duplicate of duplicateUsers) {
+          // 1. Pindahkan Orders
+          if (duplicate._count.orders > 0) {
+            await prisma.order.updateMany({
+              where: { buyerUserId: duplicate.id },
+              data: { buyerUserId: primaryUser.id },
+            });
+            mergeLogs.push(`  -> Moved ${duplicate._count.orders} orders from ${duplicate.id} to ${primaryUser.id}`);
+          }
+
+          // 2. Pindahkan Product Entries
+          if (duplicate._count.productEntries > 0) {
+            await prisma.productEntry.updateMany({
+              where: { userId: duplicate.id },
+              data: { userId: primaryUser.id },
+            });
+            mergeLogs.push(`  -> Moved ${duplicate._count.productEntries} product entries from ${duplicate.id} to ${primaryUser.id}`);
+          }
+
+          // 3. Pindahkan Chat Messages
+          if (duplicate._count.chatMessages > 0) {
+            await prisma.chatMessage.updateMany({
+              where: { buyerUserId: duplicate.id },
+              data: { buyerUserId: primaryUser.id },
+            });
+            mergeLogs.push(`  -> Moved ${duplicate._count.chatMessages} chats from ${duplicate.id} to ${primaryUser.id}`);
+          }
+
+          // 4. Gabungkan saldo jika ada
+          if (Number(duplicate.balance) > 0) {
+            await prisma.user.update({
+              where: { id: primaryUser.id },
+              data: { balance: { increment: duplicate.balance } },
+            });
+            mergeLogs.push(`  -> Merged balance ${duplicate.balance} from ${duplicate.id} to ${primaryUser.id}`);
+          }
+
+          // 5. Hapus akun duplikat
+          await prisma.user.delete({
+            where: { id: duplicate.id },
+          });
+          mergeLogs.push(`  -> Deleted duplicate user: ${duplicate.name || 'No Name'} (${duplicate.id})`);
+          totalMergedCount++;
+        }
+
+        // Pastikan nomor HP primary user menggunakan format normalized
+        if (primaryUser.phoneNumber !== normalizedPhone) {
+          await prisma.user.update({
+            where: { id: primaryUser.id },
+            data: { phoneNumber: normalizedPhone },
+          });
+          normalizedCount++;
+        }
+      } else {
+        // Jika tidak duplikat tapi nomornya belum dalam format standar (62xxx)
+        const singleUser = users[0];
+        if (singleUser.phoneNumber !== normalizedPhone) {
+          try {
+            await prisma.user.update({
+              where: { id: singleUser.id },
+              data: { phoneNumber: normalizedPhone },
+            });
+            normalizedCount++;
+            mergeLogs.push(`Normalized single user ${singleUser.name || 'No Name'} (${singleUser.id}) to ${normalizedPhone}`);
+          } catch (e: any) {
+            mergeLogs.push(`Failed to normalize ${singleUser.id}: ${e.message}`);
           }
         }
       }
     }
 
-    // Jalankan normalisasi nomor (update satu per satu untuk menghindari conflict unique)
-    let normalizedCount = 0;
-    for (const item of toNormalize) {
-      try {
-        // Cek apakah nomor baru sudah dipakai user lain
-        const conflict = await prisma.user.findUnique({ where: { phoneNumber: item.newPhone } });
-        if (!conflict || conflict.id === item.id) {
-          await prisma.user.update({
-            where: { id: item.id },
-            data: { phoneNumber: item.newPhone },
-          });
-          normalizedCount++;
-        }
-      } catch (e) {
-        console.warn(`[CLEANUP] Gagal normalisasi ${item.id}:`, e);
-      }
-    }
-
-    // Hapus duplikat yang aman
-    let deletedCount = 0;
-    if (toDelete.length > 0) {
-      const deleteResult = await prisma.user.deleteMany({
-        where: { id: { in: toDelete } },
-      });
-      deletedCount = deleteResult.count;
-    }
-
     return NextResponse.json({
       success: true,
       summary: {
-        totalUsers: allUsers.length,
-        duplicateGroups: Object.keys(report).length,
+        totalMerged: totalMergedCount,
         normalizedPhoneNumbers: normalizedCount,
-        deletedDuplicates: deletedCount,
-        remainingAfterCleanup: allUsers.length - deletedCount,
+        message: `Berhasil menggabungkan ${totalMergedCount} user duplikat dan menormalkan ${normalizedCount} nomor HP.`,
       },
-      duplicatesFound: report,
-      deletedIds: toDelete,
-      message: deletedCount === 0 && normalizedCount === 0
-        ? 'Tidak ada duplikat atau nomor tidak valid ditemukan. Database sudah bersih!'
-        : `Berhasil: ${normalizedCount} nomor dinormalisasi, ${deletedCount} duplikat dihapus.`,
+      mergeLogs,
     });
   } catch (error: any) {
-    console.error('[CLEANUP DUPLICATES ERROR]', error.message);
+    console.error('[CLEANUP MERGE ERROR]', error.message);
     return NextResponse.json({ error: 'Internal Server Error', detail: error.message }, { status: 500 });
   }
 }

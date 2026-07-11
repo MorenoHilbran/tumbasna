@@ -476,6 +476,26 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ initialIsLogin = true, on
                   Daftar Sekarang
                 </button>
 
+                <div className="login-alternative-separator">
+                  <div className="sep-line"></div>
+                  <span className="sep-text">ATAU HUBUNGKAN</span>
+                  <div className="sep-line"></div>
+                </div>
+
+                <button
+                  type="button"
+                  className="login-google-btn"
+                  style={{ marginTop: '0', marginBottom: '16px' }}
+                  onClick={() => handleGoogleLogin()}
+                >
+                  <img
+                    src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg"
+                    alt="Google"
+                    className="google-btn-logo"
+                  />
+                  <span>OTORISASI DENGAN GOOGLE</span>
+                </button>
+
                 <div className="register-redirect-back">
                   Sudah punya akun?{' '}
                   <span className="login-highlight-btn" onClick={() => setIsLogin(true)}>
