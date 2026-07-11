@@ -271,7 +271,9 @@ const MainAppShell: React.FC = () => {
                   className={`bottom-nav-item ${isActive ? 'active' : ''}`}
                   onClick={() => setActiveTab(tab.id)}
                 >
-                  <IonIcon icon={isActive ? tab.iconActive : tab.iconInactive} className="bottom-nav-icon" />
+                  <div className="bottom-nav-icon-wrapper">
+                    <IonIcon icon={isActive ? tab.iconActive : tab.iconInactive} className="bottom-nav-icon" />
+                  </div>
                   <span className="bottom-nav-text">{tab.label}</span>
                 </li>
               );

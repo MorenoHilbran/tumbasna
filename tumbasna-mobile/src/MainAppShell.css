@@ -53,50 +53,70 @@ html, body, #root, ion-app {
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  color: #9CA3AF;
-  padding-top: 6px;
+  padding-top: 4px;
   position: relative;
 }
 
+.bottom-nav-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 30px;
+  border-radius: 16px;
+  margin-bottom: 2px;
+  background-color: transparent;
+  transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
 .bottom-nav-icon {
-  font-size: 24px;
-  margin-bottom: 4px;
-  transition: all 0.2s ease;
+  font-size: 22px;
+  color: #9CA3AF;
+  transition: color 0.25s ease, transform 0.25s ease;
 }
 
 .bottom-nav-text {
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 11px;
   font-weight: 700;
-  transition: color 0.2s ease;
+  color: #9CA3AF;
+  transition: color 0.25s ease, transform 0.25s ease;
 }
 
 /* Active State */
-.bottom-nav-item.active {
-  color: #1F3826;
+.bottom-nav-item.active .bottom-nav-icon-wrapper {
+  background-color: #F0FDF4; /* Light green background (mint) */
+  animation: navItemPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
 }
 
 .bottom-nav-item.active .bottom-nav-icon {
-  transform: translateY(-2px);
-  color: #1F3826;
+  color: #2E7D32; /* Beautiful green icon color */
 }
 
-/* Active Indicator Line */
-.bottom-nav-item::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 24px;
-  height: 4px;
-  border-radius: 0 0 4px 4px;
-  background: transparent;
-  transition: background 0.2s ease;
+.bottom-nav-item.active .bottom-nav-text {
+  color: #2E7D32; /* Active text changes color accordingly */
+  animation: navTextPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
 }
 
-.bottom-nav-item.active::before {
-  background: #7FBB54;
+@keyframes navItemPop {
+  0% {
+    transform: scale(0.9) translateY(0);
+  }
+  50% {
+    transform: scale(1.08) translateY(-1px);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes navTextPop {
+  0% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 /* Floating Cart FAB Button */
