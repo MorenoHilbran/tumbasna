@@ -76,6 +76,12 @@ export async function POST(req: Request) {
               name: `Ongkos Kirim (${order.courier})`,
             }]
           : []),
+        {
+          id: "SERVICE_FEE",
+          price: 2000,
+          quantity: 1,
+          name: "Biaya Layanan Aplikasi",
+        },
       ],
     };
 

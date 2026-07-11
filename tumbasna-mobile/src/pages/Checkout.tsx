@@ -65,30 +65,6 @@ const locationCoords: Record<string, [number, number]> = {
   'Karo': [3.1167, 98.5000]
 };
 
-// Mapping nama kota → RajaOngkir City ID (Starter Plan)
-const CITY_ID_MAP: Record<string, string> = {
-  'banyumas': '39',
-  'cilacap': '88',
-  'purbalingga': '344',
-  'banjarnegara': '33',
-  'kebumen': '165',
-  'tegal': '425',
-  'brebes': '73',
-  'magelang': '225',
-  'boyolali': '71',
-  'cianjur': '85',
-  'karo': '158',
-};
-
-function getCityId(address: string): string {
-  const lower = address.toLowerCase();
-  for (const [key, id] of Object.entries(CITY_ID_MAP)) {
-    if (lower.includes(key)) return id;
-  }
-  return '39'; // fallback: Banyumas
-}
-
-
 // Component Map Event
 const MapController = ({ center, onMoveEnd }: { center: [number, number], onMoveEnd: (pos: [number, number]) => void }) => {
   const map = useMapEvents({
@@ -111,10 +87,10 @@ const MapController = ({ center, onMoveEnd }: { center: [number, number], onMove
 
 const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
   const { cart, user, checkout } = useApp();
-  
+
   // Workflow States (Skip prompt, go straight to map)
   const [step, setStep] = useState<'map' | 'summary'>('map');
-  
+
   // Location States
   const [buyerCoords, setBuyerCoords] = useState<[number, number]>([-7.4244, 109.2300]); // Default to Purwokerto/Banyumas
   const [buyerAddressLabel, setBuyerAddressLabel] = useState('');
@@ -124,7 +100,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
   const [selectedCourier, setSelectedCourier] = useState(SHIPPING_METHODS[0].id);
   const [dynamicShippingCost, setDynamicShippingCost] = useState(SHIPPING_METHODS[0].price);
   const [isCalculatingOngkir, setIsCalculatingOngkir] = useState(false);
-  
+
   // COD Radius / Distance States
   const [codAvailable, setCodAvailable] = useState(true);
   const [distanceInfo, setDistanceInfo] = useState('Mendeteksi jarak lokasi...');
@@ -172,7 +148,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000, enableHighAccuracy: true });
       });
       setBuyerCoords([position.coords.latitude, position.coords.longitude]);
-      
+
       // Reverse geocode GPS location
       try {
         const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`);
@@ -255,7 +231,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
 
   useEffect(() => {
     if (step !== 'summary') return;
-    
+
     const checkDistance = async () => {
       const supplierLocationStr = cart[0]?.product.supplierLocation;
       if (!supplierLocationStr) return;
@@ -263,7 +239,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
       try {
         const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(supplierLocationStr)}`);
         const geoData = await geoRes.json();
-        
+
         if (geoData && geoData.length > 0) {
           const supplierLat = parseFloat(geoData[0].lat);
           const supplierLng = parseFloat(geoData[0].lon);
@@ -271,7 +247,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
 
           const dist = haversineKm(buyerCoords[0], buyerCoords[1], supplierLat, supplierLng);
           setDistance(dist);
-          
+
           if (dist <= 20) {
             setCodAvailable(true);
             setDistanceInfo(`Jarak ke supplier: ${dist.toFixed(1)} km (COD Tersedia)`);
@@ -315,8 +291,8 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
           const res = await fetch(`${API_URL}/api/shipping/cost`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              courier: selectedCourier, 
+            body: JSON.stringify({
+              courier: selectedCourier,
               weight: totalWeightGrams,
               originId: getCityId(cart[0]?.product.supplierLocation || ''),
               destinationId: getCityId(buyerAddressLabel)
@@ -335,15 +311,16 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
         } finally {
           setIsCalculatingOngkir(false);
         }
-      } else {
-        setDynamicShippingCost(getMethodPrice(selectedCourier));
       }
+      // Untuk kurir-lokal & COD, harga dihitung langsung via getMethodPrice()
+      // tanpa menyentuh dynamicShippingCost agar tidak kontaminasi harga ekspedisi
     };
     fetchShipping();
   }, [selectedCourier, cart, step, distance]);
 
   const serviceFee = 2000;
-  const totalAmount = itemsTotal + dynamicShippingCost + serviceFee;
+  const activeShippingCost = selectedCourier === 'ekspedisi' ? dynamicShippingCost : getMethodPrice(selectedCourier);
+  const totalAmount = itemsTotal + activeShippingCost + serviceFee;
 
   const handlePlaceOrder = async () => {
     setIsPlacingOrder(true);
@@ -360,9 +337,9 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
       const sLocLabel = getCityLabel(cart[0]?.product.supplierLocation || '');
 
       const orderId = await checkout(
-        activeShipping.name, 
-        dynamicShippingCost, 
-        buyerCoords, 
+        activeShipping.name,
+        activeShippingCost,
+        buyerCoords,
         supplierCoords || undefined,
         bAddrLabel,
         sLocLabel
@@ -396,13 +373,13 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
                 {step === 'map' ? 'Pilih Lokasi' : 'Checkout'}
               </h2>
             </div>
-            <div style={{width: 32}}></div>
+            <div style={{ width: 32 }}></div>
           </div>
         </IonToolbar>
       </IonHeader>
 
       <IonContent className={`checkout-content ${step === 'map' ? 'no-scroll' : ''}`}>
-        
+
         {/* ==================================================== */}
         {/* VIEW 1: MAP PICKER WITH SEARCH OVERLAY & GPS FAB    */}
         {/* ==================================================== */}
@@ -411,9 +388,9 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
             <div className="map-search-overlay">
               <div className="search-bar-wrapper">
                 <IonIcon icon={searchOutline} className="search-icon" />
-                <input 
-                  type="text" 
-                  placeholder="Cari jalan atau area di Banyumas..." 
+                <input
+                  type="text"
+                  placeholder="Cari jalan atau area di Banyumas..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearchLocation()}
@@ -423,7 +400,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
               </div>
 
               {/* Gunakan Lokasi Saat Ini Button */}
-              <button 
+              <button
                 type="button"
                 className="current-loc-inline-btn"
                 onClick={handleGetGpsAndShowMap}
@@ -455,9 +432,9 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
             </div>
 
             <div className="map-container-box" style={{ position: 'relative' }}>
-              <MapContainer 
-                center={buyerCoords} 
-                zoom={16} 
+              <MapContainer
+                center={buyerCoords}
+                zoom={16}
                 style={{ width: '100%', height: '100%' }}
                 zoomControl={false}
               >
@@ -480,7 +457,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
               </div>
 
               {/* GPS FAB Button */}
-              <button 
+              <button
                 className="gps-fab"
                 onClick={handleGetGpsAndShowMap}
                 disabled={isGettingGps}
@@ -488,7 +465,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
                 {isGettingGps ? <IonSpinner name="crescent" style={{ width: 20, height: 20 }} /> : <IonIcon icon={locateOutline} />}
               </button>
             </div>
-            
+
             <div className="map-picker-footer">
               <IonButton expand="block" className="loc-btn-primary" onClick={handleConfirmMapLocation}>
                 <IonIcon icon={checkmarkCircle} slot="start" />
