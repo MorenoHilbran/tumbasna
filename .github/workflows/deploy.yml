@@ -22,5 +22,5 @@ jobs:
           # Menjalankan script deploy.sh yang ada di VPS
           script: |
             cd /opt/tumbasna
-            sudo chmod +x deploy.sh
-            sudo ./deploy.sh
+            echo "${{ secrets.VPS_PASSWORD }}" | sudo -S chmod +x deploy.sh
+            echo "${{ secrets.VPS_PASSWORD }}" | sudo -S ./deploy.sh
