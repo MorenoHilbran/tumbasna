@@ -23,6 +23,7 @@ import {
   timeOutline,
   chatbubblesOutline,
   trendingUpOutline,
+  settingsOutline,
   starOutline,
   peopleOutline,
   checkmarkCircleOutline,
@@ -181,9 +182,10 @@ const Home: React.FC<HomeProps> = ({ onNavigateToPasar, onNavigateToPesanan, onN
             <div className="dash-live-order-left">
               <div className="dash-live-pulse-dot" />
               <div className="dash-live-order-info">
-                <span className="dash-live-order-status">
-                  {latestActiveOrder.status === 'Dikirim' ? '🚚 Sedang Dikirim' : '⚙️ Sedang Diproses'}
-                </span>
+                <div className="dash-live-order-status">
+                  <IonIcon icon={latestActiveOrder.status === 'Dikirim' ? bicycleOutline : settingsOutline} className="dash-live-status-icon" />
+                  <span>{latestActiveOrder.status === 'Dikirim' ? 'Sedang Dikirim' : 'Sedang Diproses'}</span>
+                </div>
                 <span className="dash-live-order-id">Pesanan {latestActiveOrder.id}</span>
                 <span className="dash-live-order-supplier">via {latestActiveOrder.courier}</span>
               </div>
@@ -465,8 +467,8 @@ const Home: React.FC<HomeProps> = ({ onNavigateToPasar, onNavigateToPesanan, onN
           </div>
         </div>
 
-        {/* Extra spacing at the bottom */}
-        <div style={{ height: '30px' }}></div>
+        {/* Extra spacing at the bottom — ruang agar tidak tertutup navbar */}
+        <div style={{ height: '90px' }}></div>
       </IonContent>
     </IonPage>
   );

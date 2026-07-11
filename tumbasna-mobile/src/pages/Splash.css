@@ -1,5 +1,9 @@
+/* ==============================
+   Splash.css — Premium Deep Forest Theme
+   ============================== */
+
 .splash-content-wrapper {
-  --background: #ffffff;
+  --background: #00361c;
 }
 
 .splash-container {
@@ -8,169 +12,262 @@
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: #ffffff;
+  background: radial-gradient(ellipse at 30% 20%, #006837 0%, #003d20 45%, #00210f 100%);
   position: relative;
   overflow: hidden;
 }
 
-.splash-background-pattern {
+/* ── Glow Orbs (Glassmorphism Depth) ──────────────────────── */
+.splash-orb {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: 
-    radial-gradient(circle at 10% 20%, rgba(140, 198, 63, 0.04) 0%, transparent 40%),
-    radial-gradient(circle at 90% 80%, rgba(247, 148, 29, 0.04) 0%, transparent 40%);
+  border-radius: 50%;
+  pointer-events: none;
   z-index: 1;
 }
 
+.splash-orb-top {
+  width: 280px;
+  height: 280px;
+  top: -80px;
+  right: -60px;
+  background: radial-gradient(circle, rgba(140, 198, 63, 0.18) 0%, transparent 70%);
+  animation: orbPulse 6s ease-in-out infinite;
+}
+
+.splash-orb-bottom {
+  width: 320px;
+  height: 320px;
+  bottom: -100px;
+  left: -80px;
+  background: radial-gradient(circle, rgba(247, 148, 29, 0.12) 0%, transparent 70%);
+  animation: orbPulse 8s ease-in-out infinite reverse;
+}
+
+@keyframes orbPulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+
+/* ── Floating Leaves ──────────────────────────────────────── */
+.splash-leaf {
+  position: absolute;
+  z-index: 5;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.4));
+}
+
+.splash-leaf-1 {
+  top: 8%;
+  right: 8%;
+  width: 55px;
+  transform: rotate(30deg);
+  animation: float1 5s ease-in-out infinite, fadeInLeaf 1.2s ease-out 0.3s both;
+}
+
+.splash-leaf-2 {
+  bottom: 22%;
+  left: 4%;
+  width: 70px;
+  transform: rotate(-20deg);
+  animation: float2 7s ease-in-out infinite alternate, fadeInLeaf 1.2s ease-out 0.5s both;
+}
+
+.splash-leaf-3 {
+  top: 25%;
+  left: 10%;
+  width: 30px;
+  transform: rotate(60deg);
+  animation: float1 4s ease-in-out infinite 1s, fadeInLeaf 1s ease-out 0.8s both;
+}
+
+@keyframes float1 {
+  0% { transform: translateY(0) rotate(30deg); }
+  50% { transform: translateY(-14px) rotate(36deg); }
+  100% { transform: translateY(0) rotate(30deg); }
+}
+
+@keyframes float2 {
+  0% { transform: translateY(0) rotate(-20deg); }
+  100% { transform: translateY(-18px) rotate(-12deg); }
+}
+
+@keyframes fadeInLeaf {
+  0% { opacity: 0; transform: scale(0.7) translateY(20px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ── Center Content ───────────────────────────────────────── */
 .splash-content {
   z-index: 10;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  margin-top: -10vh;
+  margin-top: -8vh;
+}
+
+/* ── Logo ─────────────────────────────────────────────────── */
+.splash-logo-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
 }
 
 .splash-logo {
-  width: 160px;
+  width: 110px;
   height: auto;
-  margin-bottom: 10px;
   animation: logoFadeIn 1s ease-out forwards;
-  filter: drop-shadow(0 10px 20px rgba(0,0,0,0.1));
+  position: relative;
+  z-index: 2;
+  filter: drop-shadow(0 8px 24px rgba(0,0,0,0.4)) brightness(1.05);
 }
 
+.splash-logo-glow {
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(140, 198, 63, 0.25) 0%, transparent 70%);
+  z-index: 1;
+  animation: glowPulse 3s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.2); opacity: 1; }
+}
+
+/* ── Brand Typography ─────────────────────────────────────── */
 .splash-brand-text {
-  font-family: var(--font-sans);
-  font-size: 42px;
+  font-size: 48px;
   font-weight: 800;
-  letter-spacing: -1.5px;
-  margin: 0;
+  letter-spacing: -1px;
+  margin: 0 0 14px;
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  animation: fadeUp 0.9s ease-out 0.25s both;
+  line-height: 1;
+}
+
+/* "Tumbas" — Playfair Display Italic, cream white */
+.splash-brand-tumbas {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-weight: 700;
+  color: #FFF8F0;
+  text-shadow: 0 2px 16px rgba(255, 248, 240, 0.25);
+}
+
+/* "Na" — Plus Jakarta Sans Bold, warm gold */
+.splash-brand-na {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-style: normal;
+  font-weight: 800;
+  color: #F7941D;
+  text-shadow: 0 2px 16px rgba(247, 148, 29, 0.35);
+  letter-spacing: -2px;
+}
+
+/* ── Ornamental Divider ───────────────────────────────────── */
+.splash-divider {
   display: flex;
   align-items: center;
-  animation: fadeUp 1s ease-out 0.2s both;
+  gap: 8px;
+  margin: 0 0 14px;
+  animation: scaleIn 0.7s ease-out 0.5s both;
 }
 
-.splash-brand-tumbas {
-  color: var(--ion-color-primary); /* #006837 */
+.splash-divider-line {
+  width: 40px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(247, 148, 29, 0.5), transparent);
 }
 
-.splash-brand-na {
-  color: var(--ion-color-secondary); /* #8CC63F */
+.splash-divider-diamond {
+  width: 6px;
+  height: 6px;
+  background: #F7941D;
+  transform: rotate(45deg);
+  border-radius: 1px;
+  box-shadow: 0 0 8px rgba(247, 148, 29, 0.6);
 }
 
-.splash-divider {
-  width: 60px;
-  height: 3px;
-  display: flex;
-  margin: 10px auto;
-  border-radius: 3px;
-  overflow: hidden;
-  animation: scaleIn 0.8s ease-out 0.4s both;
-}
-
-.splash-divider-left {
-  flex: 1;
-  background-color: var(--ion-color-tertiary); /* #F7941D */
-}
-
-.splash-divider-right {
-  flex: 1;
-  background-color: var(--ion-color-primary); /* #006837 */
-}
-
+/* ── Tagline ──────────────────────────────────────────────── */
 .splash-tagline {
-  font-family: var(--font-sans);
-  font-size: 14px;
-  color: #333333;
-  font-weight: 600;
-  margin-top: 10px;
-  line-height: 1.4;
-  animation: fadeUp 1s ease-out 0.5s both;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 500;
+  line-height: 1.6;
+  margin: 0;
+  animation: fadeUp 0.9s ease-out 0.6s both;
+  letter-spacing: 0.2px;
 }
 
 .splash-tagline span {
-  color: var(--ion-color-success); /* #009245 */
-  font-weight: 800;
+  color: #8CC63F;
+  font-weight: 700;
 }
 
-/* Floating Leaves */
-.splash-leaf {
-  position: absolute;
-  z-index: 5;
-  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.15));
-  opacity: 0.9;
-}
-
-.splash-leaf-1 {
-  top: 15%;
-  right: 15%;
-  width: 45px;
-  transform: rotate(45deg);
-  animation: float1 4s ease-in-out infinite, fadeIn 1.5s ease-out;
-}
-
-.splash-leaf-2 {
-  bottom: 30%;
-  left: 5%;
-  width: 60px;
-  transform: rotate(-15deg);
-  animation: float2 5s ease-in-out infinite alternate, fadeIn 1.5s ease-out;
-}
-
-@keyframes float1 {
-  0% { transform: translateY(0) rotate(45deg); }
-  50% { transform: translateY(-15px) rotate(50deg); }
-  100% { transform: translateY(0) rotate(45deg); }
-}
-
-@keyframes float2 {
-  0% { transform: translateY(0) rotate(-15deg); }
-  100% { transform: translateY(-20px) rotate(-5deg); }
-}
-
-/* Bottom Waves */
-.splash-waves-container {
+/* ── Bottom Gradient Fade ─────────────────────────────────── */
+.splash-bottom-fade {
   position: absolute;
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 35vh; /* Larger to make sure they show nicely */
+  height: 30%;
+  background: linear-gradient(to bottom, transparent, rgba(0, 30, 15, 0.6));
   z-index: 2;
-  overflow: hidden;
-  animation: wavesUp 1s ease-out;
+  pointer-events: none;
 }
 
-.splash-wave {
+/* ── Loading Dots ─────────────────────────────────────────── */
+.splash-loading-dots {
   position: absolute;
-  bottom: -5px; /* Cover any gaps */
-  left: 0;
-  width: 100%;
-  height: 100%;
+  bottom: 52px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  animation: fadeIn 0.8s ease-out 1s both;
 }
 
-.splash-wave-orange {
-  z-index: 3;
+.splash-loading-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(140, 198, 63, 0.7);
+  display: block;
+  animation: dotBounce 1.2s ease-in-out infinite;
 }
 
-.splash-wave-green-light {
-  z-index: 4;
+.splash-loading-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+  background: rgba(247, 148, 29, 0.7);
 }
 
-.splash-wave-green-dark {
-  z-index: 5;
+.splash-loading-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+  background: rgba(255, 255, 255, 0.4);
 }
 
-/* Animations */
+@keyframes dotBounce {
+  0%, 80%, 100% { transform: scale(0.7); opacity: 0.5; }
+  40% { transform: scale(1.2); opacity: 1; }
+}
+
+/* ── Keyframe Animations ──────────────────────────────────── */
 @keyframes logoFadeIn {
-  0% { opacity: 0; transform: scale(0.9) translateY(20px); }
+  0% { opacity: 0; transform: scale(0.85) translateY(18px); }
   100% { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 @keyframes fadeUp {
-  0% { opacity: 0; transform: translateY(15px); }
+  0% { opacity: 0; transform: translateY(16px); }
   100% { opacity: 1; transform: translateY(0); }
 }
 
@@ -182,9 +279,4 @@
 @keyframes fadeIn {
   0% { opacity: 0; }
   100% { opacity: 1; }
-}
-
-@keyframes wavesUp {
-  0% { transform: translateY(50px); opacity: 0; }
-  100% { transform: translateY(0); opacity: 1; }
 }
