@@ -393,8 +393,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const logout = () => {
+    // Bersihkan semua data sesi dari localStorage agar tidak ada sisa data lama
+    localStorage.removeItem('tumbasna_user');
+    localStorage.removeItem('tumbasna_cart');
+    localStorage.removeItem('tumbasna_chats');
     setUser(null);
     setOrders([]);
+    setCart([]);
   };
 
   // ── Cart ─────────────────────────────────────────────────────────────────

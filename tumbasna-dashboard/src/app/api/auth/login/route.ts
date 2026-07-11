@@ -1,6 +1,16 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
+// ── Normalisasi nomor HP ke format 62xxx ─────────────────────────────────────
+function normalizePhone(raw: string): string {
+  let p = raw.trim().replace(/\s+/g, '').replace(/[^0-9+]/g, '');
+  if (p.startsWith('+62')) p = '62' + p.slice(3);
+  else if (p.startsWith('62')) { /* sudah benar */ }
+  else if (p.startsWith('0')) p = '62' + p.slice(1);
+  else if (p.startsWith('8')) p = '62' + p; // 812xxx → 6212xxx
+  return p;
+}
+
 // POST /api/auth/login
 // Body: { phone }  — mobile login pakai nomor HP (no password system)
 export async function POST(req: Request) {
@@ -13,7 +23,7 @@ export async function POST(req: Request) {
     }
 
     // Normalize phone
-    const normalizedPhone = phone.replace(/^\+/, '').replace(/^0/, '62');
+    const normalizedPhone = normalizePhone(phone);
 
     const user = await prisma.user.findUnique({
       where: { phoneNumber: normalizedPhone },
