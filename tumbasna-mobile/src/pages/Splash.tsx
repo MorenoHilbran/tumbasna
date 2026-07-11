@@ -34,15 +34,7 @@ const Splash: React.FC = () => {
             </p>
           </div>
 
-          {/* Bottom Card for Loading */}
-          <div className="splash-loading-card">
-            <div className="splash-progress-bar-container">
-              <div className="splash-progress-bar-fill" />
-            </div>
-            <p className="splash-loading-text">
-              Memuat pengalaman terbaik untuk Anda...
-            </p>
-          </div>
+
 
         </div>
       </IonContent>

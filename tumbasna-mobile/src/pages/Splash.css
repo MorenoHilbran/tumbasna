@@ -9,7 +9,7 @@
 .splash-container {
   display: flex;
   flex-direction: column;
-  justify-content: space-between; /* Space out top logo and bottom loading card */
+  justify-content: flex-start; /* Align logo content from top */
   align-items: center;
   height: 100vh;
   background: url('/spsc.png') no-repeat center bottom;
@@ -25,7 +25,7 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  margin-top: 10vh;
+  margin-top: 12vh;
   z-index: 10;
   animation: fadeInDown 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
   
@@ -116,64 +116,7 @@
   color: #0b4526;
 }
 
-/* ── Bottom Loading Card ───────────────────────────────────── */
-.splash-loading-card {
-  width: 100%;
-  background: #f7faf5; /* Matches the base color of the spsc.png bottom background */
-  border-top-left-radius: 36px;
-  border-top-right-radius: 36px;
-  padding: 32px 24px calc(24px + var(--ion-safe-area-bottom, 0px));
-  box-shadow: 0 -8px 30px rgba(0, 104, 55, 0.05), 0 -2px 10px rgba(0, 104, 55, 0.02);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  z-index: 10;
-  animation: slideUpCard 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.splash-progress-bar-container {
-  width: 70%;
-  max-width: 250px;
-  height: 5px;
-  background: rgba(0, 104, 55, 0.08);
-  border-radius: 100px;
-  overflow: hidden;
-  margin-bottom: 14px;
-}
-
-.splash-progress-bar-fill {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, #009245 0%, #8cc63f 60%, #f7941d 100%);
-  border-radius: 100px;
-  animation: fillProgress 2.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-.splash-loading-text {
-  font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  color: #0b4526;
-  margin: 0;
-  text-align: center;
-  letter-spacing: 0.1px;
-  animation: fadeInText 0.8s ease-out 0.3s both;
-}
-
 /* ── Animations ───────────────────────────────────────────── */
-
-@keyframes fillProgress {
-  0% { width: 0%; }
-  15% { width: 10%; }
-  45% { width: 45%; }
-  75% { width: 85%; }
-  100% { width: 100%; }
-}
-
-@keyframes slideUpCard {
-  0% { transform: translateY(100%); }
-  100% { transform: translateY(0); }
-}
 
 @keyframes fadeInText {
   0% { opacity: 0; transform: translateY(4px); }
