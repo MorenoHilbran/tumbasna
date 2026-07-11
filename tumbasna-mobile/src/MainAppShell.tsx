@@ -238,6 +238,11 @@ const MainAppShell: React.FC = () => {
                   setActiveTab('chat');
                   setViewState('tabs');
                 }}
+                onNavigateToChat={() => {
+                  setSelectedChatPartner(null);
+                  setActiveTab('chat');
+                  setViewState('tabs');
+                }}
               />
             );
         }

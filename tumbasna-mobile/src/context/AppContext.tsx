@@ -272,6 +272,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             bankAccount: d.bankAccount || prev.bankAccount,
             balance: d.balance ?? prev.balance,
             activeOrdersCount: d.activeOrdersCount ?? prev.activeOrdersCount,
+            purchasesThisMonth: d.purchasesThisMonth ?? prev.purchasesThisMonth,
           } : null);
         }
       }
