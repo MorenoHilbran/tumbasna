@@ -37,6 +37,7 @@ const Profil: React.FC = () => {
   const [toastMessage, setToastMessage] = useState('');
   const [toastColor, setToastColor] = useState<'success' | 'danger'>('success');
   const [loading, setLoading] = useState(false);
+  const [locating, setLocating] = useState(false);
 
   // States Form
   const [ownerName, setOwnerName] = useState('');
@@ -93,6 +94,55 @@ const Profil: React.FC = () => {
       setToastColor('danger');
       setShowToast(true);
     }
+  };
+
+  // Deteksi lokasi GPS & reverse geocoding via OpenStreetMap Nominatim
+  const handleUseCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setToastMessage('GPS tidak tersedia di perangkat ini');
+      setToastColor('danger');
+      setShowToast(true);
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`,
+            { headers: { 'Accept-Language': 'id' } }
+          );
+          const data = await res.json();
+          const addr = data.address || {};
+          const parts = [
+            addr.road,
+            addr.village || addr.suburb,
+            addr.city_district || addr.county,
+            addr.city || addr.town,
+            addr.state,
+          ].filter(Boolean);
+          const readableAddress = parts.join(', ');
+          setAddress(readableAddress || data.display_name || '');
+          setToastMessage('Lokasi berhasil dideteksi!');
+          setToastColor('success');
+          setShowToast(true);
+        } catch {
+          setToastMessage('Gagal mendapatkan nama lokasi. Coba lagi.');
+          setToastColor('danger');
+          setShowToast(true);
+        } finally {
+          setLocating(false);
+        }
+      },
+      () => {
+        setLocating(false);
+        setToastMessage('Izin lokasi ditolak. Aktifkan GPS di pengaturan.');
+        setToastColor('danger');
+        setShowToast(true);
+      },
+      { timeout: 10000, enableHighAccuracy: true }
+    );
   };
 
   return (
@@ -326,12 +376,23 @@ const Profil: React.FC = () => {
             <div className="form-section-header">Alamat & Rekening</div>
 
             <div className="edit-input-group">
-              <label>Alamat Lengkap Pengiriman</label>
+              <div className="edit-address-label-row">
+                <label>Alamat Lengkap Pengiriman</label>
+                <button
+                  type="button"
+                  className="btn-use-location"
+                  onClick={handleUseCurrentLocation}
+                  disabled={locating}
+                >
+                  <IonIcon icon={locationOutline} />
+                  <span>{locating ? 'Mendeteksi...' : 'Lokasi Saat Ini'}</span>
+                </button>
+              </div>
               <div className="input-with-icon textarea-icon">
                 <IonIcon icon={locationOutline} />
-                <textarea 
-                  value={address} 
-                  onChange={(e) => setAddress(e.target.value)} 
+                <textarea
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
                   placeholder="Contoh: Jl. Diponegoro No. 12, Magelang Tengah"
                   rows={3}
                 />

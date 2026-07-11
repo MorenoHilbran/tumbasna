@@ -11,8 +11,33 @@ const coordsMap: Record<string, [number, number]> = {
     'Cilacap': [-7.7150, 108.9767],
     'Purbalingga': [-7.3884, 109.3641],
     'Banjarnegara': [-7.3884, 109.6939],
-    'Kebumen': [-7.6701, 109.6524]
+    'Kebumen': [-7.6701, 109.6524],
+    'Tegal': [-6.8676, 109.1384]
 };
+
+// Nominatim OpenStreetMap Geocoding helper
+async function fetchGeocode(address: string): Promise<[number, number] | null> {
+    if (!address) return null;
+    try {
+        let queryStr = address;
+        if (!queryStr.toLowerCase().includes('indonesia')) {
+            queryStr += ', Indonesia';
+        }
+        const query = encodeURIComponent(queryStr);
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`);
+        if (res.ok) {
+            const data = await res.json();
+            if (data && data[0]) {
+                const lat = parseFloat(data[0].lat);
+                const lon = parseFloat(data[0].lon);
+                return [lat, lon];
+            }
+        }
+    } catch (err) {
+        console.error('Error geocoding address:', address, err);
+    }
+    return null;
+}
 
 // ─── Types ───────────────────────────────────────────────────
 interface ArmadaItem {
@@ -25,6 +50,10 @@ interface ArmadaItem {
     progress: number;
     estimasi: string;
     jarak: string;
+    supplierLocation?: string;
+    buyerAddress?: string;
+    supplierCoords?: [number, number] | null;
+    buyerCoords?: [number, number] | null;
 }
 
 interface LogistikMapLeafletProps {
@@ -135,14 +164,19 @@ const getPositionAlongPath = (path: [number, number][], progressPercent: number)
 };
 
 // ─── Helper: Pan Map to Selected Truck position ──────────────
-function PanToSelectedTruck({ armadaData, selectedId, routePaths }: { armadaData: ArmadaItem[]; selectedId: string | null; routePaths: Record<string, [number, number][]> }) {
+function PanToSelectedTruck({ armadaData, selectedId, routePaths, coordsCache }: { 
+    armadaData: ArmadaItem[]; 
+    selectedId: string | null; 
+    routePaths: Record<string, [number, number][]>;
+    coordsCache: Record<string, [number, number]>;
+}) {
     const map = useMap();
     useEffect(() => {
         if (!selectedId) return;
         const a = armadaData.find(x => x.id === selectedId);
         if (a) {
-            const origin = coordsMap[a.rute.dari];
-            const dest = coordsMap[a.rute.ke];
+            const origin = a.supplierCoords || coordsCache[a.supplierLocation || a.rute.dari] || coordsCache[a.rute.dari];
+            const dest = a.buyerCoords || coordsCache[a.buyerAddress || a.rute.ke] || coordsCache[a.rute.ke];
             if (origin && dest) {
                 const path = routePaths[a.id];
                 if (path && path.length > 0) {
@@ -156,7 +190,7 @@ function PanToSelectedTruck({ armadaData, selectedId, routePaths }: { armadaData
                 }
             }
         }
-    }, [selectedId, armadaData, routePaths, map]);
+    }, [selectedId, armadaData, routePaths, coordsCache, map]);
     return null;
 }
 
@@ -164,6 +198,53 @@ function PanToSelectedTruck({ armadaData, selectedId, routePaths }: { armadaData
 export default function LogistikMapLeaflet({ armadaData, selectedId, onSelect }: LogistikMapLeafletProps) {
     const center: [number, number] = [-7.55, 109.25]; // Center of Barlingmascakeb
     const [routePaths, setRoutePaths] = useState<Record<string, [number, number][]>>({});
+    const [coordsCache, setCoordsCache] = useState<Record<string, [number, number]>>(coordsMap);
+
+    // Geocoding missing addresses
+    useEffect(() => {
+        let isMounted = true;
+        const geocodeMissing = async () => {
+            const newCache = { ...coordsCache };
+            let updated = false;
+
+            for (const a of armadaData) {
+                if (!isMounted) return;
+
+                // Check supplier location
+                const sLoc = a.supplierLocation || a.rute.dari;
+                if (sLoc && !newCache[sLoc] && !a.supplierCoords) {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    if (!isMounted) return;
+                    const coords = await fetchGeocode(sLoc);
+                    if (coords) {
+                        newCache[sLoc] = coords;
+                        updated = true;
+                    }
+                }
+
+                // Check buyer address
+                const bAddr = a.buyerAddress || a.rute.ke;
+                if (bAddr && !newCache[bAddr] && !a.buyerCoords) {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    if (!isMounted) return;
+                    const coords = await fetchGeocode(bAddr);
+                    if (coords) {
+                        newCache[bAddr] = coords;
+                        updated = true;
+                    }
+                }
+            }
+
+            if (updated && isMounted) {
+                setCoordsCache(newCache);
+            }
+        };
+
+        geocodeMissing();
+        return () => {
+            isMounted = false;
+        };
+    }, [armadaData]);
 
     // Fetch road paths dynamically from OSRM public routing API
     useEffect(() => {
@@ -174,8 +255,8 @@ export default function LogistikMapLeaflet({ armadaData, selectedId, onSelect }:
             for (const a of armadaData) {
                 if (newPaths[a.id]) continue; // Already loaded
 
-                const origin = coordsMap[a.rute.dari];
-                const dest = coordsMap[a.rute.ke];
+                const origin = a.supplierCoords || coordsCache[a.supplierLocation || a.rute.dari] || coordsCache[a.rute.dari];
+                const dest = a.buyerCoords || coordsCache[a.buyerAddress || a.rute.ke] || coordsCache[a.rute.ke];
                 if (!origin || !dest) continue;
 
                 try {
@@ -207,7 +288,7 @@ export default function LogistikMapLeaflet({ armadaData, selectedId, onSelect }:
         };
 
         fetchRoutes();
-    }, [armadaData, routePaths]);
+    }, [armadaData, routePaths, coordsCache]);
 
     return (
         <MapContainer
@@ -225,11 +306,11 @@ export default function LogistikMapLeaflet({ armadaData, selectedId, onSelect }:
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
 
-            <PanToSelectedTruck armadaData={armadaData} selectedId={selectedId} routePaths={routePaths} />
+            <PanToSelectedTruck armadaData={armadaData} selectedId={selectedId} routePaths={routePaths} coordsCache={coordsCache} />
 
             {armadaData.map((a) => {
-                const origin = coordsMap[a.rute.dari];
-                const dest = coordsMap[a.rute.ke];
+                const origin = a.supplierCoords || coordsCache[a.supplierLocation || a.rute.dari] || coordsCache[a.rute.dari];
+                const dest = a.buyerCoords || coordsCache[a.buyerAddress || a.rute.ke] || coordsCache[a.rute.ke];
 
                 if (!origin || !dest) return null;
 
@@ -260,7 +341,7 @@ export default function LogistikMapLeaflet({ armadaData, selectedId, onSelect }:
                             <Popup offset={[0, -10]}>
                                 <div style={{ fontFamily: 'Poppins, sans-serif' }}>
                                     <p style={{ fontWeight: 800, margin: 0, fontSize: '11px', color: '#10B981' }}>Titik Pengirim (Supplier)</p>
-                                    <p style={{ fontSize: '10px', margin: '2px 0 0 0', color: '#334155' }}>Gudang/Petani di {a.rute.dari}</p>
+                                    <p style={{ fontSize: '10px', margin: '2px 0 0 0', color: '#334155' }}>Gudang/Petani di {a.supplierLocation || a.rute.dari}</p>
                                 </div>
                             </Popup>
                         </Marker>
@@ -273,7 +354,7 @@ export default function LogistikMapLeaflet({ armadaData, selectedId, onSelect }:
                             <Popup offset={[0, -10]}>
                                 <div style={{ fontFamily: 'Poppins, sans-serif' }}>
                                     <p style={{ fontWeight: 800, margin: 0, fontSize: '11px', color: '#EF4444' }}>Titik Penerima (UMKM)</p>
-                                    <p style={{ fontSize: '10px', margin: '2px 0 0 0', color: '#334155' }}>Pedagang/Pasar di {a.rute.ke}</p>
+                                    <p style={{ fontSize: '10px', margin: '2px 0 0 0', color: '#334155' }}>Pedagang/Pasar di {a.buyerAddress || a.rute.ke}</p>
                                 </div>
                             </Popup>
                         </Marker>
@@ -310,7 +391,7 @@ export default function LogistikMapLeaflet({ armadaData, selectedId, onSelect }:
                                     </div>
                                     <p style={{ fontSize: '10px', margin: '0 0 2px 0', color: '#334155', fontWeight: 750 }}>Supir: {a.driver}</p>
                                     <p style={{ fontSize: '10px', margin: '0 0 2px 0', color: '#334155' }}>Muatan: {a.muatan.split('—')[0]}</p>
-                                    <p style={{ fontSize: '9px', margin: 0, color: '#64748B', fontWeight: 500 }}>Rute: {a.rute.dari} → {a.rute.ke} ({a.jarak})</p>
+                                    <p style={{ fontSize: '9px', margin: 0, color: '#64748B', fontWeight: 500 }}>Rute: {a.supplierLocation || a.rute.dari} → {a.buyerAddress || a.rute.ke} ({a.jarak})</p>
                                     <div style={{ marginTop: '6px', background: '#F8FAFC', borderRadius: '6px', padding: '4px 6px', fontSize: '9px', fontWeight: 700, color: '#475569' }}>
                                         Progress: {a.progress}% • ETA: {a.estimasi}
                                     </div>

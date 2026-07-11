@@ -1,6 +1,16 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
+// ── Normalisasi nomor HP ke format 62xxx ─────────────────────────────────────
+function normalizePhone(raw: string): string {
+  let p = raw.trim().replace(/\s+/g, '').replace(/[^0-9+]/g, '');
+  if (p.startsWith('+62')) p = '62' + p.slice(3);
+  else if (p.startsWith('62')) { /* sudah benar */ }
+  else if (p.startsWith('0')) p = '62' + p.slice(1);
+  else if (p.startsWith('8')) p = '62' + p; // 812xxx → 6212xxx
+  return p;
+}
+
 // POST /api/auth/register
 // Body: { ownerName, businessName, phone, email, address, businessType, bankName, bankAccount }
 export async function POST(req: Request) {
@@ -12,8 +22,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Nama dan nomor HP wajib diisi' }, { status: 400 });
     }
 
-    // Normalize phone: hilangkan +62 / 62, pastikan format 62xxx
-    const normalizedPhone = phone.replace(/^\+/, '').replace(/^0/, '62');
+    // Normalize phone: format seragam 62xxx
+    const normalizedPhone = normalizePhone(phone);
 
     // Cek apakah nama usaha sudah terdaftar oleh pengguna lain
     if (businessName) {

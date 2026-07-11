@@ -87,11 +87,21 @@ const wilayahData = [
         komoditas: ['Beras', 'Gula', 'Cabai', 'Tomat'],
         stok: '780 ton',
         hargaRataRata: 'Rp 13.400/kg',
-        transaksi: 143,
-        lat: -7.6701,
-        lng: 109.6524,
-        luas: 1282,
-        radius: 16000,
+    },
+    {
+        id: 'tegal',
+        name: 'Tegal',
+        status: 'melimpah',
+        supplier: 48,
+        buyer: 125,
+        komoditas: ['Beras', 'Cabai Rawit', 'Bawang Merah', 'Sayuran'],
+        stok: '1.920 ton',
+        hargaRataRata: 'Rp 12.000/kg',
+        transaksi: 195,
+        lat: -6.8676,
+        lng: 109.1384,
+        luas: 701,
+        radius: 12000,
     },
 ];
 
@@ -184,6 +194,7 @@ function DetailPanel({ w, onClose }: { w: typeof wilayahData[0]; onClose: () => 
 export default function PetaPage() {
     const [selected, setSelected] = useState<string | null>('banyumas');
     const [points, setPoints] = useState<any[]>([]);
+    const [regions, setRegions] = useState<any[]>(wilayahData);
 
     useEffect(() => {
         const fetchPoints = async () => {
@@ -191,8 +202,23 @@ export default function PetaPage() {
                 const res = await fetch('/api/dashboard');
                 if (!res.ok) throw new Error('Gagal memuat koordinat produk');
                 const json = await res.json();
-                if (json.success && json.data?.points) {
-                    setPoints(json.data.points);
+                if (json.success) {
+                    if (json.data?.points) {
+                        setPoints(json.data.points);
+                    }
+                    if (json.data?.regionStats) {
+                        const updated = wilayahData.map(w => {
+                            const stats = json.data.regionStats[w.id];
+                            if (stats) {
+                                return {
+                                    ...w,
+                                    ...stats
+                                };
+                            }
+                            return w;
+                        });
+                        setRegions(updated);
+                    }
                 }
             } catch (err) {
                 console.error(err);
@@ -201,9 +227,9 @@ export default function PetaPage() {
         fetchPoints();
     }, []);
 
-    const selectedData = wilayahData.find(w => w.id === selected);
-    const melimpahCount = wilayahData.filter(w => w.status === 'melimpah').length;
-    const menipisCount = wilayahData.filter(w => w.status === 'menipis').length;
+    const selectedData = regions.find(w => w.id === selected);
+    const melimpahCount = regions.filter(w => w.status === 'melimpah').length;
+    const menipisCount = regions.filter(w => w.status === 'menipis').length;
 
     return (
         <div className="relative w-full h-[calc(100vh-57px)] lg:h-[calc(100vh-73px)] overflow-hidden bg-slate-50">
@@ -211,7 +237,7 @@ export default function PetaPage() {
             {/* Real Leaflet Map - Full Bleed Background */}
             <div className="absolute inset-0 z-0">
                 <LeafletPetaMap
-                    wilayahData={wilayahData}
+                    wilayahData={regions}
                     selected={selected}
                     onSelect={setSelected}
                     productPoints={points}
@@ -270,7 +296,7 @@ export default function PetaPage() {
                 </span>
 
                 <div className="flex items-center gap-1.5">
-                    {wilayahData.map((w) => {
+                    {regions.map((w) => {
                         const isSel = selected === w.id;
                         return (
                             <button

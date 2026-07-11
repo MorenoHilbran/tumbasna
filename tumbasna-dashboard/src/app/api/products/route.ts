@@ -18,19 +18,33 @@ export async function GET() {
   try {
     const supplyEntries = await prisma.productEntry.findMany({
       where: { type: 'SUPPLY', status: 'ACTIVE' },
-      include: { user: true },
+      include: { 
+        user: true,
+        orderItems: {
+          include: {
+            order: {
+              select: { status: true }
+            }
+          }
+        }
+      },
       orderBy: { createdAt: 'desc' },
       take: 50
     });
 
     const products = supplyEntries.map(entry => {
       const priceNum = Number(entry.price);
+      const soldQty = entry.orderItems
+        .filter(item => item.order && ['DIPROSES', 'DIKIRIM', 'SELESAI'].includes(item.order.status))
+        .reduce((sum, item) => sum + Number(item.qty), 0);
+      const remainingStock = Math.max(0, Number(entry.qty) - soldQty);
+
       // Map database schema to mobile app Product interface
       return {
         id: entry.id,
         name: entry.commodity.split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
         price: priceNum,
-        stock: Number(entry.qty),
+        stock: remainingStock,
         supplierName: entry.user.name || 'Petani ' + entry.user.phoneNumber,
         supplierLocation: entry.location,
         supplierPhone: entry.user.phoneNumber,

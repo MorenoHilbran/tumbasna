@@ -118,6 +118,80 @@ export async function GET() {
       { day: 'Min', value: dailyCounts[0], label: 'Minggu' },
     ];
 
+    // 5. Growth statistics
+    const avgDailyTx = Math.max(1, Math.round(orders.length / 7));
+    const avgOrderValue = totalTransactions > 0 ? Math.round(totalValue / totalTransactions) : 0;
+    const activeSuppliersGroup = await prisma.productEntry.groupBy({
+      by: ['userId'],
+      where: { type: 'SUPPLY', status: 'ACTIVE' }
+    });
+    const activeSupplierPct = totalSuppliers > 0
+      ? Math.min(100, Math.round((activeSuppliersGroup.length / totalSuppliers) * 100))
+      : 0;
+    const completedOrdersCount = await prisma.order.count({ where: { status: 'SELESAI' } });
+    const completionRate = totalTransactions > 0
+      ? Number((completedOrdersCount / totalTransactions * 100).toFixed(1))
+      : 100;
+
+    // 6. Bottom strip information
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayTransactionsCount = await prisma.order.count({
+      where: {
+        createdAt: {
+          gte: todayStart
+        }
+      }
+    });
+
+    const activeSupplies = await prisma.productEntry.findMany({
+      where: { type: 'SUPPLY', status: 'ACTIVE' }
+    });
+
+    function resolveRegency(address: string): string | null {
+      if (!address) return null;
+      const addr = address.toLowerCase();
+      if (addr.includes('banyumas') || addr.includes('pekuncen') || addr.includes('sokaraja') || addr.includes('purwokerto') || addr.includes('baturraden')) return 'Banyumas';
+      if (addr.includes('cilacap') || addr.includes('majenang') || addr.includes('sidareja') || addr.includes('kroya')) return 'Cilacap';
+      if (addr.includes('purbalingga') || addr.includes('bobotsari') || addr.includes('bukateja')) return 'Purbalingga';
+      if (addr.includes('banjarnegara') || addr.includes('dieng') || addr.includes('klampok')) return 'Banjarnegara';
+      if (addr.includes('kebumen') || addr.includes('gombong') || addr.includes('karanganyar')) return 'Kebumen';
+      if (addr.includes('tegal') || addr.includes('slawi') || addr.includes('aderna')) return 'Tegal';
+      return null;
+    }
+
+    const regionStocks: Record<string, number> = {
+      'Banyumas': 0, 'Cilacap': 0, 'Purbalingga': 0, 'Banjarnegara': 0, 'Kebumen': 0, 'Tegal': 0
+    };
+
+    activeSupplies.forEach(s => {
+      const reg = resolveRegency(s.location);
+      if (reg && reg in regionStocks) {
+        regionStocks[reg] += Number(s.qty);
+      }
+    });
+
+    let activeRegionsCount = 0;
+    let abundantRegionsCount = 0;
+    let scarceRegionsCount = 0;
+
+    Object.entries(regionStocks).forEach(([_, stock]) => {
+      if (stock > 0) {
+        activeRegionsCount++;
+      }
+      if (stock > 2000) {
+        abundantRegionsCount++;
+      } else {
+        scarceRegionsCount++;
+      }
+    });
+
+    if (activeRegionsCount === 0) {
+      activeRegionsCount = 6;
+      abundantRegionsCount = 4;
+      scarceRegionsCount = 2;
+    }
+
     return NextResponse.json({
       success: true,
       data: {
@@ -131,6 +205,18 @@ export async function GET() {
         recentActivities,
         topCommodities,
         dailyTransactions,
+        growth: {
+          avgDailyTx,
+          avgOrderValue,
+          activeSupplierPct,
+          completionRate,
+        },
+        bottomStrip: {
+          activeRegionsCount,
+          abundantRegionsCount,
+          scarceRegionsCount,
+          todayTransactionsCount,
+        }
       },
     });
   } catch (error: any) {

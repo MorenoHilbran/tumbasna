@@ -17,6 +17,7 @@ import {
     TrendingUp,
     ShoppingCart,
     Users,
+    ArrowLeft,
 } from 'lucide-react';
 
 // ─── Mock Data ────────────────────────────────────────────────
@@ -59,6 +60,11 @@ export default function TransaksiPage() {
     const [selectedShipping, setSelectedShipping] = useState<any | null>(null);
     const [shippingLoading, setShippingLoading] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [waybillNumber, setWaybillNumber] = useState('');
+    const [waybillCourier, setWaybillCourier] = useState('jne');
+    const [showWaybillForm, setShowWaybillForm] = useState(false);
+    const [viewMode, setViewMode] = useState<'list' | 'supplier'>('list');
+    const [selectedSupplier, setSelectedSupplier] = useState<string | null>(null);
     const perPage = 8;
 
     useEffect(() => {
@@ -79,7 +85,7 @@ export default function TransaksiPage() {
 
                         return {
                             id: o.id,
-                            buyer: o.items?.[0]?.product?.name ? 'Toko ' + o.supplierName.split(' ')[0] : 'Toko Tani',
+                            buyer: o.buyerName || 'Pedagang Tumbasna',
                             supplier: o.supplierName,
                             produk: o.items?.[0]?.product?.name || 'Komoditas',
                             qty: (o.items?.[0]?.quantity || 100) + ' kg',
@@ -89,7 +95,8 @@ export default function TransaksiPage() {
                             wilayah: o.supplierLocation.split(',')[0] || 'Cilacap',
                             metode: 'QRIS',
                             dbStatus: o.status,
-                            trackingTimeline: o.trackingTimeline || []
+                            trackingTimeline: o.trackingTimeline || [],
+                            rawNotes: o.notes || null,
                         };
                     });
                     setTransaksiData(mapped);
@@ -104,13 +111,20 @@ export default function TransaksiPage() {
         try {
             const body: any = { status: newStatus };
             
-            // Jika admin klik "Kirim Barang", kita update timeline trackingnya untuk mobile
+            // Jika admin klik "Kirim Barang", sertakan nomor resi dan update timeline
             if (newStatus === 'DIKIRIM' && selectedTrx) {
+                if (!waybillNumber.trim()) {
+                    alert('Masukkan nomor resi ekspedisi terlebih dahulu!');
+                    return;
+                }
+                body.waybillNumber = waybillNumber.trim();
+                body.waybillCourier = waybillCourier;
+
                 const updatedTimeline = [...(selectedTrx.trackingTimeline || [])];
                 const currentTime = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
                 if (updatedTimeline.length >= 4) {
                     updatedTimeline[2] = { ...updatedTimeline[2], done: true, time: currentTime };
-                    updatedTimeline[3] = { ...updatedTimeline[3], time: 'Sedang Berjalan', description: 'Barang telah dijemput kurir logistik dan dalam perjalanan ke lokasi Anda.' };
+                    updatedTimeline[3] = { ...updatedTimeline[3], time: 'Sedang Berjalan', description: `Barang dijemput kurir ${waybillCourier.toUpperCase()}. Nomor resi: ${waybillNumber.trim()}` };
                     body.trackingTimeline = updatedTimeline;
                 }
             }
@@ -122,6 +136,8 @@ export default function TransaksiPage() {
             });
             
             if (res.ok) {
+                setShowWaybillForm(false);
+                setWaybillNumber('');
                 fetchOrders();
                 alert(`Status transaksi ${id} berhasil diubah menjadi ${newStatus}`);
             }
@@ -173,13 +189,45 @@ export default function TransaksiPage() {
 
     }, [selectedTrx]);
 
+    const groupedBySupplier = transaksiData.reduce((acc: Record<string, {
+        supplierName: string;
+        transactions: any[];
+        totalValue: number;
+        completedCount: number;
+        pendingCount: number;
+        batalCount: number;
+    }>, trx) => {
+        const name = trx.supplier || 'Supplier Umum';
+        if (!acc[name]) {
+            acc[name] = {
+                supplierName: name,
+                transactions: [],
+                totalValue: 0,
+                completedCount: 0,
+                pendingCount: 0,
+                batalCount: 0
+            };
+        }
+        acc[name].transactions.push(trx);
+        if (trx.status === 'selesai') {
+            acc[name].totalValue += trx.nilai;
+            acc[name].completedCount += 1;
+        } else if (trx.status === 'batal') {
+            acc[name].batalCount += 1;
+        } else {
+            acc[name].pendingCount += 1;
+        }
+        return acc;
+    }, {});
+
     const filtered = transaksiData.filter(t =>
         (t.id.toLowerCase().includes(search.toLowerCase()) ||
          t.buyer.toLowerCase().includes(search.toLowerCase()) ||
          t.supplier.toLowerCase().includes(search.toLowerCase()) ||
          t.produk.toLowerCase().includes(search.toLowerCase())) &&
         (statusFilter === 'Semua' || t.status === statusFilter) &&
-        (wilayahFilter === 'Semua' || t.wilayah === wilayahFilter)
+        (wilayahFilter === 'Semua' || t.wilayah === wilayahFilter) &&
+        (!selectedSupplier || t.supplier === selectedSupplier)
     );
 
     const totalPages = Math.ceil(filtered.length / perPage);
@@ -223,6 +271,36 @@ export default function TransaksiPage() {
                         </div>
                     </div>
                 ))}
+            </div>
+
+            {/* View Mode Tabs */}
+            <div className="flex gap-2 border-b border-slate-200 pb-px">
+                <button
+                    onClick={() => {
+                        setViewMode('list');
+                        setSelectedSupplier(null);
+                    }}
+                    className={`pb-3 px-4 text-xs font-bold transition-all relative ${
+                        viewMode === 'list' && !selectedSupplier
+                            ? 'text-slate-905 border-b-2 border-emerald-600 text-emerald-700'
+                            : 'text-slate-400 hover:text-slate-700'
+                    }`}
+                >
+                    Semua Transaksi ({transaksiData.length})
+                </button>
+                <button
+                    onClick={() => {
+                        setViewMode('supplier');
+                        setSelectedSupplier(null);
+                    }}
+                    className={`pb-3 px-4 text-xs font-bold transition-all relative ${
+                        viewMode === 'supplier' || selectedSupplier
+                            ? 'text-slate-905 border-b-2 border-emerald-600 text-emerald-700'
+                            : 'text-slate-400 hover:text-slate-700'
+                    }`}
+                >
+                    Kelompokkan per Supplier ({Object.keys(groupedBySupplier).length})
+                </button>
             </div>
 
             {/* Filters */}
@@ -282,16 +360,98 @@ export default function TransaksiPage() {
                 </div>
             </div>
 
-            {/* Table + Detail */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            {/* Conditional Views */}
+            {viewMode === 'supplier' && !selectedSupplier ? (
+                /* ── Supplier Grouped Grid View ── */
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-200">
+                    {Object.values(groupedBySupplier)
+                        .filter(group => group.supplierName.toLowerCase().includes(search.toLowerCase()))
+                        .map((group) => {
+                            const totalVolume = group.transactions.reduce((sum, t) => sum + (parseInt(t.qty) || 0), 0);
+                            return (
+                                <div 
+                                    key={group.supplierName}
+                                    className="bg-white rounded-2xl border border-slate-200/60 p-5 shadow-sm hover:shadow-md hover:border-slate-350 transition-all flex flex-col justify-between"
+                                >
+                                    <div>
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center font-bold text-base flex-shrink-0">
+                                                {group.supplierName.charAt(0).toUpperCase()}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <h3 className="font-extrabold text-slate-850 text-sm truncate">{group.supplierName}</h3>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase mt-0.5">{group.transactions.length} Transaksi</p>
+                                            </div>
+                                        </div>
 
-                {/* Table */}
-                <div className="xl:col-span-2 bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden flex flex-col justify-between">
-                    <div>
-                        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-                            <h2 className="text-sm font-extrabold text-slate-800 tracking-tight">Daftar Transaksi</h2>
-                            <p className="text-xs text-slate-400 font-semibold">{filtered.length} transaksi ditemukan</p>
-                        </div>
+                                        <div className="space-y-2 mb-5">
+                                            <div className="flex justify-between text-xs">
+                                                <span className="text-slate-400 font-medium">Total Volume</span>
+                                                <span className="font-bold text-slate-700">{totalVolume.toLocaleString('id-ID')} kg</span>
+                                            </div>
+                                            <div className="flex justify-between text-xs">
+                                                <span className="text-slate-400 font-medium">Omset Sukses</span>
+                                                <span className="font-extrabold text-emerald-600">Rp {group.totalValue.toLocaleString('id-ID')}</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-wrap gap-1.5 pt-3 border-t border-slate-100">
+                                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">
+                                                {group.completedCount} Selesai
+                                            </span>
+                                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-100">
+                                                {group.pendingCount} Pending
+                                            </span>
+                                            {group.batalCount > 0 && (
+                                                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-100">
+                                                    {group.batalCount} Batal
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        onClick={() => {
+                                            setSelectedSupplier(group.supplierName);
+                                            setCurrentPage(1);
+                                            const match = group.transactions[0];
+                                            if (match) setSelectedTrx(match);
+                                        }}
+                                        className="mt-5 w-full py-2.5 bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 border border-slate-200 hover:border-emerald-300 text-slate-650 text-xs font-bold rounded-xl transition-all"
+                                    >
+                                        Lihat Rincian Transaksi
+                                    </button>
+                                </div>
+                            );
+                        })}
+                </div>
+            ) : (
+                /* ── Table + Detail Split View ── */
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 animate-in fade-in duration-200">
+                    {/* Table */}
+                    <div className="xl:col-span-2 bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden flex flex-col justify-between">
+                        <div>
+                            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                                {selectedSupplier ? (
+                                    <div className="flex items-center gap-3">
+                                        <button 
+                                            onClick={() => setSelectedSupplier(null)}
+                                            className="p-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors"
+                                        >
+                                            <ArrowLeft className="w-4 h-4" />
+                                        </button>
+                                        <div>
+                                            <h2 className="text-sm font-extrabold text-slate-800 tracking-tight">{selectedSupplier}</h2>
+                                            <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Daftar transaksi khusus supplier ini</p>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <h2 className="text-sm font-extrabold text-slate-800 tracking-tight">Daftar Transaksi</h2>
+                                        <p className="text-xs text-slate-400 font-semibold">{filtered.length} transaksi ditemukan</p>
+                                    </>
+                                )}
+                            </div>
                         <div className="overflow-x-auto">
                             <table className="w-full">
                                 <thead>
@@ -525,23 +685,102 @@ export default function TransaksiPage() {
                                 </div>
                             </div>
                             
-                            {/* Action Button */}
+                            {/* Action Button - Input Resi */}
                             {selectedTrx.dbStatus === 'DIPROSES' && (
-                                <div className="mt-6">
-                                    <button
-                                        onClick={() => handleUpdateStatus(selectedTrx.id, 'DIKIRIM')}
-                                        className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
-                                    >
-                                        <CheckCircle2 className="w-4 h-4" />
-                                        Kirim Barang Sekarang (Update Resi)
-                                    </button>
+                                <div className="mt-6 space-y-3">
+                                    {!showWaybillForm ? (
+                                        <button
+                                            onClick={() => setShowWaybillForm(true)}
+                                            className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
+                                        >
+                                            <CheckCircle2 className="w-4 h-4" />
+                                            Kirim Barang — Input Nomor Resi
+                                        </button>
+                                    ) : (
+                                        <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50/30 space-y-3">
+                                            <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">Input Resi Ekspedisi</p>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Kurir</label>
+                                                <select
+                                                    value={waybillCourier}
+                                                    onChange={e => setWaybillCourier(e.target.value)}
+                                                    className="mt-1 w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none"
+                                                >
+                                                    <option value="jne">JNE</option>
+                                                    <option value="tiki">TIKI</option>
+                                                    <option value="pos">POS Indonesia</option>
+                                                    <option value="jnt">J&T Express</option>
+                                                    <option value="sicepat">SiCepat</option>
+                                                    <option value="anteraja">AnterAja</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Nomor Resi</label>
+                                                <input
+                                                    type="text"
+                                                    value={waybillNumber}
+                                                    onChange={e => setWaybillNumber(e.target.value)}
+                                                    placeholder="Contoh: JNE0012345678"
+                                                    className="mt-1 w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none placeholder-slate-300"
+                                                />
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => { setShowWaybillForm(false); setWaybillNumber(''); }}
+                                                    className="flex-1 py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-lg transition-all"
+                                                >
+                                                    Batal
+                                                </button>
+                                                <button
+                                                    onClick={() => handleUpdateStatus(selectedTrx.id, 'DIKIRIM')}
+                                                    className="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5"
+                                                >
+                                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                                    Konfirmasi Kirim
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             )}
-                            {selectedTrx.dbStatus === 'DIKIRIM' && (
-                                <div className="mt-6 text-center text-xs font-bold text-slate-500 bg-slate-50 border border-slate-200 py-3 rounded-xl">
-                                    Barang Sedang Dikirim. Menunggu Konfirmasi Pembeli.
-                                </div>
-                            )}
+                            {selectedTrx.dbStatus === 'DIKIRIM' && (() => {
+                                let notesObj: any = {};
+                                try { notesObj = JSON.parse(selectedTrx.rawNotes || '{}'); } catch {}
+                                return (
+                                    <div className="mt-6 space-y-3">
+                                        <div className="p-4 rounded-xl border border-teal-200 bg-teal-50/30 space-y-3">
+                                            <p className="text-[10px] font-bold text-teal-700 uppercase tracking-widest">Bukti Pengiriman</p>
+                                            {notesObj.waybillNumber && (
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Nomor Resi</p>
+                                                        <p className="text-xs font-extrabold text-slate-800 font-mono mt-0.5">{notesObj.waybillNumber}</p>
+                                                        {notesObj.waybillCourier && (
+                                                            <p className="text-[9px] text-teal-600 font-bold mt-0.5 uppercase">{notesObj.waybillCourier}</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {notesObj.waybillImageUrl ? (
+                                                <div>
+                                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Foto Bukti Resi</p>
+                                                    <img
+                                                        src={notesObj.waybillImageUrl}
+                                                        alt="Foto Bukti Resi"
+                                                        className="w-full max-h-48 object-cover rounded-lg border border-slate-200"
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <p className="text-xs text-slate-500 font-medium">Foto bukti resi belum tersedia. Supplier belum mengirimkan foto resi.</p>
+                                            )}
+                                        </div>
+                                        <div className="text-center text-xs font-bold text-slate-500 bg-slate-50 border border-slate-200 py-2.5 rounded-xl">
+                                            Menunggu Konfirmasi Penerimaan dari Pembeli
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+
                         </div>
                     ) : (
                         <div className="h-full flex flex-col items-center justify-center text-center py-12">
@@ -554,6 +793,7 @@ export default function TransaksiPage() {
                     )}
                 </div>
             </div>
-        </div>
-    );
+        )}
+    </div>
+);
 }

@@ -561,3 +561,41 @@
   opacity: 0.95;
 }
 
+/* ── Gunakan Lokasi Saat Ini ───────────────────────────────── */
+.edit-address-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn-use-location {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #EFF8F0;
+  border: 1px solid rgba(0, 104, 55, 0.15);
+  color: #006837;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 10.5px;
+  font-weight: 700;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-use-location ion-icon {
+  font-size: 13px;
+}
+
+.btn-use-location:active {
+  background: #d8f0e0;
+  transform: scale(0.96);
+}
+
+.btn-use-location:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

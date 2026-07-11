@@ -25,6 +25,24 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'User tidak ditemukan' }, { status: 404 });
     }
 
+    // Hitung pengeluaran bulan ini dari orders SELESAI
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    const monthlySpend = await prisma.order.aggregate({
+      where: {
+        buyerUserId: userId,
+        status: 'SELESAI',
+        createdAt: { gte: startOfMonth, lte: endOfMonth },
+      },
+      _sum: { totalAmount: true },
+    });
+
+    const purchasesThisMonth = monthlySpend._sum.totalAmount
+      ? Number(monthlySpend._sum.totalAmount)
+      : 0;
+
     return NextResponse.json({
       success: true,
       data: {
@@ -40,6 +58,7 @@ export async function GET(req: Request) {
         bankAccount: user.bankAccount,
         balance: Number(user.balance),
         activeOrdersCount: user.orders.length,
+        purchasesThisMonth,
       },
     });
   } catch (error: any) {

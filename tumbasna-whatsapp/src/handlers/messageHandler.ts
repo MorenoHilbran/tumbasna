@@ -33,36 +33,94 @@ export async function processIncomingMessage(
     console.log(`✅ [WHITELIST DONE] isRegistered=${isRegistered}`);
 
     // 1.5. Cek jika pesan adalah konfirmasi pengiriman barang "KIRIM TRX-xxxxxx"
-    if (cleanText.startsWith('kirim trx-')) {
-        const trxId = text.trim().toUpperCase().split(' ')[1]; // Ambil TRX-XXXXXX
-        if (trxId) {
-            try {
-                const currentTime = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-                const updatedTimeline = [
-                    { status: 'Dibuat', time: '08:12', description: 'Pesanan berhasil dibuat oleh pembeli.', done: true },
-                    { status: 'Dibayar', time: '08:15', description: 'Pembayaran QRIS sukses diverifikasi oleh sistem escrow.', done: true },
-                    { status: 'Dikirim', time: currentTime, description: 'Barang telah dikirim oleh supplier/kurir lokal.', done: true },
-                    { status: 'Selesai', time: 'Estimasi 15 Menit', description: 'Menunggu konfirmasi barang sampai dari pembeli.', done: false }
-                ];
+    // Format didukung:
+    //   a) Teks biasa: "KIRIM TRX-987654 JNE1234567890"
+    //   b) Foto resi: caption "[RESI FOTO] KIRIM TRX-987654 JNE1234567890 | URL Foto Resi: https://..."
+    //   c) Tanpa resi (COD/Kurir Lokal): "KIRIM TRX-987654"
+    const isResiFoto = cleanText.startsWith('[resi foto]');
+    const rawKirimText = isResiFoto
+        ? text.replace(/^\[RESI FOTO\]\s*/i, '').trim()
+        : text.trim();
+    const kirimMatch = rawKirimText.match(/^kirim\s+(TRX-\S+)(?:\s+(\S+))?/i);
 
-                const res = await apiService.updateOrderStatus(trxId, 'DIKIRIM', updatedTimeline);
-                if (res.success) {
-                    await sendMessage(sender, {
-                        text: `✅ *KONFIRMASI PENGIRIMAN SUKSES*\n\nPesanan dengan ID *${trxId}* telah berhasil dikonfirmasi telah dikirim!\n\n` +
-                              `• Status di aplikasi pembeli telah diperbarui secara real-time.\n` +
-                              `• Peta pelacakan kurir interaktif kini aktif di HP pembeli.\n` +
-                              `• Notifikasi WhatsApp otomatis telah dikirimkan ke pembeli untuk siap-siap menerima barang.\n\n` +
-                              `Terima kasih atas kerja samanya, Juragan! Semoga lancar sampai tujuan! 🌾`
-                    });
-                } else {
-                    await sendMessage(sender, { text: `⚠️ Gagal mengubah status pesanan *${trxId}*. Pastikan ID Pesanan yang Anda masukkan benar.` });
-                }
-            } catch (err: any) {
-                console.error(`Error update order via bot:`, err.message);
-                await sendMessage(sender, { text: `❌ Terjadi kesalahan saat memproses pengiriman pesanan *${trxId}*. Silakan coba lagi.` });
+    if (kirimMatch) {
+        const trxId = kirimMatch[1].toUpperCase(); // misal: TRX-987654
+        const parsedResi = kirimMatch[2] || null;   // misal: JNE1234567890 atau null
+
+        // Ekstrak URL foto resi jika ada (dari caption foto)
+        let waybillImageUrl: string | null = null;
+        const imgMatch = text.match(/URL Foto Resi:\s*(https?:\/\/\S+)/i);
+        if (imgMatch) waybillImageUrl = imgMatch[1];
+
+        try {
+            // Ambil detail order untuk cek metode pengiriman
+            const orderRes = await apiService.getOrderById(trxId);
+            const orderData = orderRes?.data;
+
+            const isEkspedisi = orderData?.courier &&
+                !orderData.courier.toLowerCase().includes('cod') &&
+                !orderData.courier.toLowerCase().includes('kurir lokal');
+
+            // Jika ekspedisi tapi tidak ada nomor resi → minta resi dulu
+            if (isEkspedisi && !parsedResi) {
+                const kurirName = orderData.courier || 'Ekspedisi';
+                await sendMessage(sender, {
+                    text: `📦 *KONFIRMASI PENGIRIMAN — NOMOR RESI DIPERLUKAN*\n\n` +
+                          `Pesanan *${trxId}* menggunakan *${kurirName}*.\n\n` +
+                          `Untuk melanjutkan, Juragan perlu menyertakan *nomor resi* dari ekspedisi tersebut.\n\n` +
+                          `*Cara 1 — Ketik pesan teks:*\n` +
+                          `_KIRIM ${trxId} [NOMOR_RESI]_\n` +
+                          `Contoh: \`KIRIM ${trxId} JNE1234567890\`\n\n` +
+                          `*Cara 2 — Foto resi:*\n` +
+                          `Kirimkan foto kertas resi, dengan *keterangan/caption* foto:\n` +
+                          `\`KIRIM ${trxId} [NOMOR_RESI]\`\n\n` +
+                          `Foto tersebut akan tersimpan sebagai bukti pengiriman resmi. 🧾`
+                });
+                return;
             }
-            return;
+
+            // Proses update status ke DIKIRIM
+            const currentTime = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            const updatedTimeline = [
+                { status: 'Dibuat', time: '08:12', description: 'Pesanan berhasil dibuat oleh pembeli.', done: true },
+                { status: 'Dibayar', time: '08:15', description: 'Pembayaran QRIS sukses diverifikasi oleh sistem escrow.', done: true },
+                { status: 'Dikirim', time: currentTime, description: parsedResi
+                    ? `Barang dikirim melalui ${orderData?.courier || 'ekspedisi'}. Nomor resi: ${parsedResi}.`
+                    : 'Barang telah dikirim oleh supplier/kurir lokal.', done: true },
+                { status: 'Selesai', time: 'Estimasi', description: 'Menunggu konfirmasi barang sampai dari pembeli.', done: false }
+            ];
+
+            const waybillInfo = parsedResi ? {
+                waybillNumber: parsedResi,
+                waybillCourier: orderData?.courier?.toLowerCase().split(' ')[0]?.replace(/[^a-z]/g, '') || 'jne',
+                ...(waybillImageUrl && { waybillImageUrl })
+            } : undefined;
+
+            const res = await apiService.updateOrderStatus(trxId, 'DIKIRIM', updatedTimeline, waybillInfo);
+
+            if (res.success) {
+                let replyText = `✅ *KONFIRMASI PENGIRIMAN SUKSES*\n\n` +
+                    `Pesanan *${trxId}* telah berhasil dikonfirmasi dikirim!\n\n` +
+                    `• Status di aplikasi pembeli telah diperbarui secara real-time.\n`;
+
+                if (parsedResi) {
+                    replyText += `• Nomor resi *${parsedResi}* telah tercatat di sistem untuk pelacakan.\n`;
+                }
+                if (waybillImageUrl) {
+                    replyText += `• Foto bukti resi telah tersimpan dan dapat dilihat oleh admin & pembeli.\n`;
+                }
+                replyText += `• Notifikasi otomatis telah dikirimkan ke pembeli.\n\n` +
+                    `Terima kasih atas kerja samanya, Juragan! Semoga lancar sampai tujuan! 🌾`;
+
+                await sendMessage(sender, { text: replyText });
+            } else {
+                await sendMessage(sender, { text: `⚠️ Gagal mengubah status pesanan *${trxId}*. Pastikan ID Pesanan yang Anda masukkan benar.` });
+            }
+        } catch (err: any) {
+            console.error(`Error update order via bot:`, err.message);
+            await sendMessage(sender, { text: `❌ Terjadi kesalahan saat memproses pengiriman pesanan *${trxId}*. Silakan coba lagi.` });
         }
+        return;
     }
 
     // 2. Tampilkan Menu Cepat (Numeric / Keyword Shortcuts)

@@ -42,6 +42,7 @@ interface HomeProps {
   onNavigateToPesanan: () => void;
   onNavigateToAiChat: () => void;
   onSelectProduct?: (product: Product) => void;
+  onNavigateToChat?: () => void;
 }
 
 const getAiRecommendation = (productName: string) => {
@@ -63,7 +64,7 @@ const getAiRecommendation = (productName: string) => {
   }
 };
 
-const Home: React.FC<HomeProps> = ({ onNavigateToPasar, onNavigateToPesanan, onNavigateToAiChat, onSelectProduct }) => {
+const Home: React.FC<HomeProps> = ({ onNavigateToPasar, onNavigateToPesanan, onNavigateToAiChat, onSelectProduct, onNavigateToChat }) => {
   const { user, products, addToCart } = useApp();
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -207,7 +208,7 @@ const Home: React.FC<HomeProps> = ({ onNavigateToPasar, onNavigateToPesanan, onN
                 <span className="qm-box"><i className="fa-solid fa-store"></i></span>
                 <span className="qm-lbl">Supplier</span>
               </button>
-              <button className="qm" onClick={onNavigateToAiChat}>
+              <button className="qm" onClick={onNavigateToChat ?? onNavigateToAiChat}>
                 <span className="qm-box"><i className="fa-solid fa-comment-dots"></i></span>
                 <span className="qm-lbl">Pesan</span>
               </button>

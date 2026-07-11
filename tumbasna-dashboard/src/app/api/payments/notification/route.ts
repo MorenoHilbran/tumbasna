@@ -80,17 +80,31 @@ export async function POST(req: Request) {
 
         // Kirim notifikasi WhatsApp ke supplier bahwa order sudah dibayar
         try {
-            await fetch('http://localhost:3002/api/send', {
+            const waUrl = process.env.WHATSAPP_BOT_URL || 'http://127.0.0.1:3002';
+            const waApiKey = process.env.WHATSAPP_API_KEY || process.env.TUMBASNA_SECRET_KEY || 'tumbasna-rahasia-banget';
+            const itemsDesc = payment.order ? `komoditas pesanan` : 'komoditas';
+            const kurirName = payment.order?.courier || 'Kurir Pilihan';
+            const formattedTotal = Number(payment.order?.totalAmount || 0).toLocaleString('id-ID');
+
+            const msg = `✅ *TUMBASNA: PEMBAYARAN LUNAS (ESCROW)* 🌾\n\n` +
+                `Halo Bpk/Ibu *${supplierUser?.name || 'Mitra'}*,\n` +
+                `Pembayaran untuk Pesanan *${payment.orderId}* telah sukses diverifikasi secara aman oleh Escrow Tumbasna!\n\n` +
+                `• Kurir Pilihan: *${kurirName}*\n` +
+                `• Total Nilai: *Rp ${formattedTotal}*\n\n` +
+                `Silakan segera siapkan komoditas terbaik Juragan dan serahkan ke kurir pilihan. ` +
+                `Setelah barang dikirim, ketik perintah berikut di sini:\n\n` +
+                `_KIRIM ${payment.orderId} [NOMOR_RESI]_\n` +
+                `Contoh: \`KIRIM ${payment.orderId} JNE1234567890\`\n\n` +
+                `Terima kasih telah bertransaksi dengan jujur bersama Tumbasna! 🤝`;
+
+            await fetch(`${waUrl}/api/send`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    phone: supplierPhone,
-                    message: `✅ *Pesanan Baru Terbayar (Midtrans)*\n\nID: ${payment.orderId}\nStatus: Lunas (Escrow)\n\nPembeli telah membayar pesanan. Harap segera memproses dan mengirimkan komoditas sesuai permintaan.`
-                })
+                headers: { 'Content-Type': 'application/json', 'x-secret-key': waApiKey },
+                body: JSON.stringify({ phone: supplierPhone, message: msg })
             });
-            console.log(`WA Notif terkirim ke supplier (${supplierPhone})`);
+            console.log(`✅ [WA NOTIF] Pesan pembayaran lunas terkirim ke supplier (${supplierPhone})`);
         } catch (e) {
-            console.error("Gagal mengirim WA notif", e);
+            console.error("Gagal mengirim WA notif pembayaran:", e);
         }
     } else if (paymentStatus === 'CANCEL' || paymentStatus === 'EXPIRE' || paymentStatus === 'DENY') {
         await prisma.order.update({

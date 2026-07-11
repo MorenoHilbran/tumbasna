@@ -51,6 +51,44 @@ const SHIPPING_METHODS = [
   { id: 'cod', name: 'Cash on Delivery (COD - Sesuai Ketentuan)', price: 0, desc: 'Bayar ongkos kirim saat barang tiba (Rp 0 di sistem)' }
 ];
 
+const locationCoords: Record<string, [number, number]> = {
+  'Banyumas': [-7.5151, 109.2941],
+  'Cilacap': [-7.7150, 108.9767],
+  'Purbalingga': [-7.3884, 109.3641],
+  'Banjarnegara': [-7.3884, 109.6939],
+  'Kebumen': [-7.6701, 109.6524],
+  'Tegal': [-6.8694, 109.1250],
+  'Brebes': [-6.8703, 109.0378],
+  'Magelang': [-7.4797, 110.2178],
+  'Boyolali': [-7.5306, 110.5964],
+  'Cianjur': [-6.8224, 107.1394],
+  'Karo': [3.1167, 98.5000]
+};
+
+// Mapping nama kota → RajaOngkir City ID (Starter Plan)
+const CITY_ID_MAP: Record<string, string> = {
+  'banyumas': '39',
+  'cilacap': '88',
+  'purbalingga': '344',
+  'banjarnegara': '33',
+  'kebumen': '165',
+  'tegal': '425',
+  'brebes': '73',
+  'magelang': '225',
+  'boyolali': '71',
+  'cianjur': '85',
+  'karo': '158',
+};
+
+function getCityId(address: string): string {
+  const lower = address.toLowerCase();
+  for (const [key, id] of Object.entries(CITY_ID_MAP)) {
+    if (lower.includes(key)) return id;
+  }
+  return '39'; // fallback: Banyumas
+}
+
+
 // Component Map Event
 const MapController = ({ center, onMoveEnd }: { center: [number, number], onMoveEnd: (pos: [number, number]) => void }) => {
   const map = useMapEvents({
@@ -91,6 +129,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
   const [codAvailable, setCodAvailable] = useState(true);
   const [distanceInfo, setDistanceInfo] = useState('Mendeteksi jarak lokasi...');
   const [distance, setDistance] = useState<number>(10); // Default 10km fallback
+  const [supplierCoords, setSupplierCoords] = useState<[number, number] | null>(null);
 
   // Search States
   const [searchQuery, setSearchQuery] = useState('');
@@ -204,7 +243,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
     const totalWeightGrams = cart.reduce((acc, item) => acc + (item.quantity * 1000), 0);
     const weightKg = Math.max(1, Math.ceil(totalWeightGrams / 1000));
     if (methodId === 'kurir-lokal') {
-      return Math.max(10000, Math.round(distance * 2000));
+      return Math.round(distance * 5000);
     } else if (methodId === 'cod') {
       return Math.max(15000, Math.round(distance * 2500));
     } else if (methodId === 'ekspedisi') {
@@ -228,6 +267,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
         if (geoData && geoData.length > 0) {
           const supplierLat = parseFloat(geoData[0].lat);
           const supplierLng = parseFloat(geoData[0].lon);
+          setSupplierCoords([supplierLat, supplierLng]);
 
           const dist = haversineKm(buyerCoords[0], buyerCoords[1], supplierLat, supplierLng);
           setDistance(dist);
@@ -243,11 +283,17 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
             }
           }
         } else {
+          const key = Object.keys(locationCoords).find(k => supplierLocationStr.toLowerCase().includes(k.toLowerCase()));
+          const fallback = key ? locationCoords[key] : [-7.5151, 109.2941];
+          setSupplierCoords(fallback as [number, number]);
           setDistance(12.5);
           setCodAvailable(true);
           setDistanceInfo('Jarak ke supplier: ~12.5 km (Estimasi)');
         }
       } catch (err) {
+        const key = Object.keys(locationCoords).find(k => supplierLocationStr.toLowerCase().includes(k.toLowerCase()));
+        const fallback = key ? locationCoords[key] : [-7.5151, 109.2941];
+        setSupplierCoords(fallback as [number, number]);
         setDistance(12.5);
         setCodAvailable(true);
         setDistanceInfo('Jarak ke supplier: ~12.5 km (Estimasi)');
@@ -272,8 +318,8 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
             body: JSON.stringify({ 
               courier: selectedCourier, 
               weight: totalWeightGrams,
-              originId: '501',
-              destinationId: '114' 
+              originId: getCityId(cart[0]?.product.supplierLocation || ''),
+              destinationId: getCityId(buyerAddressLabel)
             })
           });
           const data = await res.json();
@@ -302,7 +348,25 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
   const handlePlaceOrder = async () => {
     setIsPlacingOrder(true);
     try {
-      const orderId = await checkout(activeShipping.name, dynamicShippingCost);
+      const getCityLabel = (fullAddress: string) => {
+        if (!fullAddress) return '';
+        const parts = fullAddress.split(',');
+        const match = parts.find(p => p.toLowerCase().includes('kabupaten') || p.toLowerCase().includes('kota'));
+        if (match) return match.replace(/kabupaten|kota/gi, '').trim();
+        return parts[0].trim();
+      };
+
+      const bAddrLabel = getCityLabel(buyerAddressLabel);
+      const sLocLabel = getCityLabel(cart[0]?.product.supplierLocation || '');
+
+      const orderId = await checkout(
+        activeShipping.name, 
+        dynamicShippingCost, 
+        buyerCoords, 
+        supplierCoords || undefined,
+        bAddrLabel,
+        sLocLabel
+      );
       if (orderId) {
         onOrderCreated(orderId);
       }

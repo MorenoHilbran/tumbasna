@@ -17,6 +17,9 @@ import {
     Weight,
     Activity,
     TrendingUp,
+    ExternalLink,
+    Eye,
+    X,
 } from 'lucide-react';
 
 // ─── Dynamic Import for Leaflet Map ──────────────────────────
@@ -134,11 +137,66 @@ function ProgressBar({ value, status }: { value: number; status: string }) {
     );
 }
 
+// Helper to resolve subdistricts to their regencies
+function resolveRegency(address: string): string | null {
+    if (!address) return null;
+    const addr = address.toLowerCase();
+    
+    if (addr.includes('banyumas') || addr.includes('pekuncen') || addr.includes('sokaraja') || addr.includes('purwokerto') || addr.includes('baturraden')) {
+        return 'Banyumas';
+    }
+    if (addr.includes('cilacap') || addr.includes('majenang') || addr.includes('sidareja') || addr.includes('kroya')) {
+        return 'Cilacap';
+    }
+    if (addr.includes('purbalingga') || addr.includes('bobotsari') || addr.includes('bukateja')) {
+        return 'Purbalingga';
+    }
+    if (addr.includes('banjarnegara') || addr.includes('dieng') || addr.includes('klampok')) {
+        return 'Banjarnegara';
+    }
+    if (addr.includes('kebumen') || addr.includes('gombong') || addr.includes('karanganyar')) {
+        return 'Kebumen';
+    }
+    if (addr.includes('tegal') || addr.includes('slawi') || addr.includes('aderna')) {
+        return 'Tegal';
+    }
+    return null;
+}
+
+// Helper to find closest registered city from coordinate coordinates
+function findClosestCity(lat: number, lng: number): string | null {
+    const cities: Record<string, [number, number]> = {
+        'Banyumas': [-7.5151, 109.2941],
+        'Cilacap': [-7.7150, 108.9767],
+        'Purbalingga': [-7.3884, 109.3641],
+        'Banjarnegara': [-7.3884, 109.6939],
+        'Kebumen': [-7.6701, 109.6524],
+        'Tegal': [-6.8676, 109.1384]
+    };
+    
+    let closestCity: string | null = null;
+    let minDistance = Infinity;
+    
+    for (const [cityName, coords] of Object.entries(cities)) {
+        const dLat = lat - coords[0];
+        const dLng = lng - coords[1];
+        const dist = dLat * dLat + dLng * dLng;
+        if (dist < minDistance) {
+            minDistance = dist;
+            closestCity = cityName;
+        }
+    }
+    return closestCity;
+}
+
 // ─── Main Logistik Page ───────────────────────────────────────
 export default function LogistikPage() {
     const [orders, setOrders] = useState<any[]>([]);
     const [selectedArmada, setSelectedArmada] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [previewImage, setPreviewImage] = useState<string | null>(null);
+    const [filterTime, setFilterTime] = useState<'today' | 'week' | 'all'>('today');
+    const [filterActiveOnly, setFilterActiveOnly] = useState<boolean>(true);
 
     useEffect(() => {
         fetch('/api/orders')
@@ -152,9 +210,24 @@ export default function LogistikPage() {
             .finally(() => setIsLoading(false));
     }, []);
 
-    const validCities = ['Banyumas', 'Cilacap', 'Purbalingga', 'Banjarnegara', 'Kebumen'];
+    const validCities = ['Banyumas', 'Cilacap', 'Purbalingga', 'Banjarnegara', 'Kebumen', 'Tegal'];
 
-    const dbArmada = orders.map((o: any) => {
+    const filteredOrders = orders.filter((o: any) => {
+        if (!o.createdAt) return true;
+        const orderDate = new Date(o.createdAt);
+        const today = new Date();
+        
+        if (filterTime === 'today') {
+            return orderDate.toDateString() === today.toDateString();
+        } else if (filterTime === 'week') {
+            const diffTime = Math.abs(today.getTime() - orderDate.getTime());
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays <= 7;
+        }
+        return true;
+    });
+
+    const dbArmada = filteredOrders.map((o: any) => {
         let status = 'standby';
         let progress = 0;
         let estimasi = 'Belum berangkat';
@@ -177,16 +250,89 @@ export default function LogistikPage() {
             estimasi = 'Menyiapkan barang';
         }
 
+        let waybillNumber = null;
+        let waybillCourier = null;
+        let waybillImageUrl = null;
+        let supplierCoords: [number, number] | null = null;
+        let buyerCoords: [number, number] | null = null;
+        let notesSupplierAddress: string | null = null;
+        let notesBuyerAddress: string | null = null;
+
+        if (o.notes) {
+            try {
+                const parsed = JSON.parse(o.notes);
+                waybillNumber = parsed.waybillNumber || null;
+                waybillCourier = parsed.waybillCourier || null;
+                waybillImageUrl = parsed.waybillImageUrl || null;
+                notesSupplierAddress = parsed.supplierAddress || null;
+                notesBuyerAddress = parsed.buyerAddress || null;
+
+                if (parsed.supplierCoords) {
+                    if (Array.isArray(parsed.supplierCoords) && parsed.supplierCoords.length >= 2) {
+                        supplierCoords = [Number(parsed.supplierCoords[0]), Number(parsed.supplierCoords[1])];
+                    } else if (typeof parsed.supplierCoords === 'object') {
+                        const lt = parsed.supplierCoords.lat ?? parsed.supplierCoords.latitude;
+                        const lg = parsed.supplierCoords.lng ?? parsed.supplierCoords.longitude;
+                        if (lt !== undefined && lg !== undefined) {
+                            supplierCoords = [Number(lt), Number(lg)];
+                        }
+                    }
+                }
+                if (parsed.buyerCoords) {
+                    if (Array.isArray(parsed.buyerCoords) && parsed.buyerCoords.length >= 2) {
+                        buyerCoords = [Number(parsed.buyerCoords[0]), Number(parsed.buyerCoords[1])];
+                    } else if (typeof parsed.buyerCoords === 'object') {
+                        const lt = parsed.buyerCoords.lat ?? parsed.buyerCoords.latitude;
+                        const lg = parsed.buyerCoords.lng ?? parsed.buyerCoords.longitude;
+                        if (lt !== undefined && lg !== undefined) {
+                            buyerCoords = [Number(lt), Number(lg)];
+                        }
+                    }
+                }
+            } catch (_) {}
+        }
+
         let dari = 'Banyumas';
         if (o.supplierLocation) {
-            const parsed = o.supplierLocation.split(',')[0].trim();
-            const matched = validCities.find(c => parsed.toLowerCase().includes(c.toLowerCase()));
-            if (matched) dari = matched;
+            const resolved = resolveRegency(o.supplierLocation);
+            if (resolved) {
+                dari = resolved;
+            } else {
+                const parsed = o.supplierLocation.split(',')[0].trim();
+                const matched = validCities.find(c => parsed.toLowerCase().includes(c.toLowerCase()));
+                if (matched) dari = matched;
+            }
         }
         
         let ke = 'Cilacap';
-        const matchedKe = validCities.find(c => c !== dari);
-        if (matchedKe) ke = matchedKe;
+        if (o.buyerAddress) {
+            const resolved = resolveRegency(o.buyerAddress);
+            if (resolved) {
+                ke = resolved;
+            } else {
+                const parsedKe = o.buyerAddress.split(',')[0].trim();
+                const matchedKe = validCities.find(c => parsedKe.toLowerCase().includes(c.toLowerCase()));
+                if (matchedKe) ke = matchedKe;
+            }
+        } else {
+            const matchedKe = validCities.find(c => c !== dari);
+            if (matchedKe) ke = matchedKe;
+        }
+
+        // Coordinate-based location override to map custom pins back to closest regency labels
+        if (notesSupplierAddress) {
+            dari = notesSupplierAddress;
+        } else if (supplierCoords) {
+            const closest = findClosestCity(supplierCoords[0], supplierCoords[1]);
+            if (closest) dari = closest;
+        }
+
+        if (notesBuyerAddress) {
+            ke = notesBuyerAddress;
+        } else if (buyerCoords) {
+            const closest = findClosestCity(buyerCoords[0], buyerCoords[1]);
+            if (closest) ke = closest;
+        }
 
         const qtyNum = o.items?.[0]?.quantity || 100;
         const prodName = o.items?.[0]?.product?.name || 'Komoditas';
@@ -203,16 +349,45 @@ export default function LogistikPage() {
             jarak: '42 km',
             bahan_bakar: '85%',
             suhu: '24°C',
+            waybillNumber,
+            waybillCourier,
+            waybillImageUrl,
+            courier: o.courier,
+            supplierLocation: o.supplierLocation || '',
+            buyerAddress: o.buyerAddress || '',
+            supplierCoords,
+            buyerCoords,
         };
     });
 
-    const combinedArmada = [...dbArmada, ...armadaData];
+    const unfilteredCombined = [...dbArmada, ...armadaData];
+
+    // Reset selectedArmada if it gets filtered out
+    useEffect(() => {
+        if (selectedArmada) {
+            const stillExists = unfilteredCombined.some(a => {
+                if (filterActiveOnly) {
+                    return a.id === selectedArmada.id && (a.status === 'jalan' || a.status === 'standby' || a.status === 'masalah');
+                }
+                return a.id === selectedArmada.id;
+            });
+            if (!stillExists) {
+                setSelectedArmada(null);
+            }
+        }
+    }, [filterActiveOnly, filterTime, orders, selectedArmada]);
+
+    // Active only filter
+    const combinedArmada = filterActiveOnly 
+        ? unfilteredCombined.filter(a => a.status === 'jalan' || a.status === 'standby' || a.status === 'masalah')
+        : unfilteredCombined;
+
     const activeArmada = selectedArmada || combinedArmada[0] || armadaData[0];
 
-    const jalans = combinedArmada.filter(a => a.status === 'jalan').length;
-    const selesai = combinedArmada.filter(a => a.status === 'selesai').length;
-    const standbys = combinedArmada.filter(a => a.status === 'standby').length;
-    const masalahs = combinedArmada.filter(a => a.status === 'masalah').length;
+    const jalans = unfilteredCombined.filter(a => a.status === 'jalan').length;
+    const selesai = unfilteredCombined.filter(a => a.status === 'selesai').length;
+    const standbys = unfilteredCombined.filter(a => a.status === 'standby').length;
+    const masalahs = unfilteredCombined.filter(a => a.status === 'masalah').length;
 
     return (
         <div className="p-8 space-y-8 bg-[#F8FAFC]">
@@ -228,6 +403,45 @@ export default function LogistikPage() {
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-600 border border-emerald-100/50 self-start md:self-auto">
                     <Navigation className="w-4 h-4" />
                     {jalans} Armada Aktif
+                </div>
+            </div>
+
+            {/* Filters Row */}
+            <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200/60 shadow-sm">
+                <div className="flex items-center gap-3">
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Waktu Transaksi:</span>
+                    <div className="flex rounded-lg bg-slate-100 p-0.5 border border-slate-200/30">
+                        <button
+                            onClick={() => setFilterTime('today')}
+                            className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${filterTime === 'today' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400 hover:text-slate-650'}`}
+                        >
+                            Hari Ini
+                        </button>
+                        <button
+                            onClick={() => setFilterTime('week')}
+                            className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${filterTime === 'week' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400 hover:text-slate-650'}`}
+                        >
+                            7 Hari Terakhir
+                        </button>
+                        <button
+                            onClick={() => setFilterTime('all')}
+                            className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${filterTime === 'all' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400 hover:text-slate-650'}`}
+                        >
+                            Semua Riwayat
+                        </button>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                        <input
+                            type="checkbox"
+                            checked={filterActiveOnly}
+                            onChange={(e) => setFilterActiveOnly(e.target.checked)}
+                            className="w-4 h-4 rounded text-emerald-600 border-slate-300 focus:ring-emerald-500 focus:ring-offset-0 cursor-pointer"
+                        />
+                        <span className="text-xs font-bold text-slate-600">Hanya Tampilkan Armada Aktif (Sedang Dikirim)</span>
+                    </label>
                 </div>
             </div>
 
@@ -399,6 +613,53 @@ export default function LogistikPage() {
                                 </div>
                             ))}
                         </div>
+
+                        {/* Waybill / Shipping Receipt Evidence section */}
+                        {(activeArmada.waybillNumber || activeArmada.waybillImageUrl || ['jne', 'pos', 'tiki'].includes(activeArmada.courier?.toLowerCase())) && (
+                            <div className="mt-5 pt-5 border-t border-slate-100 space-y-3 animate-in fade-in duration-200">
+                                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-widest">Informasi Resi & Pengiriman</h3>
+                                
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between text-xs bg-slate-50 border border-slate-200/60 rounded-xl p-3 shadow-sm">
+                                        <div>
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase">No. Resi ({activeArmada.waybillCourier || activeArmada.courier || 'Ekspedisi'})</p>
+                                            <p className="font-mono font-bold text-slate-800 mt-0.5">{activeArmada.waybillNumber || 'Menunggu Input Supplier'}</p>
+                                        </div>
+                                        {activeArmada.waybillNumber && (
+                                            <a
+                                                href={`https://results.cekresi.com/?noresi=${activeArmada.waybillNumber}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-[10px] font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1.5 rounded-lg border border-emerald-200 transition-colors flex items-center gap-1"
+                                            >
+                                                <ExternalLink className="w-3 h-3" />
+                                                Lacak
+                                            </a>
+                                        )}
+                                    </div>
+
+                                    {activeArmada.waybillImageUrl && (
+                                        <div className="border border-slate-200/60 rounded-xl p-3 bg-white space-y-2 shadow-sm">
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase">Foto Bukti Resi</p>
+                                            <div className="relative rounded-lg overflow-hidden group border border-slate-100 aspect-[4/3] bg-slate-50 flex items-center justify-center">
+                                                <img 
+                                                    src={activeArmada.waybillImageUrl} 
+                                                    alt="Bukti Resi" 
+                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                                />
+                                                <button 
+                                                    onClick={() => setPreviewImage(activeArmada.waybillImageUrl)}
+                                                    className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white font-bold text-xs"
+                                                >
+                                                    <Eye className="w-4 h-4" />
+                                                    Lihat Foto
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Route Stats */}
@@ -442,6 +703,36 @@ export default function LogistikPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Photo Lightbox Modal */}
+            {previewImage && (
+                <div 
+                    className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200"
+                    onClick={() => setPreviewImage(null)}
+                >
+                    <div 
+                        className="relative bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] p-3 shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex items-center justify-between px-3 py-2 border-b border-slate-100">
+                            <h3 className="text-sm font-bold text-slate-800">Pratinjau Bukti Pengiriman</h3>
+                            <button 
+                                onClick={() => setPreviewImage(null)}
+                                className="p-1 rounded-lg text-slate-400 hover:bg-slate-50 hover:text-slate-650 transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-auto bg-slate-50 flex items-center justify-center p-2 rounded-xl mt-2">
+                            <img 
+                                src={previewImage} 
+                                alt="Pratinjau Bukti Pengiriman" 
+                                className="max-w-full max-h-[60vh] object-contain rounded-lg shadow-sm"
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

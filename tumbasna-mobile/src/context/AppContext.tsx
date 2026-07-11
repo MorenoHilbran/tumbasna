@@ -48,11 +48,19 @@ interface AppContextType {
   removeFromCart: (productId: string) => void;
   updateCartQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
-  checkout: (courier: string, shippingCost: number) => Promise<string>;
+  checkout: (
+    courier: string, 
+    shippingCost: number, 
+    buyerCoords?: [number, number], 
+    supplierCoords?: [number, number],
+    buyerAddress?: string,
+    supplierAddress?: string
+  ) => Promise<string>;
   payOrder: (orderId: string) => Promise<void>;
   confirmOrderReceived: (orderId: string) => Promise<void>;
   sendMessage: (supplierName: string, text: string, supplierPhone?: string) => void;
   refreshOrders: () => Promise<void>;
+  refreshProducts: () => Promise<void>;
   updateProfile: (userData: Partial<User>) => Promise<{ success: boolean; error?: string }>;
 }
 
@@ -214,19 +222,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   // ── Fetch products dari dashboard API ────────────────────────────────────
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/api/products`);
-        if (res.ok) {
-          const json = await res.json();
-          if (json.success && json.data?.length > 0) setProducts(json.data);
-        }
-      } catch {
-        console.warn('[AppContext] Dashboard offline, pakai fallback products.');
+  const refreshProducts = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/products`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.data?.length > 0) setProducts(json.data);
       }
-    };
-    fetchProducts();
+    } catch {
+      console.warn('[AppContext] Dashboard offline atau gagal refresh products.');
+    }
+  };
+
+  useEffect(() => {
+    refreshProducts();
   }, []);
 
   // ── Fetch orders dari Supabase via API (saat user login) ─────────────────
@@ -263,6 +272,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             bankAccount: d.bankAccount || prev.bankAccount,
             balance: d.balance ?? prev.balance,
             activeOrdersCount: d.activeOrdersCount ?? prev.activeOrdersCount,
+            purchasesThisMonth: d.purchasesThisMonth ?? prev.purchasesThisMonth,
           } : null);
         }
       }
@@ -383,8 +393,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const logout = () => {
+    // Bersihkan semua data sesi dari localStorage agar tidak ada sisa data lama
+    localStorage.removeItem('tumbasna_user');
+    localStorage.removeItem('tumbasna_cart');
+    localStorage.removeItem('tumbasna_chats');
     setUser(null);
     setOrders([]);
+    setCart([]);
   };
 
   // ── Cart ─────────────────────────────────────────────────────────────────
@@ -406,7 +421,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const clearCart = () => setCart([]);
 
   // ── Checkout — simpan order ke Supabase ──────────────────────────────────
-  const checkout = async (courier: string, shippingCost: number): Promise<string> => {
+  const checkout = async (
+    courier: string, 
+    shippingCost: number, 
+    buyerCoords?: [number, number], 
+    supplierCoords?: [number, number],
+    buyerAddress?: string,
+    supplierAddress?: string
+  ): Promise<string> => {
     if (cart.length === 0) return '';
     const orderId = `TRX-${Math.floor(100000 + Math.random() * 900000)}`;
     const itemsTotal = cart.reduce((acc, i) => acc + i.product.price * i.quantity, 0);
@@ -423,6 +445,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       { title: 'Pengiriman & Tracking', description: 'Menunggu penjemputan logistik.', time: 'Belum', done: false },
     ];
 
+    const notesObj = { buyerCoords, supplierCoords, buyerAddress, supplierAddress };
+    const notesStr = JSON.stringify(notesObj);
+
     const newOrder: Order = {
       id: orderId, items: [...cart], supplierName, supplierLocation, courier,
       shippingCost, totalAmount,
@@ -430,6 +455,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status: 'Menunggu Pembayaran',
       paymentQrCode: `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=tumbasna-qris-${orderId}`,
       fundsReleased: false, paymentCountdown: 300, trackingTimeline,
+      notes: notesStr,
     };
 
     // Simpan ke Supabase
@@ -444,6 +470,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           shippingCost, totalAmount,
           trackingTimeline,
           paymentQrCode: newOrder.paymentQrCode,
+          notes: notesStr,
           items: cart.map((i) => ({
             productEntryId: i.product.id.startsWith('prod-') ? null : i.product.id,
             commodity: i.product.category || i.product.name,
@@ -483,6 +510,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'DIPROSES', trackingTimeline: updatedTimeline }),
       });
+      await refreshProducts();
     } catch { console.warn('[payOrder] Gagal update status ke Supabase.'); }
   };
 
@@ -508,6 +536,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'SELESAI', fundsReleased: true }),
       });
+      await refreshProducts();
     } catch { console.warn('[confirmOrderReceived] Gagal update ke Supabase.'); }
   };
 
@@ -691,7 +720,7 @@ Pertanyaan pengguna: ${text}`;
   };
 
   return (
-    <AppContext.Provider value={{ user, products, cart, orders, chats, login, register, logout, addToCart, removeFromCart, updateCartQuantity, clearCart, checkout, payOrder, confirmOrderReceived, sendMessage, refreshOrders, updateProfile }}>
+    <AppContext.Provider value={{ user, products, cart, orders, chats, login, register, logout, addToCart, removeFromCart, updateCartQuantity, clearCart, checkout, payOrder, confirmOrderReceived, sendMessage, refreshOrders, refreshProducts, updateProfile }}>
       {children}
     </AppContext.Provider>
   );

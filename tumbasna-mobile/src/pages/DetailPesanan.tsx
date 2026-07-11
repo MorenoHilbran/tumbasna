@@ -41,7 +41,13 @@ const locationCoords: Record<string, [number, number]> = {
   'Cilacap': [-7.7150, 108.9767],
   'Purbalingga': [-7.3884, 109.3641],
   'Banjarnegara': [-7.3884, 109.6939],
-  'Kebumen': [-7.6701, 109.6524]
+  'Kebumen': [-7.6701, 109.6524],
+  'Tegal': [-6.8694, 109.1250],
+  'Brebes': [-6.8703, 109.0378],
+  'Magelang': [-7.4797, 110.2178],
+  'Boyolali': [-7.5306, 110.5964],
+  'Cianjur': [-6.8224, 107.1394],
+  'Karo': [3.1167, 98.5000]
 };
 
 const MapResizeTrigger: React.FC = () => {
@@ -54,8 +60,20 @@ const MapResizeTrigger: React.FC = () => {
   return null;
 };
 
+const MapBoundsController: React.FC<{ supplierLoc: [number, number], buyerLoc: [number, number] }> = ({ supplierLoc, buyerLoc }) => {
+  const map = useMap();
+  React.useEffect(() => {
+    if (supplierLoc && buyerLoc) {
+      setTimeout(() => {
+        map.fitBounds([supplierLoc, buyerLoc], { padding: [40, 40] });
+      }, 200);
+    }
+  }, [map, supplierLoc, buyerLoc]);
+  return null;
+};
+
 const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNavigateToChat }) => {
-  const { orders, confirmOrderReceived } = useApp();
+  const { user, orders, confirmOrderReceived } = useApp();
   const [showToast, setShowToast] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
   
@@ -67,13 +85,47 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
   const order = orders.find((o) => o.id === orderId);
 
   // ── Resolve supplier and buyer coordinates ──
-  const getSupplierCoords = (loc: string): [number, number] => {
+  const getCoordsByLocationName = (loc: string): [number, number] | null => {
+    if (!loc) return null;
     const key = Object.keys(locationCoords).find(k => loc.toLowerCase().includes(k.toLowerCase()));
-    return key ? (locationCoords[key] as [number, number]) : [-7.5151, 109.2941];
+    return key ? (locationCoords[key] as [number, number]) : null;
   };
 
-  const supplierLocation: [number, number] = order ? getSupplierCoords(order.supplierLocation) : [-7.5151, 109.2941];
-  const buyerLocation: [number, number] = [supplierLocation[0] - 0.012, supplierLocation[1] + 0.015];
+  let supplierLocation: [number, number] = [-7.5151, 109.2941]; // Default Banyumas
+  let buyerLocation: [number, number] = [-7.4244, 109.2300]; // Default Purwokerto
+
+  // Try to parse coordinates from notes, or fallback to profile/city defaults
+  let hasParsedFromNotes = false;
+  if (order && order.notes) {
+    try {
+      const parsed = JSON.parse(order.notes);
+      if (parsed.supplierCoords && Array.isArray(parsed.supplierCoords) && parsed.supplierCoords.length === 2) {
+        supplierLocation = parsed.supplierCoords as [number, number];
+        hasParsedFromNotes = true;
+      }
+      if (parsed.buyerCoords && Array.isArray(parsed.buyerCoords) && parsed.buyerCoords.length === 2) {
+        buyerLocation = parsed.buyerCoords as [number, number];
+        hasParsedFromNotes = true;
+      }
+    } catch (e) {
+      // notes is not JSON or has different format
+    }
+  }
+
+  if (!hasParsedFromNotes && order) {
+    const resolvedSupplier = getCoordsByLocationName(order.supplierLocation);
+    if (resolvedSupplier) {
+      supplierLocation = resolvedSupplier;
+    }
+
+    const resolvedBuyer = user?.address ? getCoordsByLocationName(user.address) : null;
+    if (resolvedBuyer) {
+      buyerLocation = resolvedBuyer;
+    } else {
+      buyerLocation = [supplierLocation[0] - 0.012, supplierLocation[1] + 0.015];
+    }
+  }
+
   const midpoint: [number, number] = [
     (supplierLocation[0] + buyerLocation[0]) / 2,
     (supplierLocation[1] + buyerLocation[1]) / 2
@@ -83,6 +135,17 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
   const [courierCoords, setCourierCoords] = useState<[number, number]>(supplierLocation);
   const [etaText, setEtaText] = useState('15 Menit');
   const [statusText, setStatusText] = useState('Kurir menunggu pembayaran...');
+
+  // Parse waybill info dari notes order
+  let waybillNumber: string | null = null;
+  let waybillCourier: string = 'jne';
+  if (order && order.notes) {
+    try {
+      const parsedNotes = JSON.parse(order.notes);
+      waybillNumber = parsedNotes.waybillNumber || null;
+      waybillCourier = parsedNotes.waybillCourier || 'jne';
+    } catch {}
+  }
 
   React.useEffect(() => {
     if (!order) return;
@@ -103,33 +166,65 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
       setCourierCoords(supplierLocation);
       setEtaText('Batal');
       setStatusText('Pesanan dibatalkan.');
-    } else { // status: 'Dikirim' atau status aktif pengiriman lainnya
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress = (progress + 1) % 101;
+    } else {
+      // Status: 'Dikirim'
+      if (waybillNumber) {
+        // Mode riil: fetch posisi dari RajaOngkir tracking API
+        const fetchTracking = async () => {
+          try {
+            const API_BASE = (import.meta as any).env?.VITE_API_URL || 'https://dashboard.tumbasna.id';
+            const res = await fetch(`${API_BASE}/api/shipping/track?waybill=${waybillNumber}&courier=${waybillCourier}`);
+            const data = await res.json();
+            if (data.success && data.lastCity) {
+              const cityCoords = (() => {
+                const key = Object.keys(locationCoords).find(k => data.lastCity.toLowerCase().includes(k.toLowerCase()));
+                return key ? locationCoords[key] : null;
+              })();
+              if (cityCoords) {
+                setCourierCoords(cityCoords as [number, number]);
+              }
+              const lastManifest = data.manifests?.[data.manifests.length - 1];
+              const lastDesc = lastManifest?.description || data.statusDescription || 'Dalam perjalanan.';
+              setStatusText(`[${waybillCourier.toUpperCase()}] Resi: ${waybillNumber} — ${lastDesc}`);
+              setEtaText(data.status === 'DELIVERED' ? 'Tiba' : 'Dalam Perjalanan');
+            } else {
+              setStatusText(`Resi ${waybillNumber} (${waybillCourier.toUpperCase()}) — Dalam perjalanan.`);
+              setEtaText('Dalam Perjalanan');
+            }
+          } catch {
+            setStatusText(`Resi ${waybillNumber} — Tidak dapat memuat status saat ini.`);
+          }
+        };
+        fetchTracking();
+      } else {
+        // Mode simulasi animasi (tidak ada resi)
+        let progress = 0;
+        const interval = setInterval(() => {
+          progress = (progress + 1) % 101;
+          
+          let lat = supplierLocation[0];
+          let lng = supplierLocation[1];
+          
+          if (progress <= 50) {
+            const pct = progress / 50;
+            lat = supplierLocation[0] + pct * (buyerLocation[0] - supplierLocation[0]);
+            lng = supplierLocation[1];
+          } else {
+            const pct = (progress - 50) / 50;
+            lat = buyerLocation[0];
+            lng = supplierLocation[1] + pct * (buyerLocation[1] - supplierLocation[1]);
+          }
+          
+          setCourierCoords([lat, lng] as [number, number]);
+          const remainingMinutes = Math.max(1, Math.round((100 - progress) * 0.15));
+          setEtaText(`${remainingMinutes} Menit`);
+          setStatusText('Kurir lokal sedang menuju alamat pengiriman.');
+        }, 300);
         
-        let lat = supplierLocation[0];
-        let lng = supplierLocation[1];
-        
-        if (progress <= 50) {
-          const pct = progress / 50;
-          lat = supplierLocation[0] + pct * (buyerLocation[0] - supplierLocation[0]);
-          lng = supplierLocation[1];
-        } else {
-          const pct = (progress - 50) / 50;
-          lat = buyerLocation[0];
-          lng = supplierLocation[1] + pct * (buyerLocation[1] - supplierLocation[1]);
-        }
-        
-        setCourierCoords([lat, lng] as [number, number]);
-        const remainingMinutes = Math.max(1, Math.round((100 - progress) * 0.15));
-        setEtaText(`${remainingMinutes} Menit`);
-        setStatusText('Kurir lokal sedang menuju alamat pengiriman.');
-      }, 300);
-      
-      return () => clearInterval(interval);
+        return () => clearInterval(interval);
+      }
     }
-  }, [order?.status]);
+  }, [order?.status, waybillNumber]);
 
   if (!order) {
     return (
@@ -216,6 +311,7 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
           >
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
             <MapResizeTrigger />
+            <MapBoundsController supplierLoc={supplierLocation} buyerLoc={buyerLocation} />
             
             {/* Dashed Route Path */}
             <Polyline
@@ -290,7 +386,48 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
             <span>Total Pembayaran</span>
             <strong>Rp {order.totalAmount.toLocaleString('id-ID')}</strong>
           </div>
+
+          {/* Bukti Resi / Foto Pengiriman */}
+          {(waybillNumber || (() => { try { return JSON.parse(order.notes || '{}').waybillImageUrl; } catch { return null; } })()) && (
+            <div style={{
+              margin: '12px 0 0',
+              padding: '12px 14px',
+              background: 'linear-gradient(135deg, #f0fdf4, #ecfdf5)',
+              borderRadius: 14,
+              border: '1px solid #bbf7d0'
+            }}>
+              <p style={{ fontSize: 10, fontWeight: 800, color: '#059669', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+                📦 Bukti Pengiriman
+              </p>
+              {waybillNumber && (
+                <div style={{ marginBottom: 8 }}>
+                  <p style={{ fontSize: 10, color: '#6b7280', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Nomor Resi</p>
+                  <p style={{ fontSize: 13, fontWeight: 800, color: '#111827', fontFamily: 'monospace', marginTop: 2 }}>{waybillNumber}</p>
+                  {waybillCourier && (
+                    <p style={{ fontSize: 10, fontWeight: 700, color: '#059669', marginTop: 2, textTransform: 'uppercase' }}>{waybillCourier}</p>
+                  )}
+                </div>
+              )}
+              {(() => {
+                try {
+                  const imgUrl = JSON.parse(order.notes || '{}').waybillImageUrl;
+                  if (!imgUrl) return null;
+                  return (
+                    <div>
+                      <p style={{ fontSize: 10, color: '#6b7280', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>Foto Bukti Resi</p>
+                      <img
+                        src={imgUrl}
+                        alt="Foto Bukti Resi"
+                        style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 10, border: '1px solid #d1fae5' }}
+                      />
+                    </div>
+                  );
+                } catch { return null; }
+              })()}
+            </div>
+          )}
         </div>
+
 
         {/* ── COD: Hubungi Supplier via in-app Chat ─────────── */}
         {isCOD && (

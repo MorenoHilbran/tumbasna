@@ -50,6 +50,7 @@ export async function GET(req: Request) {
       where: whereClause,
       orderBy: { createdAt: 'desc' },
       include: {
+        buyer: true,
         items: {
           include: {
             productEntry: {
@@ -65,6 +66,8 @@ export async function GET(req: Request) {
       id: order.id,
       supplierName: order.supplierName,
       supplierLocation: order.supplierLocation,
+      buyerName: order.buyer?.name || order.buyer?.businessName || 'Pedagang Tumbasna',
+      buyerAddress: order.buyer?.address || '',
       courier: order.courier,
       shippingCost: Number(order.shippingCost),
       totalAmount: Number(order.totalAmount),
@@ -135,6 +138,7 @@ export async function POST(req: Request) {
       items,             // Array<{ productEntryId?, commodity, price, qty, supplierName }>
       trackingTimeline,
       paymentQrCode,
+      notes,
     } = body;
 
     if (!id || !supplierName || !courier || !items?.length) {
@@ -162,6 +166,7 @@ export async function POST(req: Request) {
         paymentQrCode: paymentQrCode || null,
         fundsReleased: false,
         trackingTimeline: trackingTimeline || [],
+        notes: notes || null,
         items: {
           create: items.map((item: any) => ({
             productEntryId: item.productEntryId || null,
@@ -173,6 +178,52 @@ export async function POST(req: Request) {
         },
       },
     });
+
+    // Kirim notifikasi WA ke supplier bahwa ada pesanan baru masuk
+    try {
+      const waUrl = process.env.WHATSAPP_BOT_URL || 'http://127.0.0.1:3002';
+      const waApiKey = process.env.WHATSAPP_API_KEY || process.env.TUMBASNA_SECRET_KEY || 'tumbasna-rahasia-banget';
+
+      // Cari supplier untuk mendapatkan nomor telepon & nama lengkap
+      const supplierUser = await prisma.user.findFirst({
+        where: { OR: [{ name: supplierName }, { businessName: supplierName }] }
+      });
+
+      // Ambil info pembeli jika ada
+      let buyerName = 'Pedagang Tumbasna';
+      if (validBuyerUserId) {
+        const buyer = await prisma.user.findUnique({ where: { id: validBuyerUserId } });
+        if (buyer) buyerName = buyer.name || buyer.businessName || buyerName;
+      }
+
+      if (supplierUser?.phoneNumber) {
+        const itemsDesc = items.map((it: any) =>
+          `  • ${it.commodity.toUpperCase()} — ${Number(it.qty)} kg × Rp ${Number(it.price).toLocaleString('id-ID')}/kg`
+        ).join('\n');
+        const formattedTotal = Number(totalAmount || 0).toLocaleString('id-ID');
+
+        const msg = `📢 *TUMBASNA: PESANAN BARU MASUK* 🌾\n\n` +
+          `Halo Bpk/Ibu *${supplierUser.name}*,\n` +
+          `Ada pesanan baru untuk komoditas Juragan!\n\n` +
+          `• ID Pesanan: *${id}*\n` +
+          `• Pembeli: *${buyerName}*\n` +
+          `• Kurir: *${courier}*\n` +
+          `• Rincian Barang:\n${itemsDesc}\n` +
+          `• Total Nilai: *Rp ${formattedTotal}*\n` +
+          `• Status: *Menunggu Pembayaran*\n\n` +
+          `Kami akan memberi tahu Juragan kembali begitu pembayaran dikonfirmasi oleh Escrow Tumbasna. ` +
+          `Mohon jangan memproses barang sebelum ada notifikasi pembayaran lunas. 🤝`;
+
+        await fetch(`${waUrl}/api/send`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-secret-key': waApiKey },
+          body: JSON.stringify({ phone: supplierUser.phoneNumber, message: msg }),
+        });
+        console.log(`💬 [WA ORDER CREATED] Notifikasi terkirim ke supplier ${supplierUser.phoneNumber}`);
+      }
+    } catch (notifErr: any) {
+      console.warn(`⚠️ [WA ORDER NOTIF] Gagal kirim notifikasi pesanan baru:`, notifErr.message);
+    }
 
     return NextResponse.json({ success: true, data: order }, { status: 201 });
 

@@ -75,15 +75,28 @@ export async function POST(req: Request) {
     const waUrl = process.env.WHATSAPP_BOT_URL || 'http://localhost:3002';
     const waApiKey = process.env.WHATSAPP_API_KEY || process.env.TUMBASNA_SECRET_KEY || 'tumbasna-rahasia-banget';
     try {
+      // Format detail pembeli yang lengkap untuk membantu supplier mengenal pembeli
+      const buyerName = buyer?.name || 'Pedagang Tumbasna';
+      const businessInfo = buyer?.businessName ? ` _(${buyer.businessName})_` : '';
+      const locationInfo = buyer?.address ? ` — ${buyer.address}` : '';
+      const waLink = `wa.me/${(buyerPhone || buyer?.phoneNumber || '').replace(/\D/g, '')}`;
+
+      const relayMsg =
+        `💬 *Pesan dari Pembeli Tumbasna* 🛒\n` +
+        `*Dari:* ${buyerName}${businessInfo}${locationInfo}\n` +
+        `*Kontak WA:* ${waLink}\n` +
+        `─────────────────────────\n\n` +
+        `"${message}"`;
+
       const waRes = await fetch(`${waUrl}/api/send`, {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json', 
-          'x-secret-key': waApiKey 
+        headers: {
+          'Content-Type': 'application/json',
+          'x-secret-key': waApiKey
         },
         body: JSON.stringify({
           phone: supplierPhone,
-          message: `💬 *Pesan dari pembeli Tumbasna:*\n${message}`,
+          message: relayMsg,
         }),
       });
       if (!waRes.ok) {
