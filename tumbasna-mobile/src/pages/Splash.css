@@ -1,5 +1,5 @@
 /* ==============================
-   Splash.css — Premium Light Theme
+   Splash.css — Redesigned Premium Splash Screen
    ============================== */
 
 .splash-content-wrapper {
@@ -9,133 +9,69 @@
 .splash-container {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-between; /* Space out top logo and bottom loading card */
   align-items: center;
   height: 100vh;
-  background: #ffffff;
+  background: url('/spsc.png') no-repeat center bottom;
+  background-size: cover;
   position: relative;
   overflow: hidden;
+  padding: 0;
 }
 
-/* ── Glow Orbs (Subtle Light Theme Glow) ──────────────────── */
-.splash-orb {
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.splash-orb-top {
-  width: 320px;
-  height: 320px;
-  top: -60px;
-  right: -40px;
-  background: radial-gradient(circle, rgba(140, 198, 63, 0.08) 0%, transparent 70%);
-  animation: orbPulse 6s ease-in-out infinite;
-}
-
-.splash-orb-bottom {
-  width: 350px;
-  height: 350px;
-  bottom: -80px;
-  left: -60px;
-  background: radial-gradient(circle, rgba(247, 148, 29, 0.06) 0%, transparent 70%);
-  animation: orbPulse 8s ease-in-out infinite reverse;
-}
-
-@keyframes orbPulse {
-  0%, 100% { transform: scale(1); opacity: 0.8; }
-  50% { transform: scale(1.1); opacity: 1; }
-}
-
-/* ── Floating Leaves ──────────────────────────────────────── */
-.splash-leaf {
-  position: absolute;
-  z-index: 5;
-  filter: drop-shadow(0 6px 12px rgba(0, 104, 55, 0.08));
-}
-
-.splash-leaf-1 {
-  top: 10%;
-  right: 10%;
-  width: 50px;
-  transform: rotate(30deg);
-  animation: float1 5s ease-in-out infinite, fadeInLeaf 1.2s ease-out 0.3s both;
-}
-
-.splash-leaf-2 {
-  bottom: 25%;
-  left: 6%;
-  width: 65px;
-  transform: rotate(-20deg);
-  animation: float2 7s ease-in-out infinite alternate, fadeInLeaf 1.2s ease-out 0.5s both;
-}
-
-.splash-leaf-3 {
-  top: 28%;
-  left: 12%;
-  width: 28px;
-  transform: rotate(60deg);
-  animation: float1 4s ease-in-out infinite 1s, fadeInLeaf 1s ease-out 0.8s both;
-}
-
-@keyframes float1 {
-  0% { transform: translateY(0) rotate(30deg); }
-  50% { transform: translateY(-10px) rotate(34deg); }
-  100% { transform: translateY(0) rotate(30deg); }
-}
-
-@keyframes float2 {
-  0% { transform: translateY(0) rotate(-20deg); }
-  100% { transform: translateY(-14px) rotate(-14deg); }
-}
-
-@keyframes fadeInLeaf {
-  0% { opacity: 0; transform: scale(0.7) translateY(15px); }
-  100% { opacity: 1; transform: scale(1) translateY(0); }
-}
-
-/* ── Center Content ───────────────────────────────────────── */
-.splash-content {
-  z-index: 10;
+/* ── Top Logo & Tagline Content ───────────────────────────── */
+.splash-top-content {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  margin-top: -6vh;
+  margin-top: 10vh;
+  z-index: 10;
+  animation: fadeInDown 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+  
+  /* Soft ambient glow to guarantee text legibility on all viewports */
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 60%, transparent 100%);
+  padding: 20px 40px;
+  border-radius: 40px;
 }
 
-/* ── Logo ─────────────────────────────────────────────────── */
-.splash-logo-wrapper {
-  position: relative;
-  display: inline-flex;
+.splash-logo-vertical {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  margin-bottom: 24px;
 }
 
-.splash-logo {
-  width: 135px;
-  height: auto;
-  animation: logoFadeIn 1s ease-out forwards;
-  position: relative;
-  z-index: 2;
-  filter: drop-shadow(0 12px 28px rgba(0, 104, 55, 0.08));
+/* Crops logotum.png to show ONLY the square icon on the left */
+.splash-logo-icon-wrapper {
+  width: 76px;
+  height: 76px;
+  overflow: hidden;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  filter: drop-shadow(0 8px 16px rgba(0, 104, 55, 0.12));
+  animation: logoBounce 1.2s ease-out;
 }
 
-.splash-logo-glow {
-  position: absolute;
-  width: 170px;
-  height: 170px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(140, 198, 63, 0.12) 0%, transparent 70%);
-  z-index: 1;
-  animation: glowPulse 3s ease-in-out infinite;
+.splash-logo-icon {
+  height: 76px;
+  width: auto;
+  max-width: none;
+  object-fit: cover;
+  object-position: left;
 }
 
-@keyframes glowPulse {
-  0%, 100% { transform: scale(1); opacity: 0.6; }
-  50% { transform: scale(1.15); opacity: 1; }
+.splash-logo-title {
+  font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+  font-size: 36px;
+  font-weight: 800;
+  color: #0b4526; /* Dark Green for "Tumbas" */
+  margin: 14px 0 0 0;
+  letter-spacing: -1px;
+}
+
+.splash-logo-title span {
+  color: #7cb324; /* Lighter/Vibrant Green for "Na" */
 }
 
 /* ── Ornamental Divider ───────────────────────────────────── */
@@ -143,101 +79,109 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 0 0 16px;
-  animation: scaleIn 0.7s ease-out 0.5s both;
+  margin: 18px 0;
+  animation: scaleIn 0.8s ease-out 0.3s both;
 }
 
 .splash-divider-line {
-  width: 45px;
+  width: 55px;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0, 104, 55, 0.15), transparent);
+  background: linear-gradient(90deg, transparent, rgba(11, 69, 38, 0.18), transparent);
 }
 
 .splash-divider-diamond {
   width: 6px;
   height: 6px;
-  background: #006837;
+  background: #0b4526;
   transform: rotate(45deg);
   border-radius: 1px;
-  box-shadow: 0 0 6px rgba(0, 104, 55, 0.2);
 }
 
 /* ── Tagline ──────────────────────────────────────────────── */
 .splash-tagline {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 13px;
-  color: #64748b;
+  font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+  font-size: 14px;
+  color: #475569;
   font-weight: 600;
   line-height: 1.6;
   margin: 0;
-  animation: fadeUp 0.9s ease-out 0.6s both;
   letter-spacing: 0.2px;
+  animation: fadeInText 0.8s ease-out 0.4s both;
 }
 
 .splash-tagline span {
-  font-family: 'Playfair Display', serif;
-  font-style: italic;
+  font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
   font-weight: 700;
-  color: #006837;
+  font-style: italic;
+  color: #0b4526;
 }
 
-/* ── Bottom Gradient Fade ─────────────────────────────────── */
-.splash-bottom-fade {
-  position: absolute;
-  bottom: 0;
-  left: 0;
+/* ── Bottom Loading Card ───────────────────────────────────── */
+.splash-loading-card {
   width: 100%;
-  height: 25%;
-  background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.8));
-  z-index: 2;
-  pointer-events: none;
-}
-
-/* ── Loading Dots ─────────────────────────────────────────── */
-.splash-loading-dots {
-  position: absolute;
-  bottom: 52px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
+  background: #f7faf5; /* Matches the base color of the spsc.png bottom background */
+  border-top-left-radius: 36px;
+  border-top-right-radius: 36px;
+  padding: 32px 24px calc(24px + var(--ion-safe-area-bottom, 0px));
+  box-shadow: 0 -8px 30px rgba(0, 104, 55, 0.05), 0 -2px 10px rgba(0, 104, 55, 0.02);
   display: flex;
-  gap: 7px;
+  flex-direction: column;
   align-items: center;
-  animation: fadeIn 0.8s ease-out 1s both;
+  z-index: 10;
+  animation: slideUpCard 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.splash-loading-dots span {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: rgba(0, 104, 55, 0.6);
-  display: block;
-  animation: dotBounce 1.2s ease-in-out infinite;
+.splash-progress-bar-container {
+  width: 70%;
+  max-width: 250px;
+  height: 5px;
+  background: rgba(0, 104, 55, 0.08);
+  border-radius: 100px;
+  overflow: hidden;
+  margin-bottom: 14px;
 }
 
-.splash-loading-dots span:nth-child(2) {
-  animation-delay: 0.2s;
-  background: rgba(247, 148, 29, 0.7);
+.splash-progress-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #009245 0%, #8cc63f 60%, #f7941d 100%);
+  border-radius: 100px;
+  animation: fillProgress 2.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-.splash-loading-dots span:nth-child(3) {
-  animation-delay: 0.4s;
-  background: rgba(148, 163, 184, 0.5);
+.splash-loading-text {
+  font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #0b4526;
+  margin: 0;
+  text-align: center;
+  letter-spacing: 0.1px;
+  animation: fadeInText 0.8s ease-out 0.3s both;
 }
 
-@keyframes dotBounce {
-  0%, 80%, 100% { transform: scale(0.7); opacity: 0.5; }
-  40% { transform: scale(1.2); opacity: 1; }
+/* ── Animations ───────────────────────────────────────────── */
+
+@keyframes fillProgress {
+  0% { width: 0%; }
+  15% { width: 10%; }
+  45% { width: 45%; }
+  75% { width: 85%; }
+  100% { width: 100%; }
 }
 
-/* ── Keyframe Animations ──────────────────────────────────── */
-@keyframes logoFadeIn {
-  0% { opacity: 0; transform: scale(0.85) translateY(12px); }
-  100% { opacity: 1; transform: scale(1) translateY(0); }
+@keyframes slideUpCard {
+  0% { transform: translateY(100%); }
+  100% { transform: translateY(0); }
 }
 
-@keyframes fadeUp {
-  0% { opacity: 0; transform: translateY(12px); }
+@keyframes fadeInText {
+  0% { opacity: 0; transform: translateY(4px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInDown {
+  0% { opacity: 0; transform: translateY(-16px); }
   100% { opacity: 1; transform: translateY(0); }
 }
 
@@ -246,7 +190,8 @@
   100% { opacity: 1; transform: scaleX(1); }
 }
 
-@keyframes fadeIn {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
+@keyframes logoBounce {
+  0% { transform: scale(0.85); opacity: 0; }
+  70% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
 }
