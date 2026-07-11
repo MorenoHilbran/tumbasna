@@ -175,8 +175,10 @@
 }
 
 .splash-tagline span {
-  color: #006837;
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
   font-weight: 700;
+  color: #006837;
 }
 
 /* ── Bottom Gradient Fade ─────────────────────────────────── */

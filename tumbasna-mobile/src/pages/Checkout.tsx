@@ -65,6 +65,30 @@ const locationCoords: Record<string, [number, number]> = {
   'Karo': [3.1167, 98.5000]
 };
 
+// Mapping nama kota → RajaOngkir City ID (Starter Plan)
+const CITY_ID_MAP: Record<string, string> = {
+  'banyumas': '39',
+  'cilacap': '88',
+  'purbalingga': '344',
+  'banjarnegara': '33',
+  'kebumen': '165',
+  'tegal': '425',
+  'brebes': '73',
+  'magelang': '225',
+  'boyolali': '71',
+  'cianjur': '85',
+  'karo': '158',
+};
+
+function getCityId(address: string): string {
+  const lower = address.toLowerCase();
+  for (const [key, id] of Object.entries(CITY_ID_MAP)) {
+    if (lower.includes(key)) return id;
+  }
+  return '39'; // fallback: Banyumas
+}
+
+
 // Component Map Event
 const MapController = ({ center, onMoveEnd }: { center: [number, number], onMoveEnd: (pos: [number, number]) => void }) => {
   const map = useMapEvents({
@@ -294,8 +318,8 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated }) => {
             body: JSON.stringify({ 
               courier: selectedCourier, 
               weight: totalWeightGrams,
-              originId: '501',
-              destinationId: '114' 
+              originId: getCityId(cart[0]?.product.supplierLocation || ''),
+              destinationId: getCityId(buyerAddressLabel)
             })
           });
           const data = await res.json();
