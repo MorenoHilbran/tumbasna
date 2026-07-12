@@ -87,6 +87,11 @@ const wilayahData = [
         komoditas: ['Beras', 'Gula', 'Cabai', 'Tomat'],
         stok: '780 ton',
         hargaRataRata: 'Rp 13.400/kg',
+        transaksi: 120,
+        lat: -7.6701,
+        lng: 109.6524,
+        luas: 1281,
+        radius: 16000,
     },
     {
         id: 'tegal',
