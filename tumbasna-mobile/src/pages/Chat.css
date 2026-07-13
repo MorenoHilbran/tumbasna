@@ -89,7 +89,7 @@
 .wa-green { color: #25D366; font-size: 11px; }
 
 /* Thread list */
-.threads-list-wrapper { padding: 14px; }
+.threads-list-wrapper { padding: 14px 14px 100px 14px; }
 
 .whatsapp-info-banner {
   background: #EFF8F0;
