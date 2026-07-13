@@ -313,8 +313,13 @@ export async function processIncomingMessage(
             const bankName = parsedData.bank_name || '';
             const bankAccount = parsedData.bank_account || '';
 
+            console.log(`📋 [REGISTER DEBUG] Attempting registration:`, {
+                phone, name, location, bankName, bankAccount,
+                hasName: !!name, hasLocation: !!location, hasPhone: !!phone
+            });
             if (name && location && phone) {
                 try {
+                    console.log(`🚀 [REGISTER] Calling apiService.registerSupplier...`);
                     const result = await apiService.registerSupplier({ 
                         phone, 
                         name, 
@@ -323,23 +328,41 @@ export async function processIncomingMessage(
                         bankAccount 
                     });
                     console.log(`✅ [REGISTER] Supplier ${name} berhasil didaftarkan:`, result);
+                    if (result.success !== false) {
+                        parsedData.reply_message = `🎉 *REGISTRASI BERHASIL!*\n\n` +
+                            `Selamat datang di Tumbasna, *${name}*!\n\n` +
+                            `Data Anda telah tersimpan:\n` +
+                            `📍 Lokasi: ${location}\n` +
+                            `📞 Telepon: ${phone}\n` +
+                            (bankName ? `🏦 Bank: ${bankName}\n` : '') +
+                            (bankAccount ? `💳 No. Rek: ${bankAccount}\n` : '') +
+                            `\n✅ Anda sekarang dapat mulai menjual komoditas pertanian Anda!\n\n` +
+                            `Ketik *MENU* untuk melihat panduan atau langsung kirim penawaran produk Anda.`;
+                    }
                     if (phone !== rawPhoneNumber) {
                         await saveMetadata(sender, { mappedPhone: phone });
                     }
                     const { saveSessionHistory } = await import('../ai/memory');
                     await saveSessionHistory(sender, [], true); // true = delete session
                 } catch (err: any) {
+                    console.error(`❌ [REGISTER ERROR] Full error:`, err);
                     const { saveSessionHistory } = await import('../ai/memory');
                     if (err?.response?.status !== 409) {
-                        console.error(`❌ [REGISTER ERROR] Gagal daftarkan ${name}:`, err.message);
+                        console.error(`❌ [REGISTER ERROR] Gagal daftarkan ${name}:`, err.message, err.response?.data);
+                        parsedData.reply_message = `Maaf, terjadi kesalahan saat mendaftarkan data Anda. Silakan coba lagi atau hubungi admin.\n\nError: ${err.message}`;
+                        await saveSessionHistory(sender, [], true);
                     } else {
-                        console.log(`ℹ️ [REGISTER] Nomor ${phone} sudah terdaftar sebelumnya. Resetting session history.`);
-                        if (phone !== rawPhoneNumber) {
-                            await saveMetadata(sender, { mappedPhone: phone });
-                        }
-                        await saveSessionHistory(sender, [], true); // true = delete session
+                        console.log(`⚠️ [REGISTER] User sudah terdaftar (409), clearing session...`);
+                        parsedData.reply_message = `Nomor Anda sudah terdaftar sebelumnya. Anda dapat langsung mengirim penawaran produk!`;
+                        await saveSessionHistory(sender, [], true);
                     }
                 }
+            } else {
+                console.warn(`⚠️ [REGISTER] Data tidak lengkap:`, { name, location, phone });
+                parsedData.reply_message = `Data pendaftaran belum lengkap. Mohon lengkapi:\n` +
+                    (!name ? '- Nama\n' : '') +
+                    (!location ? '- Lokasi\n' : '') +
+                    (!phone ? '- Nomor telepon\n' : '');
             }
         }
 

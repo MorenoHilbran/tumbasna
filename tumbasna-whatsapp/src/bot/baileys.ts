@@ -117,6 +117,18 @@ export async function connectWhatsApp() {
     // ─── Message Listener ─────────────────────────────────────
     sock.ev.on('messages.upsert', async ({ messages, type }) => {
         console.log(`📬 [NETWORK EVENT] Tipe: ${type}, Jumlah Pesan: ${messages.length}`);
+
+        // Send read receipt for incoming messages
+        for (const msg of messages) {
+            if (msg.key.fromMe) continue;
+            
+            try {
+                await sock.readMessages([msg.key]);
+                console.log(`✓✓ [READ RECEIPT] Sent for message from ${msg.key.remoteJid}`);
+            } catch (err: any) {
+                console.warn(`⚠️ [READ RECEIPT] Failed:`, err.message);
+            }
+        }
         
         if (type !== 'notify') return;
 
