@@ -1,0 +1,61 @@
+﻿# NGINX CONFIGURATION FOR WHATSAPP BOT
+# File: /etc/nginx/sites-enabled/tumbasna
+# 
+# Tambahkan block ini ke dalam server block yang sudah ada
+
+# Untuk dashboard.tumbasna.my.id
+server {
+    listen 80;
+    server_name dashboard.tumbasna.my.id;
+
+    # Dashboard Next.js (port 3000)
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    # WhatsApp Bot (port 3002) - TAMBAHKAN INI
+    location /wa {
+        proxy_pass http://localhost:3002;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        
+        # Remove /wa prefix before forwarding to bot
+        rewrite ^/wa/(.*)$ /$1 break;
+        rewrite ^/wa$ / break;
+    }
+}
+
+# COMMANDS TO APPLY:
+# 1. SSH ke VPS
+ssh moreno@202.155.13.225
+
+# 2. Edit nginx config
+sudo nano /etc/nginx/sites-enabled/tumbasna
+
+# 3. Tambahkan location block /wa di atas
+
+# 4. Test nginx config
+sudo nginx -t
+
+# 5. Jika OK, reload nginx
+sudo systemctl reload nginx
+
+# 6. Test dari browser
+# https://dashboard.tumbasna.my.id/wa/health
+
+# 7. Jika masih ada SSL error, install SSL certificate
+sudo certbot --nginx -d dashboard.tumbasna.my.id

@@ -28,10 +28,10 @@ const navItems = [
         description: 'Ringkasan platform',
     },
     {
-        label: 'Peta',
+        label: 'Zona QRIS',
         href: '/dashboard/peta',
         icon: Map,
-        description: 'Sebaran wilayah & stok',
+        description: 'Sebaran transaksi QRIS',
     },
     {
         label: 'Komoditas',
@@ -284,3 +284,4 @@ export default function SidebarLayout({
         </div>
     );
 }
+

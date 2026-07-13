@@ -14,9 +14,12 @@ import {
     CheckCircle2,
     Activity,
     X,
+    ShoppingCart,
+    Clock,
+    DollarSign,
 } from 'lucide-react';
 
-// ─── Wilayah Data ─────────────────────────────────────────────
+// --- Wilayah Data -----------------------------------------------------------
 const wilayahData = [
     {
         id: 'banyumas',
@@ -110,7 +113,7 @@ const wilayahData = [
     },
 ];
 
-// ─── Dynamic Leaflet Map (client-only) ────────────────────────
+// --- Dynamic Leaflet Map (client-only) ------------------------------------
 const LeafletPetaMap = dynamic(() => import('@/components/PetaMapLeaflet'), {
     ssr: false,
     loading: () => (
@@ -121,126 +124,216 @@ const LeafletPetaMap = dynamic(() => import('@/components/PetaMapLeaflet'), {
     ),
 });
 
-// ─── Detail Panel ─────────────────────────────────────────────
-function DetailPanel({ w, onClose }: { w: typeof wilayahData[0]; onClose: () => void }) {
+// --- Status Badge ----------------------------------------------------------
+function StatusBadge({ status }: { status: string }) {
+    const map: Record<string, { bg: string; label: string; Icon: any }> = {
+        SELESAI: { bg: 'bg-emerald-50 text-emerald-600 border-emerald-100/50', label: 'Selesai', Icon: CheckCircle2 },
+        DIPROSES: { bg: 'bg-teal-50 text-teal-600 border-teal-100/50', label: 'Diproses', Icon: Activity },
+        DIKIRIM: { bg: 'bg-blue-50 text-blue-600 border-blue-100/50', label: 'Dikirim', Icon: Package },
+        MENUNGGU: { bg: 'bg-amber-50 text-amber-600 border-amber-100/50', label: 'Menunggu', Icon: Clock },
+        DIBATALKAN: { bg: 'bg-rose-50 text-rose-600 border-rose-100/50', label: 'Batal', Icon: X },
+    };
+    const s = map[status] ?? map.MENUNGGU;
+    const Icon = s.Icon;
+    return (
+        <span className={`inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full border ${s.bg}`}>
+            <Icon className="w-2.5 h-2.5" />
+            {s.label}
+        </span>
+    );
+}
+
+// --- Detail Panel ----------------------------------------------------------
+function DetailPanel({ w, transactions, onClose }: { w: typeof wilayahData[0]; transactions: any[]; onClose: () => void }) {
     const isMelimpah = w.status === 'melimpah';
+    
     return (
         <div className="flex flex-col h-full bg-white text-slate-800">
             {/* Header */}
             <div className={`p-4 rounded-xl mb-4 border ${isMelimpah ? 'bg-emerald-50/70 border-emerald-100/50' : 'bg-rose-50/70 border-rose-100/50'
                 }`}>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                         <div className={`w-2 h-2 rounded-full ${isMelimpah ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                        <span className={`text-[10px] font-bold uppercase tracking-widest ${isMelimpah ? 'text-emerald-600' : 'text-rose-600'
-                            }`}>
+                        <span className={`text-[10px] font-bold uppercase tracking-widest ${isMelimpah ? 'text-emerald-600' : 'text-rose-600'}`}>
                             Stok {w.status}
                         </span>
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="text-slate-400 hover:text-slate-600 transition-colors p-0.5 rounded-lg hover:bg-white/50"
-                    >
-                        <X className="w-4 h-4" />
+                    <button onClick={onClose} className="p-1 hover:bg-white/50 rounded-lg transition-colors">
+                        <X className="w-4 h-4 text-slate-400" />
                     </button>
                 </div>
-                <h2 className="text-lg font-extrabold text-slate-900 mt-2 tracking-tight">{w.name}</h2>
-                <p className="text-[10px] text-slate-400 mt-1 font-semibold uppercase tracking-wider">Luas wilayah: {w.luas.toLocaleString('id-ID')} km²</p>
+                <h3 className="text-lg font-extrabold text-slate-900 mb-1">{w.name}</h3>
+                <p className="text-[10px] text-slate-500 font-semibold">Luas: {w.luas.toLocaleString('id-ID')} km�</p>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-2 gap-2.5 mb-4">
-                {[
-                    { label: 'Supplier', value: w.supplier, icon: Users, color: '#F59E0B', bg: 'bg-amber-50 text-amber-600' },
-                    { label: 'Buyer', value: w.buyer, icon: Users, color: '#10B981', bg: 'bg-emerald-50 text-emerald-600' },
-                    { label: 'Total Stok', value: w.stok, icon: Package, color: '#10B981', bg: 'bg-emerald-50 text-emerald-600' },
-                    { label: 'Harga Rata-rata', value: w.hargaRataRata, icon: BarChart3, color: '#0F172A', bg: 'bg-slate-100 text-slate-700' },
-                ].map((s) => (
-                    <div key={s.label} className="rounded-xl p-3 bg-slate-50 border border-slate-100/80">
-                        <div className="flex items-center gap-1.5 mb-1.5">
-                            <s.icon className="w-3.5 h-3.5" style={{ color: s.color }} />
-                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{s.label}</span>
-                        </div>
-                        <p className="text-xs font-extrabold text-slate-800">{s.value}</p>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50/50 border border-emerald-100/50">
+                    <div className="flex items-center gap-2 mb-2">
+                        <Users className="w-4 h-4 text-emerald-600" />
+                        <p className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest">Supplier</p>
                     </div>
-                ))}
+                    <p className="text-2xl font-extrabold text-slate-900">{w.supplier}</p>
+                </div>
+                <div className="p-3 rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50/50 border border-blue-100/50">
+                    <div className="flex items-center gap-2 mb-2">
+                        <ShoppingCart className="w-4 h-4 text-blue-600" />
+                        <p className="text-[9px] font-bold text-blue-600 uppercase tracking-widest">Buyer</p>
+                    </div>
+                    <p className="text-2xl font-extrabold text-slate-900">{w.buyer}</p>
+                </div>
+                <div className="p-3 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50/50 border border-amber-100/50">
+                    <div className="flex items-center gap-2 mb-2">
+                        <Package className="w-4 h-4 text-amber-600" />
+                        <p className="text-[9px] font-bold text-amber-600 uppercase tracking-widest">Total Stok</p>
+                    </div>
+                    <p className="text-lg font-extrabold text-slate-900">{w.stok}</p>
+                </div>
+                <div className="p-3 rounded-xl bg-gradient-to-br from-purple-50 to-pink-50/50 border border-purple-100/50">
+                    <div className="flex items-center gap-2 mb-2">
+                        <TrendingUp className="w-4 h-4 text-purple-600" />
+                        <p className="text-[9px] font-bold text-purple-600 uppercase tracking-widest">Transaksi</p>
+                    </div>
+                    <p className="text-2xl font-extrabold text-slate-900">{w.transaksi}</p>
+                </div>
             </div>
 
-            {/* Transaksi */}
-            <div className="rounded-xl p-3 mb-4 flex items-center justify-between bg-slate-50 border border-slate-100/80">
-                <div>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">Transaksi Bulan Ini</p>
-                    <p className="text-lg font-extrabold text-slate-800 mt-1.5 leading-none">{w.transaksi}</p>
-                </div>
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-emerald-50 text-emerald-600">
-                    <TrendingUp className="w-4.5 h-4.5" />
+            {/* Rata-rata Harga */}
+            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 mb-4">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <BarChart3 className="w-4 h-4 text-slate-500" />
+                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Harga Rata-rata</p>
+                    </div>
+                    <p className="text-sm font-extrabold text-slate-900">{w.hargaRataRata}</p>
                 </div>
             </div>
 
             {/* Komoditas */}
-            <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Komoditas Tersedia</p>
+            <div className="mb-4">
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                    <Package className="w-3.5 h-3.5" />
+                    Komoditas Tersedia
+                </p>
                 <div className="flex flex-wrap gap-1.5">
-                    {w.komoditas.map((k) => (
+                    {w.komoditas.map((k, i) => (
                         <span
-                            key={k}
-                            className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-200/40 text-slate-600"
+                            key={i}
+                            className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100/50"
                         >
                             {k}
                         </span>
                     ))}
                 </div>
             </div>
+
+            {/* Transaksi Log */}
+            <div className="flex-1 overflow-hidden flex flex-col">
+                <div className="flex items-center gap-2 mb-3 pb-3 border-b border-slate-100">
+                    <ShoppingCart className="w-4 h-4 text-slate-500" />
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Detail Transaksi QRIS</p>
+                </div>
+                <div className="flex-1 overflow-y-auto space-y-2 pr-1 scrollbar-thin">
+                    {transactions.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-8 text-center">
+                            <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center mb-2">
+                                <ShoppingCart className="w-6 h-6 text-slate-300" />
+                            </div>
+                            <p className="text-xs font-semibold text-slate-500">Belum ada transaksi</p>
+                            <p className="text-[10px] text-slate-400 mt-1">di wilayah ini</p>
+                        </div>
+                    ) : (
+                        transactions.map((trx) => (
+                            <div key={trx.id} className="p-3 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-slate-100/50 transition-colors">
+                                <div className="flex items-start justify-between gap-2 mb-2">
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-bold text-slate-900 truncate">{trx.produk}</p>
+                                        <p className="text-[9px] text-slate-500 font-medium mt-0.5">
+                                            {trx.supplier} ? {trx.buyer}
+                                        </p>
+                                    </div>
+                                    <StatusBadge status={trx.dbStatus} />
+                                </div>
+                                <div className="flex items-center justify-between text-[9px] font-semibold text-slate-600 pt-2 border-t border-slate-200/50">
+                                    <div className="flex items-center gap-1">
+                                        <Package className="w-3 h-3 text-slate-400" />
+                                        <span>{trx.qty}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1 text-emerald-600">
+                                        <DollarSign className="w-3 h-3" />
+                                        <span>{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(trx.nilai)}</span>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-1 text-[8px] text-slate-400 font-medium mt-1.5">
+                                    <Clock className="w-2.5 h-2.5" />
+                                    <span>{new Date(trx.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+            </div>
         </div>
     );
 }
 
-// ─── Main Peta Page ───────────────────────────────────────────
+// --- Main Page Component ---------------------------------------------------
 export default function PetaPage() {
-    const [selected, setSelected] = useState<string | null>('banyumas');
+    const [selected, setSelected] = useState<string | null>(null);
     const [points, setPoints] = useState<any[]>([]);
-    const [regions, setRegions] = useState<any[]>(wilayahData);
+    const [allTransactions, setAllTransactions] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
 
+    const regions = wilayahData;
+    const selectedData = selected ? regions.find((r) => r.id === selected) : null;
+    const melimpahCount = regions.filter((r) => r.status === 'melimpah').length;
+    const menipisCount = regions.filter((r) => r.status === 'menipis').length;
+
+    // Fetch data from API
     useEffect(() => {
-        const fetchPoints = async () => {
-            try {
-                const res = await fetch('/api/dashboard');
-                if (!res.ok) throw new Error('Gagal memuat koordinat produk');
-                const json = await res.json();
-                if (json.success) {
-                    if (json.data?.points) {
-                        setPoints(json.data.points);
-                    }
-                    if (json.data?.regionStats) {
-                        const updated = wilayahData.map(w => {
-                            const stats = json.data.regionStats[w.id];
-                            if (stats) {
-                                return {
-                                    ...w,
-                                    ...stats
-                                };
-                            }
-                            return w;
-                        });
-                        setRegions(updated);
-                    }
-                }
-            } catch (err) {
-                console.error(err);
+        Promise.all([
+            fetch('/api/dashboard').then(res => res.json()),
+            fetch('/api/orders').then(res => res.json())
+        ])
+        .then(([dashboardData, ordersData]) => {
+            if (dashboardData.success && dashboardData.data.points) {
+                setPoints(dashboardData.data.points);
             }
-        };
-        fetchPoints();
+            
+            if (ordersData.success) {
+                const mapped = ordersData.data.map((o: any) => ({
+                    id: o.id,
+                    buyer: o.buyerName || 'Pedagang Tumbasna',
+                    supplier: o.supplierName,
+                    produk: o.items?.[0]?.product?.name || 'Komoditas',
+                    qty: (o.items?.[0]?.quantity || 100) + ' kg',
+                    nilai: o.totalAmount,
+                    dbStatus: o.status,
+                    tanggal: o.date,
+                    wilayah: o.supplierLocation.split(',')[0]?.trim() || 'Cilacap',
+                }));
+                setAllTransactions(mapped);
+            }
+            setLoading(false);
+        })
+        .catch(err => {
+            console.error('Error fetching data:', err);
+            setLoading(false);
+        });
     }, []);
 
-    const selectedData = regions.find(w => w.id === selected);
-    const melimpahCount = regions.filter(w => w.status === 'melimpah').length;
-    const menipisCount = regions.filter(w => w.status === 'menipis').length;
+    // Filter transactions by selected region
+    const filteredTransactions = selectedData 
+        ? allTransactions.filter(trx => 
+            trx.wilayah.toLowerCase().includes(selectedData.name.toLowerCase())
+        )
+        : [];
 
     return (
-        <div className="relative w-full h-[calc(100vh-57px)] lg:h-[calc(100vh-73px)] overflow-hidden bg-slate-50">
-
-            {/* Real Leaflet Map - Full Bleed Background */}
-            <div className="absolute inset-0 z-0">
+        <div className="relative w-full h-full">
+            {/* Map Container */}
+            <div className="absolute inset-0">
                 <LeafletPetaMap
                     wilayahData={regions}
                     selected={selected}
@@ -252,8 +345,8 @@ export default function PetaPage() {
             {/* FLOATING: Page Title & Legend (Top Left Overlay) */}
             <div className="absolute top-4 left-4 z-10 w-80 bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/80 shadow-md p-4 hidden md:block">
                 <div>
-                    <h1 className="text-sm font-extrabold text-slate-900 tracking-tight">Peta Komoditas</h1>
-                    <p className="text-[10px] text-slate-400 font-semibold mt-0.5 uppercase tracking-wider">Sebaran wilayah Barlingmascakeb</p>
+                    <h1 className="text-sm font-extrabold text-slate-900 tracking-tight">Zona QRIS</h1>
+                    <p className="text-[10px] text-slate-400 font-semibold mt-0.5 uppercase tracking-wider">Sebaran transaksi wilayah Barlingmascakeb</p>
                 </div>
 
                 <div className="flex items-center gap-2.5 mt-3 pt-3 border-t border-slate-100">
@@ -289,7 +382,7 @@ export default function PetaPage() {
             {/* FLOATING: Detail Panel (Top Right Overlay) */}
             {selectedData && (
                 <div className="absolute top-4 right-4 z-10 w-90 md:w-96 max-h-[calc(100%-150px)] overflow-y-auto bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/80 shadow-lg p-5">
-                    <DetailPanel w={selectedData} onClose={() => setSelected(null)} />
+                    <DetailPanel w={selectedData} transactions={filteredTransactions} onClose={() => setSelected(null)} />
                 </div>
             )}
 
