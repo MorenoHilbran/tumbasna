@@ -96,21 +96,7 @@ const wilayahData = [
         luas: 1281,
         radius: 16000,
     },
-    {
-        id: 'tegal',
-        name: 'Tegal',
-        status: 'melimpah',
-        supplier: 48,
-        buyer: 125,
-        komoditas: ['Beras', 'Cabai Rawit', 'Bawang Merah', 'Sayuran'],
-        stok: '1.920 ton',
-        hargaRataRata: 'Rp 12.000/kg',
-        transaksi: 195,
-        lat: -6.8676,
-        lng: 109.1384,
-        luas: 701,
-        radius: 12000,
-    },
+
 ];
 
 // --- Dynamic Leaflet Map (client-only) ------------------------------------
