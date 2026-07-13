@@ -1,0 +1,17 @@
+﻿*** Begin Patch
+*** Update File: tumbasna-whatsapp/src/bot/baileys.ts
+@@ sock.ev.on('messages.upsert', async ({ messages, type }) => {
++       // Send read receipt for incoming messages
++       for (const msg of messages) {
++           if (msg.key.fromMe) continue;
++           
++           try {
++               await sock.readMessages([msg.key]);
++               console.log(✓✓ [READ RECEIPT] Sent for message from \);
++           } catch (err: any) {
++               console.warn(⚠️ [READ RECEIPT] Failed:, err.message);
++           }
++       }
++
+        if (type !== 'notify') return;
+*** End Patch

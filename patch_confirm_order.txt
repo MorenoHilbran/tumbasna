@@ -1,0 +1,29 @@
+﻿*** Begin Patch
+*** Update File: tumbasna-mobile/src/context/AppContext.tsx
+@@ const confirmOrderReceived = async (orderId: string) => {
+    const currentTime = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    setOrders((prev) =>
+      prev.map((order) => {
+        if (order.id !== orderId) return order;
+        const updatedTimeline = order.trackingTimeline.map((s) => ({ ...s, done: true }));
+        updatedTimeline.push({ title: 'Selesai & Dana Dicairkan', description: \Barang diterima. Dana Rp\ dikirim ke \.\, time: currentTime, done: true });
+        return { ...order, status: 'Selesai', fundsReleased: true, trackingTimeline: updatedTimeline };
+      })
+    );
+    if (user) {
+      const order = orders.find((o) => o.id === orderId);
+      const cost = order?.totalAmount ?? 0;
+      setUser((prev) => prev ? { ...prev, purchasesThisMonth: prev.purchasesThisMonth + cost, activeOrdersCount: Math.max(0, prev.activeOrdersCount - 1) } : null);
+    }
+    try {
+      await fetch(\\/api/orders/\\, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'SELESAI', fundsReleased: true }),
+      });
++     // Refresh orders dari server untuk memastikan sinkronisasi
++     await refreshOrders();
+      await refreshProducts();
+    } catch { console.warn('[confirmOrderReceived] Gagal update ke Supabase.'); }
+  };
+*** End Patch
