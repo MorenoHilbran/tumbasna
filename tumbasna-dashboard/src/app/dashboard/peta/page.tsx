@@ -164,7 +164,7 @@ function DetailPanel({ w, transactions, onClose }: { w: typeof wilayahData[0]; t
                     </button>
                 </div>
                 <h3 className="text-lg font-extrabold text-slate-900 mb-1">{w.name}</h3>
-                <p className="text-[10px] text-slate-500 font-semibold">Luas: {w.luas.toLocaleString('id-ID')} km²</p>
+                <p className="text-[10px] text-slate-500 font-semibold">Luas: {w.luas.toLocaleString('id-ID')} kmÂ²</p>
             </div>
 
             {/* Stats Grid */}
