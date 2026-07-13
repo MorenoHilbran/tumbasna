@@ -95,6 +95,15 @@ model Order {
   buyer            User?        @relation(fields: [buyerUserId], references: [id], onDelete: SetNull)
   items            OrderItem[]
   payment          Payment?
+  deliveryDate     DateTime?    @map("delivery_date") @db.Date
+  deliveryTimeSlot String?      @map("delivery_time_slot") @db.VarChar(50)
+  buyerAddress     String?      @map("buyer_address")
+  buyerPhone       String?      @map("buyer_phone") @db.VarChar(20)
+  buyerCity        String?      @map("buyer_city") @db.VarChar(100)
+  supplierCity     String?      @map("supplier_city") @db.VarChar(100)
+  shippingZone     String?      @map("shipping_zone") @db.VarChar(50)
+  paymentGroupId   String?      @map("payment_group_id") @db.Uuid
+  paymentGroup     PaymentGroup? @relation(fields: [paymentGroupId], references: [id], onDelete: SetNull)
 
   @@map("orders")
 }
@@ -131,6 +140,8 @@ model Payment {
   createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt       DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
   order           Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  paymentMethod   String?        @default("QRIS") @map("payment_method") @db.VarChar(50)
+  adminFee        Decimal?       @default(0) @map("admin_fee") @db.Decimal(12, 2)
 
   @@map("payments")
 }
@@ -188,4 +199,64 @@ enum payment_status {
   CANCEL
   EXPIRE
   REFUND
+}
+
+model PaymentGroup {
+  id            String    @id @default(uuid()) @db.Uuid
+  buyerUserId   String?   @map("buyer_user_id") @db.Uuid
+  totalAmount   Decimal   @map("total_amount") @db.Decimal(12, 2)
+  serviceFee    Decimal   @default(2000) @map("service_fee") @db.Decimal(12, 2)
+  paymentMethod String?   @default("QRIS") @map("payment_method") @db.VarChar(50)
+  status        String?   @default("PENDING") @db.VarChar(50)
+  midtransOrderId String? @unique @map("midtrans_order_id") @db.VarChar(255)
+  qrString      String?   @map("qr_string")
+  vaNumber      String?   @map("va_number") @db.VarChar(100)
+  expiredAt     DateTime? @map("expired_at") @db.Timestamptz(6)
+  paidAt        DateTime? @map("paid_at") @db.Timestamptz(6)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  orders        Order[]
+
+  @@map("payment_groups")
+}
+
+model SupplierDeliverySetting {
+  id             String   @id @default(uuid()) @db.Uuid
+  supplierUserId String   @map("supplier_user_id") @db.Uuid
+  timeSlot       String   @map("time_slot") @db.VarChar(50)
+  startTime      DateTime @map("start_time") @db.Time(6)
+  endTime        DateTime @map("end_time") @db.Time(6)
+  dailyCapacity  Int      @default(10) @map("daily_capacity")
+  isEnabled      Boolean  @default(true) @map("is_enabled")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([supplierUserId, timeSlot])
+  @@map("supplier_delivery_settings")
+}
+
+model SupplierBlockedDate {
+  id             String   @id @default(uuid()) @db.Uuid
+  supplierUserId String   @map("supplier_user_id") @db.Uuid
+  blockedDate    DateTime @map("blocked_date") @db.Date
+  reason         String?  @db.VarChar(255)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([supplierUserId, blockedDate])
+  @@map("supplier_blocked_dates")
+}
+
+model NotificationQueue {
+  id             String    @id @default(uuid()) @db.Uuid
+  type           String    @db.VarChar(50)
+  recipientPhone String    @map("recipient_phone") @db.VarChar(20)
+  message        String
+  status         String?   @default("PENDING") @db.VarChar(50)
+  attempts       Int?      @default(0)
+  lastAttemptAt  DateTime? @map("last_attempt_at") @db.Timestamptz(6)
+  errorMessage   String?   @map("error_message")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("notification_queue")
 }

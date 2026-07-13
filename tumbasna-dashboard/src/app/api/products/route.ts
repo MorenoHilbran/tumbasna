@@ -1,4 +1,4 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
 function getProductImage(commodity: string): string {
@@ -81,7 +81,7 @@ export async function GET(request: Request) {
           }
           return img || getProductImage(entry.commodity);
         })(),
-        description: Komoditas \ segar dari \. Kualitas terjamin.,
+        description: `Komoditas ${entry.commodity} segar dari ${entry.user.businessName || entry.user.name || 'Petani'}. Kualitas terjamin.`,
         shippingEstimate: '1-3 Hari',
         category: entry.commodity,
         priceHistory: [
@@ -115,7 +115,7 @@ export async function GET(request: Request) {
             return {
               ...product,
               distance: Math.round(distance * 10) / 10, // Round to 1 decimal
-              distanceText: distance < 1 ? \m : \km
+              distanceText: distance < 1 ? 'm' : 'km'
             };
           }
           return product;

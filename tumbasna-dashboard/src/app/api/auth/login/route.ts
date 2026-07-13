@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     // Cari user berdasarkan phone atau email
     const include = {
       orders: {
-        where: { status: { notIn: ['SELESAI', 'DIBATALKAN'] } },
+        where: { status: { notIn: ['SELESAI', 'DIBATALKAN'] as any } },
         select: { id: true },
       },
     };

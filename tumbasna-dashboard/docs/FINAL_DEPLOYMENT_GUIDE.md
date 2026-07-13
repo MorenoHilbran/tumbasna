@@ -159,46 +159,46 @@ POST /api/orders/batch
 
 ```
 +-----------------------------+
-¦  1. User Add to Cart        ¦
-¦     ?                       ¦
-¦  2. Cart Pill Bar Muncul    ¦
-¦     ?                       ¦
-¦  3. Click "Lihat Keranjang" ¦
+ï¿½  1. User Add to Cart        ï¿½
+ï¿½     ?                       ï¿½
+ï¿½  2. Cart Pill Bar Muncul    ï¿½
+ï¿½     ?                       ï¿½
+ï¿½  3. Click "Lihat Keranjang" ï¿½
 +-----------------------------+
               ?
 +-----------------------------+
-¦  CHECKOUT PAGE              ¦
-¦  /checkout                  ¦
-+-----------------------------¦
-¦  • Pilih Tanggal            ¦
-¦  • Detail Pesanan           ¦
-¦  • Alamat Pengiriman        ¦
-¦  • Waktu Pengiriman         ¦
-¦  • Metode Pembayaran        ¦
-¦  • Ringkasan Total          ¦
+ï¿½  CHECKOUT PAGE              ï¿½
+ï¿½  /checkout                  ï¿½
++-----------------------------ï¿½
+ï¿½  ï¿½ Pilih Tanggal            ï¿½
+ï¿½  ï¿½ Detail Pesanan           ï¿½
+ï¿½  ï¿½ Alamat Pengiriman        ï¿½
+ï¿½  ï¿½ Waktu Pengiriman         ï¿½
+ï¿½  ï¿½ Metode Pembayaran        ï¿½
+ï¿½  ï¿½ Ringkasan Total          ï¿½
 +-----------------------------+
               ?
         [Submit Order]
               ?
 +-----------------------------+
-¦  BACKEND PROCESSING         ¦
-+-----------------------------¦
-¦  1. Group by supplier       ¦
-¦  2. Calculate shipping      ¦
-¦  3. Create orders           ¦
-¦  4. Send WA to suppliers    ¦
-¦  5. Generate QRIS           ¦
+ï¿½  BACKEND PROCESSING         ï¿½
++-----------------------------ï¿½
+ï¿½  1. Group by supplier       ï¿½
+ï¿½  2. Calculate shipping      ï¿½
+ï¿½  3. Create orders           ï¿½
+ï¿½  4. Send WA to suppliers    ï¿½
+ï¿½  5. Generate QRIS           ï¿½
 +-----------------------------+
               ?
 +-----------------------------+
-¦  PAYMENT PAGE               ¦
-¦  /payment?orders=...        ¦
-+-----------------------------¦
-¦  • QR Code QRIS             ¦
-¦  • 15 min countdown         ¦
-¦  • Instructions             ¦
-¦  • Order summary            ¦
-¦  • Auto status check        ¦
+ï¿½  PAYMENT PAGE               ï¿½
+ï¿½  /payment?orders=...        ï¿½
++-----------------------------ï¿½
+ï¿½  ï¿½ QR Code QRIS             ï¿½
+ï¿½  ï¿½ 15 min countdown         ï¿½
+ï¿½  ï¿½ Instructions             ï¿½
+ï¿½  ï¿½ Order summary            ï¿½
+ï¿½  ï¿½ Auto status check        ï¿½
 +-----------------------------+
               ?
         [User Scan & Pay]
@@ -206,9 +206,9 @@ POST /api/orders/batch
         [Payment Success]
               ?
 +-----------------------------+
-¦  • Redirect ke Orders       ¦
-¦  • WA notif ke supplier     ¦
-¦  • Status: DIPROSES         ¦
+ï¿½  ï¿½ Redirect ke Orders       ï¿½
+ï¿½  ï¿½ WA notif ke supplier     ï¿½
+ï¿½  ï¿½ Status: DIPROSES         ï¿½
 +-----------------------------+
 ```
 
@@ -299,7 +299,7 @@ sudo systemctl reload nginx
 **Option A: Via Supabase Dashboard**
 1. Login ke Supabase
 2. Go to SQL Editor
-3. Copy-paste dari `add_delivery_scheduling.sql`
+3. Copy-paste dari `very_scheduling.sql`
 4. Execute
 
 **Option B: Via Prisma**
@@ -439,7 +439,7 @@ All created in `tumbasna-dashboard/`:
 
 2. **Run Database Migration** (5 menit)
    - Via Supabase SQL Editor
-   - Copy-paste dari `add_delivery_scheduling.sql`
+   - Copy-paste dari `very_scheduling.sql`
 
 3. **Deploy Code** (15 menit)
    ```bash
@@ -490,11 +490,11 @@ All created in `tumbasna-dashboard/`:
 ### Example Calculation
 ```
 Order 1 (Pak Budi - Banyumas):
-  Beras 10kg × Rp 12.000 = Rp 120.000
+  Beras 10kg ï¿½ Rp 12.000 = Rp 120.000
   Ongkir Purwokerto?Purwokerto = Rp 2.500
 
 Order 2 (Bu Siti - Cilacap):
-  Cabai 5kg × Rp 15.000 = Rp 75.000
+  Cabai 5kg ï¿½ Rp 15.000 = Rp 75.000
   Ongkir Cilacap?Purwokerto = Rp 5.000
 
 Subtotal = Rp 195.000
