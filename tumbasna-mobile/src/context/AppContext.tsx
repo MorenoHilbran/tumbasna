@@ -222,24 +222,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   // ── Fetch products dari dashboard API ────────────────────────────────────
-     try {
-     // Get user location for distance filtering
-     let queryParams = '';
-     if (navigator.geolocation) {
-       try {
-         const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-           navigator.geolocation.getCurrentPosition(resolve, reject, {
-             enableHighAccuracy: false,
-             timeout: 3000,
-             maximumAge: 300000 // Cache for 5 minutes
-           });
-         });
-         queryParams = ?lat=\&lng=\&maxDistance=100;
-       } catch (geoErr) {
-         console.warn('[refreshProducts] Geolocation error, fetching all products:', geoErr);
-       }
-     }
-     const res = await fetch(\/api/products\);
+  const refreshProducts = async () => {
+    try {
+      // Get user location for distance filtering
+      let queryParams = '';
+      if (navigator.geolocation) {
+        try {
+          const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              enableHighAccuracy: false,
+              timeout: 3000,
+              maximumAge: 300000 // Cache for 5 minutes
+            });
+          });
+          queryParams = `?lat=${position.coords.latitude}&lng=${position.coords.longitude}&maxDistance=100`;
+        } catch (geoErr) {
+          console.warn('[refreshProducts] Geolocation error, fetching all products:', geoErr);
+        }
+      }
+      const res = await fetch(`${API_BASE}/api/products${queryParams}`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.data?.length > 0) {
+          setProducts(json.data);
+        }
+      }
+    } catch (err) {
+      console.warn('[AppContext] Dashboard offline atau gagal refresh products:', err);
+    }
+  };
 
   useEffect(() => {
     refreshProducts();
