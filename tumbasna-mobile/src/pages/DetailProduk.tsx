@@ -47,8 +47,8 @@ const DetailProduk: React.FC<DetailProdukProps> = ({ product, onBack, onNavigate
   const [toastMessage, setToastMessage] = useState('');
   const [showSupplierModal, setShowSupplierModal] = useState(false);
 
-  // Find max price for chart scale
-  const prices = product.priceHistory.map((p) => p.price);
+  // Find max price for chart scale - with safety check
+  const prices = product.priceHistory?.length > 0 ? product.priceHistory.map((p) => p.price) : [product.price];
   const maxPrice = Math.max(...prices);
 
   const incrementQty = () => {
@@ -76,7 +76,16 @@ const DetailProduk: React.FC<DetailProdukProps> = ({ product, onBack, onNavigate
 
   // Custom AI Advice text
   const getAIAdvice = () => {
-    const trend = product.priceHistory[5].price > product.priceHistory[4].price ? 'NAIK' : 'TURUN';
+    if (!product.priceHistory || product.priceHistory.length < 2) {
+      return {
+        status: 'Data Terbatas',
+        text: 'Belum cukup data historis untuk memberikan rekomendasi. Silakan hubungi supplier untuk informasi lebih lanjut.',
+        color: '#94A3B8'
+      };
+    }
+    const lastIdx = product.priceHistory.length - 1;
+    const prevIdx = product.priceHistory.length - 2;
+    const trend = product.priceHistory[lastIdx].price > product.priceHistory[prevIdx].price ? 'NAIK' : 'TURUN';
     if (trend === 'NAIK') {
       return {
         status: 'Sangat Direkomendasikan Membeli Sekarang',
@@ -175,7 +184,7 @@ const DetailProduk: React.FC<DetailProdukProps> = ({ product, onBack, onNavigate
               <div className="price-chart-container">
                 <div className="price-chart-title">Grafik Tren Harga (6 Bulan Terakhir)</div>
                 <div className="chart-bars">
-                  {product.priceHistory.map((item, index) => {
+                  {(product.priceHistory || []).map((item, index) => {
                     const heightPercent = (item.price / maxPrice) * 100;
                     return (
                       <div key={index} className="chart-bar-wrapper">
@@ -303,3 +312,8 @@ const DetailProduk: React.FC<DetailProdukProps> = ({ product, onBack, onNavigate
 };
 
 export default DetailProduk;
+
+
+
+
+

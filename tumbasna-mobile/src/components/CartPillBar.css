@@ -1,0 +1,93 @@
+/* Cart Pill Bar - Redesigned */
+.cart-pill-bar {
+  position: fixed;
+  bottom: 80px;
+  left: 16px;
+  right: 16px;
+  background: #006837;
+  border-radius: 50px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* box-shadow removed */
+  border: 1px solid rgba(140, 198, 63, 0.3);
+  z-index: 1000;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  animation: slideUp 0.3s ease-out;
+}
+
+.cart-pill-bar:active {
+  transform: scale(0.98);
+  /* box-shadow removed */
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.cart-pill-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.cart-pill-image {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #F8F7F4;
+  flex-shrink: 0;
+  border: 1px solid rgba(0, 104, 55, 0.08);
+}
+
+.cart-pill-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cart-pill-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.cart-pill-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.cart-pill-items {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.cart-pill-price {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  color: #FFA500;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+
+
+
+

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { IonApp, IonIcon } from '@ionic/react';
 import { 
   homeOutline, home, 
@@ -9,7 +9,7 @@ import {
   cartOutline 
 } from 'ionicons/icons';
 
-import { useApp, Product } from './context/AppContext';
+import { useApp, Product, CartItem } from './context/AppContext';
 
 import Home from './pages/Home';
 import Pasar from './pages/Pasar';
@@ -20,7 +20,7 @@ import Keranjang from './pages/Keranjang';
 import Checkout from './pages/Checkout';
 import DetailProduk from './pages/DetailProduk';
 import DetailPesanan from './pages/DetailPesanan';
-import PembayaranQris from './pages/PembayaranQris';
+import OrderDetail from './pages/OrderDetail';
 import LoginRegister from './pages/LoginRegister';
 import Welcome from './pages/Welcome';
 import Splash from './pages/Splash';
@@ -28,7 +28,7 @@ import Splash from './pages/Splash';
 import './MainAppShell.css';
 
 type TabState = 'beranda' | 'pasar' | 'pesanan' | 'chat' | 'profil';
-type ViewState = 'tabs' | 'detail_produk' | 'keranjang' | 'checkout' | 'pembayaran_qris' | 'detail_pesanan';
+type ViewState = 'tabs' | 'detail_produk' | 'keranjang' | 'checkout' | 'order_detail_payment' | 'detail_pesanan';
 
 const TABS: { id: TabState; label: string; iconActive: string; iconInactive: string }[] = [
   { id: 'beranda', label: 'Beranda', iconActive: home, iconInactive: homeOutline },
@@ -41,24 +41,23 @@ const TABS: { id: TabState; label: string; iconActive: string; iconInactive: str
 const MainAppShell: React.FC = () => {
   const { user, refreshProducts } = useApp();
 
-  // Navigation State
   const [activeTab, setActiveTab] = useState<TabState>('beranda');
   const [viewState, setViewState] = useState<ViewState>('tabs');
   
-  // Refetch products when entering Pasar to ensure up-to-date stock information
   useEffect(() => {
     if (activeTab === 'pasar') {
       refreshProducts();
     }
   }, [activeTab]);
   
-  // Selected Data State
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [selectedChatPartner, setSelectedChatPartner] = useState<string | null>(null);
   const [selectedChatPartnerPhone, setSelectedChatPartnerPhone] = useState<string | null>(null);
+  
+  const [checkoutSupplierId, setCheckoutSupplierId] = useState<string | null>(null);
+  const [checkoutSupplierItems, setCheckoutSupplierItems] = useState<CartItem[]>([]);
 
-  // Auth Onboarding Navigation State
   const [showSplash, setShowSplash] = useState(true);
   const [showWelcome, setShowWelcome] = useState(true);
   const [initialLoginMode, setInitialLoginMode] = useState<'login' | 'register'>('login');
@@ -66,11 +65,10 @@ const MainAppShell: React.FC = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowSplash(false);
-    }, 2500); // 2.5 seconds splash screen
+    }, 2500);
     return () => clearTimeout(timer);
   }, []);
 
-  // Reset tab to beranda on user login or reset onboarding on logout
   useEffect(() => {
     if (user) {
       setActiveTab('beranda');
@@ -80,7 +78,6 @@ const MainAppShell: React.FC = () => {
     }
   }, [user?.phone]);
 
-  // If user is not logged in, show Welcome page or LoginRegister page
   if (showSplash) {
     return <Splash />;
   }
@@ -104,7 +101,6 @@ const MainAppShell: React.FC = () => {
     );
   }
 
-  // Render the current sub-page or tab content
   const renderContent = () => {
     switch (viewState) {
       case 'detail_produk':
@@ -130,11 +126,16 @@ const MainAppShell: React.FC = () => {
       case 'keranjang':
         return (
           <Keranjang
+            onBack={() => setViewState('tabs')}
             onNavigateToPasar={() => {
               setViewState('tabs');
               setActiveTab('pasar');
             }}
-            onNavigateToCheckout={() => setViewState('checkout')}
+            onCheckout={(supplierId, items) => {
+              setCheckoutSupplierId(supplierId);
+              setCheckoutSupplierItems(items);
+              setViewState('checkout');
+            }}
           />
         );
 
@@ -144,30 +145,30 @@ const MainAppShell: React.FC = () => {
             onBack={() => setViewState('keranjang')}
             onOrderCreated={(orderId) => {
               setSelectedOrderId(orderId);
-              setViewState('pembayaran_qris');
+              setViewState('order_detail_payment');
             }}
+            supplierId={checkoutSupplierId || undefined}
+            supplierItems={checkoutSupplierItems.length > 0 ? checkoutSupplierItems : undefined}
           />
         );
 
-      case 'pembayaran_qris':
+      case 'order_detail_payment':
         if (selectedOrderId) {
           return (
-            <PembayaranQris
+            <OrderDetail
               orderId={selectedOrderId}
-              onNavigateToPesanan={() => {
+              onBack={() => {
+                setViewState('detail_pesanan');
+              }}
+              onPaymentSuccess={() => {
                 setViewState('tabs');
                 setActiveTab('pesanan');
-              }}
-              onNavigateToTracking={(id) => {
-                setSelectedOrderId(id);
-                setViewState('detail_pesanan');
               }}
             />
           );
         }
         setViewState('tabs');
         return null;
-
       case 'detail_pesanan':
         if (selectedOrderId) {
           return (
@@ -182,6 +183,9 @@ const MainAppShell: React.FC = () => {
                 setViewState('tabs');
                 setActiveTab('chat');
               }}
+              onNavigateToPayment={() => {
+                setViewState('order_detail_payment');
+              }}
             />
           );
         }
@@ -190,11 +194,11 @@ const MainAppShell: React.FC = () => {
 
       case 'tabs':
       default:
-        // Render Active Tab Content
         switch (activeTab) {
           case 'pasar':
             return (
               <Pasar
+                onNavigateToCart={() => setViewState('keranjang')}
                 onSelectProduct={(product) => {
                   setSelectedProduct(product);
                   setViewState('detail_produk');
@@ -210,7 +214,7 @@ const MainAppShell: React.FC = () => {
                 }}
                 onNavigateToPayment={(id) => {
                   setSelectedOrderId(id);
-                  setViewState('pembayaran_qris');
+                  setViewState('order_detail_payment');
                 }}
               />
             );
@@ -253,34 +257,29 @@ const MainAppShell: React.FC = () => {
     }
   };
 
+  const pageKey = viewState + '-' + activeTab;
+  const navClass = 'bottom-nav-item' + (activeTab === 'active' ? ' active' : '');
+
   return (
     <IonApp style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      {/* Active Screen Area */}
       <div 
-        key={`${viewState}-${activeTab}`}
+        key={pageKey}
         className="page-transition-wrapper"
         style={{ flex: 1, position: 'relative', overflow: 'hidden', height: '100%' }}
       >
         {renderContent()}
       </div>
 
-      {/* Global Cart FAB Overlay (only visible on main home/pasar/profile views when cart has items) */}
-      {viewState === 'tabs' && (activeTab === 'beranda' || activeTab === 'pasar') && (
-        <button className="floating-cart-fab" onClick={() => setViewState('keranjang')}>
-          <IonIcon icon={cartOutline} />
-        </button>
-      )}
-
-      {/* Simple Bottom Navigation Bar */}
       {viewState === 'tabs' && (
         <div className="bottom-nav">
           <ul className="bottom-nav-list">
             {TABS.map((tab) => {
               const isActive = activeTab === tab.id;
+              const itemClass = isActive ? 'bottom-nav-item active' : 'bottom-nav-item';
               return (
                 <li 
                   key={tab.id}
-                  className={`bottom-nav-item ${isActive ? 'active' : ''}`}
+                  className={itemClass}
                   onClick={() => setActiveTab(tab.id)}
                 >
                   <div className="bottom-nav-icon-wrapper">
@@ -298,3 +297,7 @@ const MainAppShell: React.FC = () => {
 };
 
 export default MainAppShell;
+
+
+
+

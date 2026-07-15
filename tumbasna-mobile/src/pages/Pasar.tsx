@@ -25,13 +25,15 @@ import {
 } from 'ionicons/icons';
 import { useApp, Product } from '../context/AppContext';
 import SupplierModal from '../components/SupplierModal';
+import CartPillBar from '../components/CartPillBar';
 import './Pasar.css';
 
 interface PasarProps {
   onSelectProduct: (product: Product) => void;
+  onNavigateToCart: () => void;
 }
 
-const Pasar: React.FC<PasarProps> = ({ onSelectProduct }) => {
+const Pasar: React.FC<PasarProps> = ({ onSelectProduct, onNavigateToCart }) => {
   const { products, addToCart } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'semua' | 'termurah' | 'terdekat' | 'terbaru'>('semua');
@@ -135,8 +137,7 @@ const Pasar: React.FC<PasarProps> = ({ onSelectProduct }) => {
     e.stopPropagation();
     if (addedIds.has(product.id)) return; // prevent double-tap
     addToCart(product, 1);
-    setToastMessage(`1 kg ${product.name} ditambahkan ke Keranjang`);
-    setShowToast(true);
+    // Toast removed - pill bar provides feedback
 
     // Tampilkan state sukses pada tombol selama 1.5 detik
     setAddedIds((prev) => new Set(prev).add(product.id));
@@ -291,8 +292,15 @@ const Pasar: React.FC<PasarProps> = ({ onSelectProduct }) => {
           onSelectProduct={onSelectProduct}
         />
       </IonContent>
+
+      {/* Cart Pill Bar */}
+      <CartPillBar onNavigateToCart={onNavigateToCart} />
     </IonPage>
   );
 };
 
 export default Pasar;
+
+
+
+

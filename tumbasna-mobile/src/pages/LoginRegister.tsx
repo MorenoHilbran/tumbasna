@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   IonContent,
   IonPage,
@@ -537,3 +537,6 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ initialIsLogin = true, on
 };
 
 export default LoginRegister;
+
+
+

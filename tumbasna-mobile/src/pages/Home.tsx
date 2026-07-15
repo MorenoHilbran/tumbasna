@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { IonContent, IonPage, IonToast } from '@ionic/react';
 import { useApp, Product } from '../context/AppContext';
+import CartPillBar from '../components/CartPillBar';
 import './Home.css';
 
 const AI_SLIDES = [
@@ -65,11 +66,10 @@ const getAiRecommendation = (productName: string) => {
 };
 
 const Home: React.FC<HomeProps> = ({ onNavigateToPasar, onNavigateToPesanan, onNavigateToAiChat, onSelectProduct, onNavigateToChat }) => {
-  const { user, products, addToCart } = useApp();
+  const { user, products, cart, addToCart } = useApp();
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [activeSlide, setActiveSlide] = useState(0);
-  const [cartShake, setCartShake] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -271,10 +271,7 @@ const Home: React.FC<HomeProps> = ({ onNavigateToPasar, onNavigateToPesanan, onN
                           onClick={(e) => {
                             e.stopPropagation();
                             addToCart(product, 1);
-                            setToastMessage(`1 kg ${product.name} ditambahkan ke Keranjang`);
-                            setShowToast(true);
-                            setCartShake(true);
-                            setTimeout(() => setCartShake(false), 600);
+                            // Toast removed - pill bar provides feedback
                           }}
                         >
                           <i className="fa-solid fa-plus"></i>
@@ -318,14 +315,9 @@ const Home: React.FC<HomeProps> = ({ onNavigateToPasar, onNavigateToPesanan, onN
 
           </div>
 
-          {/* FAB Cart */}
-          <button 
-            className={`fab-cart ${cartShake ? 'shake' : ''}`} 
-            onClick={onNavigateToPasar} 
-            aria-label="Keranjang"
-          >
-            <i className="fa-solid fa-cart-shopping"></i>
-          </button>
+
+          <CartPillBar onNavigateToCart={onNavigateToPasar} />
+
 
           <IonToast
             isOpen={showToast}
@@ -343,3 +335,12 @@ const Home: React.FC<HomeProps> = ({ onNavigateToPasar, onNavigateToPesanan, onN
 };
 
 export default Home;
+
+
+
+
+
+
+
+
+

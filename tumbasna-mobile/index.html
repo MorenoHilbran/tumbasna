@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -16,27 +16,121 @@
     <meta name="description" content="Tumbasna - Platform Rantai Pasok Pangan Digital modern yang menghubungkan UMKM dengan supplier dan petani lokal secara cepat, aman, dan transparan." />
     
     <link rel="manifest" href="/manifest.json" />
-    
     <link rel="shortcut icon" type="image/png" href="/favicon.png" />
+    
+    <!-- Preload Critical Resources -->
+    <link rel="preload" href="/logotum.png" as="image" type="image/png" />
+    <link rel="preload" href="/src/main.tsx" as="script" />
     
     <!-- add to homescreen for ios -->
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Tumbasna" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
-    <!-- Google Fonts: Plus Jakarta Sans (sans) + Playfair Display (serif accent) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Playfair+Display:ital,wght@0,700;1,400;1,600;1,700&display=swap" rel="stylesheet">
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- DNS Prefetch for external resources -->
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com" />
+    <link rel="dns-prefetch" href="https://api.tumbasna.my.id" />
 
+    <!-- Preconnect for critical external domains -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
+    <!-- Google Fonts: Plus Jakarta Sans (optimized with display=swap) -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700&display=swap" rel="stylesheet" />
+    
+    <!-- Font Awesome (defer loading) -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" /></noscript>
+
+    <!-- Inline Critical CSS for Splash Screen -->
+    <style>
+      /* Critical splash screen styles for instant render */
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      
+      #root {
+        min-height: 100vh;
+        background: #ffffff;
+      }
+      
+      /* Initial loading state */
+      .initial-loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        background: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+      }
+      
+      .initial-loader-content {
+        text-align: center;
+      }
+      
+      .initial-loader-logo {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto 20px;
+        animation: fadeInScale 0.8s ease-out;
+      }
+      
+      .initial-loader-text {
+        font-size: 28px;
+        font-weight: 900;
+        color: #006837;
+        margin: 0;
+        animation: fadeIn 1s ease-out 0.3s both;
+      }
+      
+      .initial-loader-text span {
+        color: #F7941D;
+      }
+      
+      @keyframes fadeInScale {
+        from {
+          opacity: 0;
+          transform: scale(0.9);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+      
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- Initial Loading Screen (before React hydrates) -->
+    <div id="root">
+      <div class="initial-loader">
+        <div class="initial-loader-content">
+          <div class="initial-loader-logo">
+            <img src="/logotum.png" alt="Tumbasna" style="width: 100%; height: 100%; object-fit: contain;" />
+          </div>
+          <h1 class="initial-loader-text">Tumbas<span>Na</span></h1>
+        </div>
+      </div>
+    </div>
+    
     <!-- Midtrans Snap Script (diaktifkan saat VITE_PAYMENT_MODE=midtrans) -->
-    <!-- <script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="Mid-client-PjI0Nu76GIkFIqVR"></script> -->
+    <!-- <script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="Mid-client-PjI0Nu76GIkFIqVR" defer></script> -->
+    
+    <!-- Main App Script -->
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

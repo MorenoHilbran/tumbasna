@@ -1,9 +1,10 @@
-/* ==============================
-   Checkout.css — Modern Classic
+﻿/* ==============================
+   Checkout.css – Modern Classic
    ============================== */
 
 .checkout-toolbar {
   --background: #ffffff;
+  --border-width: 0;
 }
 
 .checkout-toolbar-inner {
@@ -11,7 +12,7 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  padding: 8px 12px;
+  padding: 12px 16px;
 }
 
 .checkout-back-btn {
@@ -24,20 +25,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 6px;
+  padding: 8px;
   border-radius: 8px;
   cursor: pointer;
   outline: none;
+  width: 40px;
+  height: 40px;
+  transition: all 0.2s ease;
 }
 
-.checkout-logo-row {
-  display: flex;
-  align-items: center;
-}
-
-.checkout-header-logo-only {
-  height: 38px;
-  object-fit: contain;
+.checkout-back-btn:active {
+  background: rgba(0, 104, 55, 0.1);
+  transform: scale(0.95);
 }
 
 .checkout-header-title {
@@ -46,6 +45,7 @@
   font-weight: 700;
   color: #1f532a;
   margin: 0;
+  text-align: center;
 }
 
 .checkout-content {
@@ -62,8 +62,30 @@
   margin: 18px 16px 8px;
 }
 
-/* Shipping Address Card */
-.checkout-address-card {
+.supplier-info-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 0 14px 16px;
+  border: 1px solid rgba(0, 104, 55, 0.06);
+  box-shadow: 0 4px 12px rgba(0, 104, 55, 0.02);
+}
+
+.supplier-info-card h3 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  color: #006837;
+  margin: 0 0 4px 0;
+}
+
+.supplier-info-card p {
+  font-size: 11px;
+  color: #6B7A6F;
+  margin: 0;
+}
+
+.address-summary-card {
   background: #ffffff;
   border-radius: 12px;
   padding: 16px;
@@ -71,49 +93,251 @@
   border: 1px solid rgba(0, 104, 55, 0.06);
   box-shadow: 0 4px 12px rgba(0, 104, 55, 0.02);
   display: flex;
-  gap: 12px;
-}
-
-.address-icon-bg {
-  background: rgba(140, 198, 63, 0.1);
-  color: #8CC63F;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.address-details {
+.address-summary-card:active {
+  background: #F9FCF8;
+}
+
+.address-icon-text {
+  display: flex;
+  gap: 12px;
   flex: 1;
-  line-height: 1.4;
 }
 
-.address-business-name {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 13.5px;
-  font-weight: 800;
-  color: #006837;
-  margin: 0 0 3px 0;
-}
-
-.address-phone {
-  font-size: 11px;
-  color: #6B7A6F;
-  margin: 0 0 4px 0;
+.address-icon-text ion-icon {
+  font-size: 20px;
+  color: #F7941D;
+  flex-shrink: 0;
 }
 
 .address-text {
   font-size: 11px;
   color: #6B7A6F;
-  margin: 0;
   line-height: 1.5;
+  margin: 0;
 }
 
-/* Shipping Methods Selection */
+.address-change-btn {
+  color: #F7941D;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.delivery-time-section {
+  margin: 0 14px 16px;
+}
+
+.delivery-time-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 0 14px 16px;
+}
+
+.delivery-time-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 104, 55, 0.06);
+  border-radius: 12px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 104, 55, 0.02);
+}
+
+.delivery-time-card:active {
+  transform: scale(0.98);
+}
+
+.delivery-time-card.active {
+  border-color: #8CC63F;
+  background: #F9FCF8;
+}
+
+.delivery-time-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.delivery-time-header .time-icon {
+  font-size: 18px;
+  color: #F7941D;
+}
+
+.delivery-time-header ion-radio {
+  --color-checked: #8CC63F;
+  margin: 0;
+}
+
+.delivery-time-info h4 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  color: #006837;
+  margin: 0 0 3px 0;
+}
+
+.delivery-time-info p {
+  font-size: 9px;
+  color: #6B7A6F;
+  margin: 0;
+}
+
+.delivery-time-select {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid rgba(0, 104, 55, 0.12);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #006837;
+  outline: none;
+  box-shadow: 0 4px 12px rgba(0, 104, 55, 0.02);
+  cursor: pointer;
+}
+
+.delivery-time-select:focus {
+  border-color: #8CC63F;
+  box-shadow: 0 0 0 3px rgba(140, 198, 63, 0.1);
+}
+
+.distance-info-bar {
+  background: linear-gradient(135deg, #E8F5E9 0%, #F1F8E9 100%);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 0 14px 10px;
+  border: 1px solid #C5E1A5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.distance-info-bar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: linear-gradient(180deg, #8CC63F 0%, #7AB62F 100%);
+}
+
+.distance-info-bar ion-icon {
+  font-size: 18px;
+  color: #689F38;
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+
+.distance-info-bar span {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #33691E;
+  flex: 1;
+}
+
+.distance-info-bar .distance-badge {
+  background: #ffffff;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  color: #689F38;
+  border: 1px solid #C5E1A5;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.payment-method-section {
+  margin: 0 14px 16px;
+}
+
+.payment-method-card {
+  background: #ffffff;
+  margin-bottom: 6px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 104, 55, 0.06);
+  box-shadow: 0 4px 12px rgba(0, 104, 55, 0.02);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.payment-method-card.active {
+  border-color: #8CC63F;
+  background: #F9FCF8;
+}
+
+.payment-method-info {
+  flex: 1;
+}
+
+.payment-method-info h4 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  color: #006837;
+  margin: 0 0 3px 0;
+}
+
+.payment-method-info p {
+  font-size: 10px;
+  color: #6B7A6F;
+  margin: 0;
+}
+
+.payment-expand-btn {
+  background: #ffffff;
+  border: 1.5px dashed #8CC63F;
+  border-radius: 10px;
+  padding: 10px 14px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: #006837;
+  margin-top: 4px;
+  box-shadow: 0 2px 6px rgba(140, 198, 63, 0.08);
+}
+
+.payment-expand-btn:hover {
+  background: rgba(140, 198, 63, 0.05);
+  border-color: #7AB62F;
+  border-style: solid;
+}
+
+.payment-expand-btn:active {
+  transform: scale(0.98);
+  background: rgba(140, 198, 63, 0.1);
+}
+
+.payment-expand-btn ion-icon {
+  font-size: 16px;
+  color: #8CC63F;
+  transition: transform 0.3s ease;
+}
+
 .shipping-methods-list {
   margin: 0 14px 16px;
 }
@@ -159,6 +383,24 @@
   margin: 0;
 }
 
+.shipping-distance-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #FFF3E0;
+  border: 1px solid #FFE0B2;
+  border-radius: 6px;
+  padding: 4px 8px;
+  margin-top: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  color: #F57C00;
+}
+
+.shipping-distance-badge ion-icon {
+  font-size: 12px;
+}
+
 .shipping-info-right {
   display: flex;
   align-items: center;
@@ -177,38 +419,76 @@
   margin: 0;
 }
 
-/* Order Items Summary */
+.ekspedisi-expand-section {
+  margin-top: 10px;
+}
+
+.ekspedisi-expand-btn {
+  background: #ffffff;
+  border: 1.5px dashed #8CC63F;
+  border-radius: 10px;
+  padding: 10px 14px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: #006837;
+  box-shadow: 0 2px 6px rgba(140, 198, 63, 0.08);
+}
+
+.ekspedisi-expand-btn:hover {
+  background: rgba(140, 198, 63, 0.05);
+  border-color: #7AB62F;
+  border-style: solid;
+}
+
+.ekspedisi-expand-btn:active {
+  transform: scale(0.98);
+  background: rgba(140, 198, 63, 0.1);
+}
+
+.ekspedisi-expand-btn ion-icon {
+  font-size: 16px;
+  color: #8CC63F;
+  transition: transform 0.3s ease;
+}
+
 .checkout-items-summary-card {
   background: #ffffff;
   border-radius: 12px;
-  margin: 0 14px 16px;
   padding: 16px;
+  margin: 0 14px 16px;
   border: 1px solid rgba(0, 104, 55, 0.06);
+  box-shadow: 0 4px 12px rgba(0, 104, 55, 0.02);
 }
 
 .summary-item-row {
   display: flex;
   gap: 12px;
-  padding: 10px 0;
-  border-bottom: 1px dashed rgba(0, 104, 55, 0.06);
+  align-items: center;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(0, 104, 55, 0.06);
 }
 
 .summary-item-row:last-child {
   border-bottom: none;
   padding-bottom: 0;
-}
-
-.summary-item-row:first-child {
-  padding-top: 0;
+  margin-bottom: 0;
 }
 
 .summary-item-img {
-  width: 42px;
-  height: 42px;
+  width: 50px;
+  height: 50px;
   border-radius: 8px;
   overflow: hidden;
-  background: #F8F7F4;
-  border: 1px solid rgba(0, 104, 55, 0.05);
+  flex-shrink: 0;
 }
 
 .summary-item-img img {
@@ -224,455 +504,654 @@
 .summary-item-title {
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 11.5px;
-  font-weight: 700;
+  font-weight: 800;
   color: #006837;
-  margin: 0 0 2px 0;
+  margin: 0 0 3px 0;
 }
 
 .summary-item-qty {
   font-size: 10px;
-  color: #9EA8A2;
+  color: #6B7A6F;
   margin: 0;
 }
 
 .summary-item-total {
   font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 11.5px;
   font-weight: 800;
-  font-size: 12px;
   color: #006837;
-  align-self: center;
+  flex-shrink: 0;
 }
 
-/* Pricing Detail breakdown */
+.pricing-breakdown-wrapper {
+  position: relative;
+  margin: 0 14px 16px;
+  margin-bottom: 40px;
+}
+
 .pricing-breakdown-card {
   background: #ffffff;
   border-radius: 12px;
-  margin: 0 14px 24px;
   padding: 16px;
   border: 1px solid rgba(0, 104, 55, 0.06);
+  box-shadow: 0 4px 12px rgba(0, 104, 55, 0.02);
+  margin-bottom: 0;
 }
 
 .breakdown-row {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
   font-size: 11px;
   color: #6B7A6F;
-  margin-bottom: 8px;
+}
+
+.breakdown-row span:last-child {
+  font-weight: 700;
+  color: #006837;
 }
 
 .breakdown-row.total-row-bold {
-  border-top: 1px dashed rgba(0, 104, 55, 0.12);
-  padding-top: 10px;
-  margin-top: 6px;
-  margin-bottom: 12px;
-}
-
-.breakdown-row.total-row-bold span:first-child {
-  font-weight: 800;
-  color: #006837;
-  font-size: 12px;
+  border-top: 1px solid rgba(0, 104, 55, 0.1);
+  margin-top: 8px;
+  padding-top: 12px;
+  font-weight: 700;
 }
 
 .total-highlight {
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 15px;
-  font-weight: 800;
-  color: #F7941D;
+  font-weight: 900;
+  color: #006837;
 }
 
-.escrow-notice {
-  background: #EFF8F0;
-  border: 1px solid rgba(140, 198, 63, 0.25);
-  border-radius: 8px;
-  padding: 10px;
+.escrow-notice-hanging {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% - 20px);
+  background: #FFC107;
+  padding: 12px 14px;
+  border-radius: 0 0 12px 12px;
   display: flex;
-  gap: 8px;
-  color: #1f532a;
-  font-size: 9.5px;
-  line-height: 1.4;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 6px 16px rgba(255, 193, 7, 0.25);
+  z-index: 10;
 }
 
-.escrow-notice ion-icon {
-  font-size: 15px;
-  color: #8CC63F;
+.escrow-notice-hanging ion-icon {
+  font-size: 20px;
+  color: #000000;
   flex-shrink: 0;
 }
 
-/* Checkout Footer Actions */
-.checkout-footer {
-  position: absolute;
+.escrow-notice-hanging span {
+  font-size: 10.5px;
+  color: #000000;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.checkout-footer-new {
+  position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  background: #ffffff;
+  background: linear-gradient(180deg, #ffffff 0%, #f8f7f4 100%);
   border-top: 1px solid rgba(0, 104, 55, 0.08);
-  padding: 12px 16px 24px;
+  padding: 14px 16px;
   display: flex;
-  justify-content: space-between;
+  gap: 12px;
   align-items: center;
-  box-shadow: 0 -4px 16px rgba(0, 104, 55, 0.04);
+  box-shadow: 0 -4px 16px rgba(0, 104, 55, 0.06);
+  z-index: 1000;
 }
 
-.checkout-footer-amount-column {
-  display: flex;
-  flex-direction: column;
+.footer-price-section {
+  flex: 1;
 }
 
-.footer-amount-label {
+.footer-price-label {
   font-size: 10px;
-  color: #9EA8A2;
-  font-weight: 500;
+  color: #6B7A6F;
   margin-bottom: 2px;
 }
 
-.footer-amount-val {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 16px;
-  font-weight: 800;
-  color: #F7941D;
-}
-
-.pay-qris-btn {
-  --background: #F7941D;
-  --background-activated: #d4831b;
-  --color: #ffffff;
-  --border-radius: 10px;
-  --box-shadow: none;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 700;
-  font-size: 12.5px;
-  height: 44px;
-  margin: 0;
-  flex: 1;
-  max-width: 180px;
-}
-
-/* =======================================
-   New Location & Map Steps
-   ======================================= */
-
-.loc-search-container {
-  display: flex;
-  flex-direction: column;
-  padding: 16px;
-  background: #F8F7F4;
-  height: 100%;
-}
-
-.search-bar-wrapper {
+.footer-price-values {
   display: flex;
   align-items: center;
-  background: #ffffff;
-  border-radius: 20px;
-  padding: 0 16px;
-  height: 48px;
-  border: 1px solid rgba(0, 104, 55, 0.1);
-  margin-bottom: 24px;
+  gap: 8px;
 }
 
-.search-icon {
-  font-size: 20px;
-  color: #6B7A6F;
-  margin-right: 12px;
+.footer-price-original {
+  font-size: 11px;
+  color: #9CA3AF;
+  text-decoration: line-through;
 }
 
-.loc-search-input {
-  flex: 1;
-  border: none;
-  outline: none;
-  background: transparent;
+.footer-price-discounted {
   font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 14px;
-  color: #1f532a;
-}
-
-.loc-search-input::placeholder {
-  color: #9EA8A2;
-}
-
-.search-spinner {
-  width: 24px;
-  height: 24px;
+  font-size: 18px;
+  font-weight: 900;
   color: #006837;
 }
 
-.loc-options-list {
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 8px 16px;
-  border: 1px solid rgba(0, 104, 55, 0.05);
-}
-
-.loc-option-item {
-  display: flex;
-  align-items: center;
-  padding: 16px 0;
-  border-bottom: 1px solid rgba(0, 104, 55, 0.05);
+.footer-summary-btn {
+  background: none;
+  border: none;
+  color: #F7941D;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 0 0 0;
   cursor: pointer;
+  text-decoration: underline;
 }
 
-.loc-option-item:last-child {
-  border-bottom: none;
+.checkout-btn-green-new {
+  --background: #006837;
+  --background-hover: #005530;
+  --background-activated: #004428;
+  --color: #ffffff;
+  --border-radius: 12px;
+  --padding-top: 14px;
+  --padding-bottom: 14px;
+  --padding-start: 24px;
+  --padding-end: 24px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: none;
+  letter-spacing: 0;
+  min-width: 140px;
+  height: 48px;
 }
 
-.loc-option-icon {
-  width: 32px;
-  height: 32px;
+
+/* ==============================
+   MAP PAGE STYLES
+   ============================== */
+
+.map-search-bar {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  z-index: 1000;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.map-search-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid rgba(0, 104, 55, 0.2);
+  border-radius: 12px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  color: #006837;
+  outline: none;
+  background: #ffffff;
+}
+
+.map-search-input:focus {
+  border-color: #8CC63F;
+}
+
+.map-search-btn,
+.map-gps-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 104, 55, 0.15);
+  background: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
-  color: #006837;
-  margin-right: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.loc-option-text {
-  flex: 1;
+.map-search-btn:active,
+.map-gps-btn:active {
+  transform: scale(0.95);
+  background: #F8F7F4;
 }
 
-.loc-option-text strong {
-  display: block;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 13.5px;
-  font-weight: 700;
-  color: #006837;
-  margin-bottom: 4px;
+.map-search-btn ion-icon,
+.map-gps-btn ion-icon {
+  font-size: 22px;
+  color: #8CC63F;
 }
 
-.loc-option-text p {
-  margin: 0;
-  font-size: 11px;
-  color: #6B7A6F;
+.map-gps-btn {
+  border-color: rgba(140, 198, 63, 0.3);
 }
 
-.search-results-list {
+.map-gps-btn ion-icon {
+  font-size: 22px;
+  color: #8CC63F;
+}
+
+.map-search-results {
+  position: absolute;
+  top: 76px;
+  left: 16px;
+  right: 16px;
   background: #ffffff;
   border-radius: 12px;
-  padding: 0 16px;
-  border: 1px solid rgba(0, 104, 55, 0.05);
-  max-height: calc(100vh - 200px);
+  border: 1px solid rgba(0, 104, 55, 0.15);
+  max-height: 300px;
   overflow-y: auto;
+  z-index: 999;
 }
 
 .search-result-item {
+  padding: 12px 16px;
   display: flex;
   align-items: center;
-  padding: 16px 0;
-  border-bottom: 1px solid rgba(0, 104, 55, 0.05);
+  gap: 12px;
   cursor: pointer;
+  border-bottom: 1px solid rgba(0, 104, 55, 0.06);
+  transition: background 0.2s ease;
 }
 
 .search-result-item:last-child {
   border-bottom: none;
 }
 
-.result-icon {
+.search-result-item:hover {
+  background: #F8F7F4;
+}
+
+.search-result-item ion-icon {
   font-size: 20px;
-  color: #9EA8A2;
-  margin-right: 12px;
+  color: #F7941D;
   flex-shrink: 0;
 }
 
 .search-result-item span {
-  font-size: 12px;
-  color: #1f532a;
+  font-size: 11px;
+  color: #006837;
   line-height: 1.4;
 }
 
-.loc-btn-primary {
-  --background: #006837;
-  --background-activated: #004d28;
-  --color: #ffffff;
-  --border-radius: 12px;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 700;
-  font-size: 13px;
-  height: 48px;
-  width: 100%;
-  margin-bottom: 16px;
-}
-
-.loc-divider {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  margin: 8px 0 24px;
-  color: #9EA8A2;
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.loc-divider::before,
-.loc-divider::after {
-  content: '';
-  flex: 1;
-  border-bottom: 1px solid rgba(0, 104, 55, 0.1);
-}
-
-.loc-divider span {
-  padding: 0 12px;
-}
-
-.loc-btn-secondary {
-  --border-color: #006837;
-  --border-width: 1.5px;
-  --border-radius: 12px;
-  --color: #006837;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 700;
-  font-size: 13px;
-  height: 48px;
-  width: 100%;
-}
-
-/* Map Picker Wrapper */
-.no-scroll {
-  --overflow: hidden;
-}
-
-.map-picker-wrapper {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  width: 100%;
-  background: #F8F7F4;
-}
-
-.map-picker-instruction {
-  background: #ffffff;
-  padding: 12px 16px;
-  font-size: 11px;
-  color: #6B7A6F;
-  text-align: center;
-  border-bottom: 1px solid rgba(0, 104, 55, 0.08);
-  box-shadow: 0 4px 12px rgba(0, 104, 55, 0.02);
-  z-index: 10;
-}
-
-.map-container-box {
-  flex: 1;
-  width: 100%;
-  position: relative;
+.map-container-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 1;
 }
 
-.map-picker-footer {
+.map-container-wrapper .leaflet-container {
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.map-address-display {
+  position: absolute;
+  bottom: 64px;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border-radius: 16px 16px 0 0;
+  padding: 16px 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  z-index: 1000;
+  border-top: 2px solid #8CC63F;
+}
+
+.map-address-display ion-icon {
+  font-size: 24px;
+  color: #F7941D;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.map-address-display p {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  color: #006837;
+  font-weight: 600;
+  margin: 0;
+  flex: 1;
+  line-height: 1.5;
+}
+
+.map-confirm-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  padding: 16px 20px;
+  z-index: 1001;
+}
+
+.confirm-location-btn {
+  --background: #006837;
+  --background-hover: #005530;
+  --background-activated: #004428;
+  --color: #ffffff;
+  --border-radius: 12px;
+  --padding-top: 14px;
+  --padding-bottom: 14px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: none;
+  height: 48px;
+  margin: 0;
+}
+
+@media (max-width: 360px) {
+  .map-search-bar {
+    top: 12px;
+    left: 12px;
+    right: 12px;
+  }
+  
+  .map-search-input {
+    font-size: 12px;
+    padding: 10px 12px;
+  }
+  
+  .map-search-btn,
+  .map-gps-btn {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .map-address-display {
+    padding: 14px 16px;
+  }
+  
+  .map-address-display p {
+    font-size: 11px;
+  }
+  
+  .map-confirm-footer {
+    padding: 14px 16px;
+  }
+}
+.map-fullscreen-modal {
+  background: #ffffff;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.map-modal-header {
+  background: #ffffff;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(0, 104, 55, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.map-modal-back-btn {
+  background: rgba(0, 104, 55, 0.05);
+  border: 1px solid rgba(0, 104, 55, 0.1);
+  color: #006837;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+}
+
+.map-modal-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f532a;
+  margin: 0;
+}
+
+.map-container-wrapper {
+  flex: 1;
+  position: relative;
+}
+
+.map-container-wrapper .leaflet-container {
+  width: 100%;
+  height: 100%;
+}
+
+.map-controls {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.map-search-box {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 12px 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.map-search-box ion-icon {
+  font-size: 20px;
+  color: #6B7A6F;
+}
+
+.map-search-box input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  color: #006837;
+}
+
+
+
+.map-footer {
   background: #ffffff;
   padding: 16px;
   border-top: 1px solid rgba(0, 104, 55, 0.08);
-  box-shadow: 0 -4px 12px rgba(0, 104, 55, 0.04);
-  z-index: 10;
 }
 
-.distance-info-bar {
+.map-selected-address {
+  background: #F8F7F4;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
   display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0 14px 12px;
-  padding: 10px 12px;
-  background: #EFF8F0;
-  border: 1px solid rgba(140, 198, 63, 0.2);
-  border-radius: 8px;
-  color: #006837;
-  font-size: 11px;
-  font-weight: 600;
+  gap: 10px;
 }
 
-.distance-info-bar ion-icon {
-  font-size: 16px;
-  color: #8CC63F;
-}
-
-.address-change-btn {
+.map-selected-address ion-icon {
+  font-size: 20px;
   color: #F7941D;
-  font-size: 11px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
+  flex-shrink: 0;
 }
 
-/* Floating search bar overlay on the map */
-.map-search-overlay {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  right: 12px;
-  z-index: 1001;
+.map-selected-address-text {
+  font-size: 11px;
+  color: #6B7A6F;
+  line-height: 1.5;
+}
+
+.map-confirm-btn {
+  --background: #8CC63F;
+  --background-hover: #7AB62F;
+  --background-activated: #6AA520;
+  --color: #ffffff;
+  --border-radius: 12px;
+  --padding-top: 14px;
+  --padding-bottom: 14px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  width: 100%;
+  height: 48px;
+}
+
+.ekspedisi-options-list {
+  margin-top: 12px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-}
-
-.map-search-overlay .search-bar-wrapper {
-  margin-bottom: 0;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(0, 104, 55, 0.12);
-}
-
-.search-results-list-overlay {
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 0 16px;
-  border: 1px solid rgba(0, 104, 55, 0.08);
-  max-height: 200px;
-  overflow-y: auto;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-}
-
-/* Floating GPS button on the map */
-.gps-fab {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  z-index: 1000;
-  background: #ffffff;
-  border: 1px solid rgba(0, 104, 55, 0.12);
-  color: #006837;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  cursor: pointer;
-  outline: none;
-  transition: background 0.2s ease;
-}
-
-.gps-fab:active {
-  background: #F8F7F4;
-}
-
-.current-loc-inline-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   gap: 8px;
-  background: #ffffff;
-  border: 1px solid rgba(0, 104, 55, 0.12);
-  border-radius: 20px;
-  height: 40px;
-  margin-top: 6px;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 12px;
-  font-weight: 700;
-  color: #006837;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.ekspedisi-option-item {
+  background: #F8F7F4;
+  border: 1px solid rgba(0, 104, 55, 0.08);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   cursor: pointer;
-  width: 100%;
   transition: all 0.2s ease;
 }
 
-.current-loc-inline-btn:active {
-  background: #EFF8F0;
-  transform: scale(0.98);
+.ekspedisi-option-item:hover {
+  background: #ffffff;
 }
 
-.current-loc-inline-btn .btn-spinner {
-  width: 16px;
-  height: 16px;
+.ekspedisi-option-item.active {
+  background: #F9FCF8;
+  border-color: #8CC63F;
+}
+
+.ekspedisi-info {
+  flex: 1;
+}
+
+.ekspedisi-info h5 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #006837;
+  margin: 0 0 2px 0;
+}
+
+.ekspedisi-info p {
+  font-size: 10px;
+  color: #6B7A6F;
+  margin: 0;
+}
+
+.ekspedisi-price {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ekspedisi-price span {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 11.5px;
+  font-weight: 800;
   color: #006837;
 }
+
+.ekspedisi-price ion-radio {
+  --color-checked: #8CC63F;
+  margin: 0;
+}
+
+.ekspedisi-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px;
+  justify-content: center;
+  color: #6B7A6F;
+  font-size: 11px;
+}
+
+.ekspedisi-loading ion-spinner {
+  --color: #8CC63F;
+}
+
+@media (max-width: 360px) {
+  .ekspedisi-info h5 {
+    font-size: 10.5px;
+  }
+  
+  .ekspedisi-price span {
+    font-size: 10.5px;
+  }
+  
+  .footer-price-discounted {
+    font-size: 16px;
+  }
+  
+  .escrow-notice-hanging {
+    left: 10px;
+    right: 10px;
+  }
+  
+  .escrow-notice-hanging span {
+    font-size: 10px;
+  }
+  
+  .delivery-time-cards {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  
+  .delivery-time-card {
+    padding: 10px 8px;
+  }
+  
+  .delivery-time-info h4 {
+    font-size: 10px;
+  }
+  
+  .delivery-time-info p {
+    font-size: 8px;
+  }
+  
+  .distance-info-bar {
+    padding: 6px 10px;
+  }
+  
+  .distance-info-bar span {
+    font-size: 10px;
+  }
+  
+  .distance-info-bar .distance-badge {
+    font-size: 10px;
+    padding: 3px 6px;
+  }
+  
+  .payment-expand-btn,
+  .ekspedisi-expand-btn {
+    font-size: 10px;
+    padding: 8px 12px;
+  }
+  
+  .payment-method-card {
+    margin-bottom: 5px;
+    padding: 10px;
+  }
+}
+
+
+
+
+
 

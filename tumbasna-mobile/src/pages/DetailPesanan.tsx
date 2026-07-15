@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   IonContent,
   IonHeader,
@@ -31,6 +31,7 @@ interface DetailPesananProps {
   orderId: string;
   onBack: () => void;
   onNavigateToChat: (supplierName: string) => void;
+  onNavigateToPayment?: () => void;
 }
 
 
@@ -72,7 +73,7 @@ const MapBoundsController: React.FC<{ supplierLoc: [number, number], buyerLoc: [
   return null;
 };
 
-const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNavigateToChat }) => {
+const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNavigateToChat, onNavigateToPayment }) => {
   const { user, orders, confirmOrderReceived } = useApp();
   const [showToast, setShowToast] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
@@ -84,7 +85,7 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
 
   const order = orders.find((o) => o.id === orderId);
 
-  // ── Resolve supplier and buyer coordinates ──
+  // â”€â”€ Resolve supplier and buyer coordinates â”€â”€
   const getCoordsByLocationName = (loc: string): [number, number] | null => {
     if (!loc) return null;
     const key = Object.keys(locationCoords).find(k => loc.toLowerCase().includes(k.toLowerCase()));
@@ -131,7 +132,7 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
     (supplierLocation[1] + buyerLocation[1]) / 2
   ];
 
-  // ── Courier Position & Map States ──
+  // â”€â”€ Courier Position & Map States â”€â”€
   const [courierCoords, setCourierCoords] = useState<[number, number]>(supplierLocation);
   const [etaText, setEtaText] = useState('15 Menit');
   const [statusText, setStatusText] = useState('Kurir menunggu pembayaran...');
@@ -185,14 +186,14 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
               }
               const lastManifest = data.manifests?.[data.manifests.length - 1];
               const lastDesc = lastManifest?.description || data.statusDescription || 'Dalam perjalanan.';
-              setStatusText(`[${waybillCourier.toUpperCase()}] Resi: ${waybillNumber} — ${lastDesc}`);
+              setStatusText(`[${waybillCourier.toUpperCase()}] Resi: ${waybillNumber} â€” ${lastDesc}`);
               setEtaText(data.status === 'DELIVERED' ? 'Tiba' : 'Dalam Perjalanan');
             } else {
-              setStatusText(`Resi ${waybillNumber} (${waybillCourier.toUpperCase()}) — Dalam perjalanan.`);
+              setStatusText(`Resi ${waybillNumber} (${waybillCourier.toUpperCase()}) â€” Dalam perjalanan.`);
               setEtaText('Dalam Perjalanan');
             }
           } catch {
-            setStatusText(`Resi ${waybillNumber} — Tidak dapat memuat status saat ini.`);
+            setStatusText(`Resi ${waybillNumber} â€” Tidak dapat memuat status saat ini.`);
           }
         };
         fetchTracking();
@@ -260,21 +261,21 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
   // Custom divIcons to bypass asset path resolving issues
   const supplierIcon = L.divIcon({
     className: 'custom-div-icon',
-    html: `<div style="font-size: 26px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">🏢</div>`,
+    html: `<div style="font-size: 26px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">ðŸ¢</div>`,
     iconSize: [30, 30],
     iconAnchor: [15, 30]
   });
 
   const buyerIcon = L.divIcon({
     className: 'custom-div-icon',
-    html: `<div style="font-size: 26px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">📍</div>`,
+    html: `<div style="font-size: 26px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">ðŸ“</div>`,
     iconSize: [30, 30],
     iconAnchor: [15, 30]
   });
 
   const courierIcon = L.divIcon({
     className: 'custom-div-icon',
-    html: `<div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; background: #006837; color: white; border-radius: 50%; font-size: 16px; border: 2.5px solid white; box-shadow: 0 3px 8px rgba(0,0,0,0.3); animation: pulse-ring 1.5s infinite;">🚚</div>`,
+    html: `<div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; background: #006837; color: white; border-radius: 50%; font-size: 16px; border: 2.5px solid white; box-shadow: 0 3px 8px rgba(0,0,0,0.3); animation: pulse-ring 1.5s infinite;">ðŸšš</div>`,
     iconSize: [34, 34],
     iconAnchor: [17, 17]
   });
@@ -298,7 +299,7 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
 
       <IonContent className="tracking-content">
 
-        {/* ── Real Leaflet Tracking Map ────────────────────────── */}
+        {/* â”€â”€ Real Leaflet Tracking Map â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className="simulated-map-container" style={{ height: '240px', position: 'relative' }}>
           <MapContainer
             center={midpoint}
@@ -342,7 +343,7 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
           </div>
         </div>
 
-        {/* ── Order Summary Card ───────────────────────────── */}
+        {/* â”€â”€ Order Summary Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className="tracking-order-summary-card" style={{ marginTop: 12 }}>
           <div className="summary-header">
             <div>
@@ -397,7 +398,7 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
               border: '1px solid #bbf7d0'
             }}>
               <p style={{ fontSize: 10, fontWeight: 800, color: '#059669', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
-                📦 Bukti Pengiriman
+                ðŸ“¦ Bukti Pengiriman
               </p>
               {waybillNumber && (
                 <div style={{ marginBottom: 8 }}>
@@ -429,7 +430,7 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
         </div>
 
 
-        {/* ── COD: Hubungi Supplier via in-app Chat ─────────── */}
+        {/* â”€â”€ COD: Hubungi Supplier via in-app Chat â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         {isCOD && (
           <div className="cod-wa-card">
             <div className="cod-wa-header">
@@ -446,7 +447,7 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
           </div>
         )}
 
-        {/* ── Escrow Security ──────────────────────────────── */}
+        {/* â”€â”€ Escrow Security â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className={`escrow-details-bar ${order.fundsReleased ? 'released' : 'held'}`} style={{ margin: '0 14px 16px' }}>
           <IonIcon icon={order.fundsReleased ? checkmarkCircle : shieldCheckmarkOutline} />
           <div className="escrow-bar-text">
@@ -459,7 +460,7 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
           </div>
         </div>
 
-        {/* ── Timeline ─────────────────────────────────────── */}
+        {/* â”€â”€ Timeline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className="section-title-tracking">Timeline Transaksi</div>
         <div className="timeline-card">
           <div className="timeline-wrapper">
@@ -488,7 +489,7 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
           </div>
         </div>
 
-        {/* ── Rating & Review Card (Tampil jika Selesai) ── */}
+        {/* â”€â”€ Rating & Review Card (Tampil jika Selesai) â”€â”€ */}
         {order.status === 'Selesai' && (
           <div style={{ margin: '20px 14px' }}>
             <div className="section-title-tracking">Beri Nilai Supplier</div>
@@ -533,7 +534,7 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
         <div style={{ height: '120px' }}></div>
       </IonContent>
 
-      {/* ── Floating confirm button ───────────────────────── */}
+      {/* â”€â”€ Floating confirm button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {order.status !== 'Selesai' && order.status !== 'Dibatalkan' && (
         <div className="floating-action-footer">
           <div className="footer-notice-text">
@@ -564,3 +565,6 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
 };
 
 export default DetailPesanan;
+
+
+

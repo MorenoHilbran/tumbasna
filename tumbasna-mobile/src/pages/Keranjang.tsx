@@ -1,50 +1,58 @@
-import React from 'react';
+﻿import React from 'react';
 import {
   IonContent,
   IonHeader,
   IonPage,
-  IonTitle,
   IonToolbar,
   IonIcon,
   IonButton,
-  IonCard,
-  IonToast,
-  IonItem,
-  IonList,
-  IonLabel,
-  IonThumbnail
 } from '@ionic/react';
 import {
   trashOutline,
   addOutline,
   removeOutline,
   cartOutline,
-  arrowForwardOutline,
-  walletOutline,
-  shieldCheckmarkOutline
+  arrowBackOutline,
+  arrowForwardOutline
 } from 'ionicons/icons';
 import { useApp, CartItem } from '../context/AppContext';
 import './Keranjang.css';
 
 interface KeranjangProps {
   onNavigateToPasar: () => void;
-  onNavigateToCheckout: () => void;
+  onCheckout: (supplierId: string, supplierItems: CartItem[]) => void;
+  onBack: () => void;
 }
 
-const Keranjang: React.FC<KeranjangProps> = ({ onNavigateToPasar, onNavigateToCheckout }) => {
+const Keranjang: React.FC<KeranjangProps> = ({ onNavigateToPasar, onCheckout, onBack }) => {
   const { cart, updateCartQuantity, removeFromCart } = useApp();
 
-  const subtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
+  // Group cart items by supplier
+  const groupedBySupplier = cart.reduce((acc, item) => {
+    const supplierId = item.product.supplierName;
+    if (!acc[supplierId]) {
+      acc[supplierId] = {
+        supplierName: item.product.supplierName,
+        supplierCity: item.product.supplierLocation,
+        items: []
+      };
+    }
+    acc[supplierId].items.push(item);
+    return acc;
+  }, {} as Record<string, { supplierName: string; supplierCity: string; items: CartItem[] }>);
+
+  const suppliers = Object.values(groupedBySupplier);
 
   return (
     <IonPage>
-      {/* Header */}
+      {/* Header with Back Button */}
       <IonHeader className="ion-no-border">
         <IonToolbar className="cart-toolbar">
           <div className="cart-toolbar-inner">
-            <div className="cart-logo-row">
-              <img src="/logo.png" alt="Tumbasna" className="cart-header-logo-only" />
-            </div>
+            <button className="cart-back-btn" onClick={onBack}>
+              <IonIcon icon={arrowBackOutline} />
+            </button>
+            <h1 className="cart-header-title">Keranjang Belanja</h1>
           </div>
         </IonToolbar>
       </IonHeader>
@@ -52,58 +60,89 @@ const Keranjang: React.FC<KeranjangProps> = ({ onNavigateToPasar, onNavigateToCh
       <IonContent className="cart-content">
         {cart.length > 0 ? (
           <>
-            {/* Safe transaction banner */}
-            <div className="safe-badge-banner">
-              <IonIcon icon={shieldCheckmarkOutline} />
-              <span>Transaksi Dijamin Aman: Dana ditahan hingga barang Anda terima.</span>
-            </div>
+            {/* Group by Supplier Cards */}
+            <div className="supplier-groups">
+              {suppliers.map((supplier, index) => {
+                const supplierTotal = supplier.items.reduce(
+                  (acc, item) => acc + item.product.price * item.quantity, 
+                  0
+                );
 
-            {/* List of Cart Items */}
-            <div className="cart-items-list">
-              {cart.map((item) => (
-                <div key={item.product.id} className="cart-item-card">
-                  <div className="cart-item-img-wrapper">
-                    <img src={item.product.image} alt={item.product.name} />
-                  </div>
-
-                  <div className="cart-item-details">
-                    <h3 className="cart-item-name">{item.product.name}</h3>
-                    <p className="cart-item-supplier">{item.product.supplierName}</p>
-                    <div className="cart-item-price">Rp {item.product.price.toLocaleString('id-ID')}/kg</div>
-                    
-                    <div className="cart-item-actions-row">
-                      {/* Quantity Modifier */}
-                      <div className="cart-qty-selector">
-                        <button
-                          className="cart-qty-btn"
-                          onClick={() => updateCartQuantity(item.product.id, item.quantity - 1)}
-                        >
-                          <IonIcon icon={removeOutline} />
-                        </button>
-                        <span className="cart-qty-val">{item.quantity} kg</span>
-                        <button
-                          className="cart-qty-btn"
-                          onClick={() => updateCartQuantity(item.product.id, item.quantity + 1)}
-                        >
-                          <IonIcon icon={addOutline} />
-                        </button>
+                return (
+                  <div key={index} className="supplier-card">
+                    {/* Supplier Header */}
+                    <div className="supplier-header">
+                      <div className="supplier-info">
+                        <h3 className="supplier-name">{supplier.supplierName}</h3>
+                        <p className="supplier-location">{supplier.supplierCity}</p>
                       </div>
+                    </div>
 
-                      {/* Remove Button */}
-                      <button
-                        className="cart-delete-btn"
-                        onClick={() => removeFromCart(item.product.id)}
+                    {/* Items in this supplier */}
+                    <div className="supplier-items">
+                      {supplier.items.map((item) => (
+                        <div key={item.product.id} className="cart-item-card">
+                          <div className="cart-item-img-wrapper">
+                            <img src={item.product.image} alt={item.product.name} />
+                          </div>
+
+                          <div className="cart-item-details">
+                            <h3 className="cart-item-name">{item.product.name}</h3>
+                            <div className="cart-item-price">Rp {item.product.price.toLocaleString('id-ID')}/kg</div>
+                            
+                            <div className="cart-item-actions-row">
+                              {/* Quantity Modifier */}
+                              <div className="cart-qty-selector">
+                                <button
+                                  className="cart-qty-btn"
+                                  onClick={() => updateCartQuantity(item.product.id, item.quantity - 1)}
+                                >
+                                  <IonIcon icon={removeOutline} />
+                                </button>
+                                <span className="cart-qty-val">{item.quantity} kg</span>
+                                <button
+                                  className="cart-qty-btn"
+                                  onClick={() => updateCartQuantity(item.product.id, item.quantity + 1)}
+                                >
+                                  <IonIcon icon={addOutline} />
+                                </button>
+                              </div>
+
+                              {/* Remove Button */}
+                              <button
+                                className="cart-delete-btn"
+                                onClick={() => removeFromCart(item.product.id)}
+                              >
+                                <IonIcon icon={trashOutline} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Supplier Total & Checkout */}
+                    <div className="supplier-footer">
+                      <div className="supplier-total">
+                        <span>Subtotal ({supplier.items.length} item)</span>
+                        <span className="supplier-total-price">Rp {supplierTotal.toLocaleString('id-ID')}</span>
+                      </div>
+                      <IonButton
+                        color="tertiary"
+                        expand="block"
+                        className="supplier-checkout-btn"
+                        onClick={() => onCheckout(supplier.supplierName, supplier.items)}
                       >
-                        <IonIcon icon={trashOutline} />
-                      </button>
+                        Lanjut ke Checkout <IonIcon icon={arrowForwardOutline} slot="end" />
+                      </IonButton>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
-            {/* Spacing for floating footer */}
-            <div style={{ height: '180px' }}></div>
+            {/* Spacing for bottom */}
+            <div style={{ height: '40px' }}></div>
           </>
         ) : (
           /* Empty State */
@@ -123,30 +162,6 @@ const Keranjang: React.FC<KeranjangProps> = ({ onNavigateToPasar, onNavigateToCh
           </div>
         )}
       </IonContent>
-
-      {/* Floating Summary Footer */}
-      {cart.length > 0 && (
-        <div className="cart-footer">
-          <div className="cart-summary-row">
-            <div className="summary-label">
-              <span>Subtotal Pembelian</span>
-              <p>({cart.length} Komoditas)</p>
-            </div>
-            <div className="summary-value">
-              Rp {subtotal.toLocaleString('id-ID')}
-            </div>
-          </div>
-
-          <IonButton
-            color="tertiary"
-            expand="block"
-            className="checkout-btn pulse-button"
-            onClick={onNavigateToCheckout}
-          >
-            Lanjut ke Checkout <IonIcon icon={arrowForwardOutline} slot="end" />
-          </IonButton>
-        </div>
-      )}
     </IonPage>
   );
 };

@@ -1,0 +1,1168 @@
+﻿/* ==============================
+   Checkout.css – Modern Classic
+   ============================== */
+
+.checkout-toolbar {
+  --background: #ffffff;
+}
+
+.checkout-toolbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 8px 12px;
+}
+
+.checkout-back-btn {
+  position: fixed;
+  left: 12px;
+  background: rgba(0, 104, 55, 0.05);
+  border: 1px solid rgba(0, 104, 55, 0.1);
+  color: #006837;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  outline: none;
+}
+
+.checkout-header-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f532a;
+  margin: 0;
+}
+
+.checkout-content {
+  --background: #F8F7F4;
+}
+
+.checkout-section-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  color: #6B7A6F;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 18px 16px 8px;
+}
+
+/* NEW: Supplier Info Card */
+.supplier-info-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 0 14px 16px;
+  border: 1px solid rgba(0, 104, 55, 0.06);
+  box-shadow: 0 4px 12px rgba(0, 104, 55, 0.02);
+}
+
+.supplier-info-card h3 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  color: #006837;
+  margin: 0 0 4px 0;
+}
+
+.supplier-info-card p {
+  font-size: 11px;
+  color: #6B7A6F;
+  margin: 0;
+}
+
+/* Address Summary Card */
+.address-summary-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 0 14px 16px;
+  border: 1px solid rgba(0, 104, 55, 0.06);
+  box-shadow: 0 4px 12px rgba(0, 104, 55, 0.02);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.address-summary-card:active {
+  background: #F9FCF8;
+}
+
+.address-icon-text {
+  display: flex;
+  gap: 12px;
+  flex: 1;
+}
+
+.address-icon-text ion-icon {
+  font-size: 20px;
+  color: #F7941D;
+  flex-shrink: 0;
+}
+
+.address-text {
+  font-size: 11px;
+  color: #6B7A6F;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.address-change-btn {
+  color: #F7941D;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* NEW: Delivery Time Selection */
+.delivery-time-section {
+  margin: 0 14px 16px;
+}
+
+.delivery-time-select {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid rgba(0, 104, 55, 0.12);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #006837;
+  outline: none;
+  box-shadow: 0 4px 12px rgba(0, 104, 55, 0.02);
+  cursor: pointer;
+}
+
+.delivery-time-select:focus {
+  border-color: #8CC63F;
+  box-shadow: 0 0 0 3px rgba(140, 198, 63, 0.1);
+}
+
+/* NEW: Payment Method Selection */
+.payment-method-section {
+  margin: 0 14px 16px;
+}
+
+.payment-method-card {
+  background: #ffffff;
+  margin-bottom: 10px;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 104, 55, 0.06);
+  box-shadow: 0 4px 12px rgba(0, 104, 55, 0.02);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.payment-method-card.active {
+  border-color: #8CC63F;
+  background: #F9FCF8;
+}
+
+.payment-method-info {
+  flex: 1;
+}
+
+.payment-method-info h4 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  color: #006837;
+  margin: 0 0 3px 0;
+}
+
+.payment-method-info p {
+  font-size: 10px;
+  color: #6B7A6F;
+  margin: 0;
+}
+
+/* Shipping Methods Selection */
+.shipping-methods-list {
+  margin: 0 14px 16px;
+}
+
+.shipping-method-card {
+  background: #ffffff;
+  .payment-method-card {
+  background: #ffffff;
+  margin-bottom: 10px;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 104, 55, 0.06);
+  box-shadow: 0 4px 12px rgba(0, 104, 55, 0.02);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.shipping-method-card.active {
+  border-color: #8CC63F;
+  background: #F9FCF8;
+}
+
+.shipping-radio-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.shipping-info-left {
+  flex: 1;
+  padding-right: 8px;
+}
+
+.shipping-method-name {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  color: #006837;
+  margin: 0 0 3px 0;
+}
+
+.shipping-method-desc {
+  font-size: 10px;
+  color: #6B7A6F;
+  margin: 0;
+}
+
+.shipping-info-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.shipping-method-price {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #006837;
+}
+
+.custom-radio {
+  --color-checked: #8CC63F;
+  margin: 0;
+}
+
+/* Order Items Summary */
+.checkout-items-summary-card {
+  background: #ffffff;
+  border-radius: 12px;
+  margin: 0 14px 16px;
+  padding: 16px;
+  border: 1px solid rgba(0, 104, 55, 0.06);
+}
+
+.summary-item-row {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px dashed rgba(0, 104, 55, 0.06);
+}
+
+.summary-item-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.summary-item-row:first-child {
+  padding-top: 0;
+}
+
+.summary-item-img {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #F8F7F4;
+  border: 1px solid rgba(0, 104, 55, 0.05);
+}
+
+.summary-item-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.summary-item-details {
+  flex: 1;
+}
+
+.summary-item-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #006837;
+  margin: 0 0 2px 0;
+}
+
+.summary-item-qty {
+  font-size: 10px;
+  color: #9EA8A2;
+  margin: 0;
+}
+
+.summary-item-total {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800;
+  font-size: 12px;
+  color: #006837;
+  align-self: center;
+}
+
+/* Pricing Detail breakdown */
+.pricing-breakdown-card {
+  background: #ffffff;
+  border-radius: 12px;
+  margin: 0 14px 24px;
+  padding: 16px;
+  border: 1px solid rgba(0, 104, 55, 0.06);
+}
+
+.breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #6B7A6F;
+  margin-bottom: 8px;
+}
+
+.breakdown-row.total-row-bold {
+  border-top: 1px dashed rgba(0, 104, 55, 0.12);
+  padding-top: 10px;
+  margin-top: 6px;
+  margin-bottom: 12px;
+}
+
+.breakdown-row.total-row-bold span:first-child {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800;
+  font-size: 12px;
+  color: #006837;
+}
+
+.total-highlight {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 900;
+  font-size: 14px;
+  color: #006837;
+}
+
+.escrow-notice {
+  display: flex;
+  gap: 10px;
+  background: #EFF8F0;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(140, 198, 63, 0.15);
+  margin-top: 12px;
+}
+
+.escrow-notice ion-icon {
+  font-size: 18px;
+  color: #8CC63F;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.escrow-notice span {
+  font-size: 10px;
+  color: #006837;
+  line-height: 1.5;
+}
+
+/* Checkout Footer - NEW GREEN BUTTON */
+.checkout-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border-top: 1px solid rgba(0, 104, 55, 0.08);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  z-index: 100;
+}
+
+.checkout-footer-amount-column {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.footer-amount-label {
+  font-size: 10px;
+  color: #6B7A6F;
+  font-weight: 600;
+}
+
+.footer-amount-val {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 900;
+  color: #006837;
+}
+
+/* NEW: Green Button - Pesan Sekarang */
+.checkout-btn-green {
+  --background: #006837;
+  --background-activated: #005028;
+  --background-hover: #005028;
+  --border-radius: 12px;
+  --color: #ffffff;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  height: 50px;
+  flex: 1;
+  text-transform: none;
+  letter-spacing: 0;
+  margin: 0;
+  --box-shadow: none;
+}
+
+.checkout-btn-green::part(native) {
+  box-shadow: none;
+}
+
+.distance-info-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 14px 12px;
+  padding: 10px 12px;
+  background: #EFF8F0;
+  border: 1px solid rgba(140, 198, 63, 0.2);
+  border-radius: 8px;
+  color: #006837;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.distance-info-bar ion-icon {
+  font-size: 16px;
+  color: #8CC63F;
+}
+
+/* Map Related Styles */
+.map-search-bar {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  background: #ffffff;
+  border-bottom: 1px solid rgba(0, 104, 55, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.map-search-input {
+  flex: 1;
+  background: #F8F7F4;
+  border: 1px solid rgba(0, 104, 55, 0.08);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  color: #006837;
+  outline: none;
+}
+
+.map-search-input:focus {
+  border-color: #8CC63F;
+  background: #ffffff;
+}
+
+.map-search-btn,
+.map-gps-btn {
+  background: #006837;
+  border: none;
+  color: #ffffff;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.map-search-btn:active,
+.map-gps-btn:active {
+  background: #005028;
+  transform: scale(0.95);
+}
+
+.map-search-results {
+  background: #ffffff;
+  border-bottom: 1px solid rgba(0, 104, 55, 0.08);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.search-result-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(0, 104, 55, 0.04);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.search-result-item:active {
+  background: #F9FCF8;
+}
+
+.search-result-item ion-icon {
+  font-size: 20px;
+  color: #F7941D;
+  flex-shrink: 0;
+}
+
+.search-result-item span {
+  font-size: 12px;
+  color: #006837;
+  line-height: 1.4;
+}
+
+.map-container-wrapper {
+  flex: 1;
+  width: 100%;
+  height: calc(100vh - 200px);
+  position: relative;
+}
+
+.map-address-display {
+  position: absolute;
+  bottom: 80px;
+  left: 12px;
+  right: 12px;
+  background: #ffffff;
+  padding: 14px 16px;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 1000;
+}
+
+.map-address-display ion-icon {
+  font-size: 24px;
+  color: #F7941D;
+  flex-shrink: 0;
+}
+
+.map-address-display p {
+  font-size: 11px;
+  color: #006837;
+  line-height: 1.5;
+  margin: 0;
+  flex: 1;
+}
+
+.map-confirm-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  padding: 16px;
+  border-top: 1px solid rgba(0, 104, 55, 0.08);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+  z-index: 1000;
+}
+
+.confirm-location-btn {
+  --background: #006837;
+  --background-activated: #005028;
+  --border-radius: 12px;
+  --color: #ffffff;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  height: 50px;
+  text-transform: none;
+  letter-spacing: 0;
+  --box-shadow: none;
+}
+
+.confirm-location-btn::part(native) {
+  box-shadow: none;
+}
+
+/* Pin Animation */
+@keyframes pinBounce {
+  0% {
+    transform: translateY(-40px) scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: translateY(0) scale(1.1);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.custom-pin-icon {
+  animation: pinBounce 0.6s ease-out;
+}
+
+/* ==============================
+   NEW UI COMPONENTS - Session 3
+   ============================== */
+
+/* Delivery Time Cards */
+.delivery-time-cards {
+  display: flex;
+  gap: 10px;
+  margin: 0 14px 16px;
+}
+
+.delivery-time-card {
+  flex: 1;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 104, 55, 0.06);
+  box-shadow: 0 4px 12px rgba(0, 104, 55, 0.02);
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.delivery-time-card.active {
+  border-color: #8CC63F;
+  background: #F9FCF8;
+}
+
+.delivery-time-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.delivery-time-card .time-icon {
+  font-size: 20px;
+  color: #F7941D;
+}
+
+.delivery-time-card ion-radio {
+  --color-checked: #8CC63F;
+  margin: 0;
+}
+
+.delivery-time-info h4 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  color: #006837;
+  margin: 0 0 2px 0;
+}
+
+.delivery-time-info p {
+  font-size: 10px;
+  color: #6B7A6F;
+  margin: 0;
+}
+
+/* Payment Method Expand Button */
+.payment-expand-btn {
+  width: 100%;
+  background: transparent;
+  border: 1px dashed rgba(0, 104, 55, 0.15);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-top: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #8CC63F;
+  outline: none;
+}
+
+.payment-expand-btn:hover {
+  background: rgba(140, 198, 63, 0.05);
+  border-color: #8CC63F;
+}
+
+.payment-expand-btn:active {
+  transform: scale(0.98);
+}
+
+.payment-expand-btn ion-icon {
+  font-size: 18px;
+  color: #8CC63F;
+}
+
+/* Floating Escrow Notice Card */
+.escrow-notice-floating {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #FFF9E6;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(247, 148, 29, 0.2);
+  margin: 16px 14px;
+  box-shadow: 0 6px 16px rgba(247, 148, 29, 0.08);
+}
+
+.escrow-notice-floating ion-icon {
+  font-size: 20px;
+  color: #F7941D;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.escrow-notice-floating span {
+  font-size: 10.5px;
+  color: #006837;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+/* New Checkout Footer with Price Display */
+.checkout-footer-new {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border-top: 1px solid rgba(0, 104, 55, 0.08);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 100;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.footer-price-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.footer-price-label {
+  font-size: 9px;
+  color: #6B7A6F;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.footer-price-values {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.footer-price-original {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #9CA39E;
+  text-decoration: line-through;
+}
+
+.footer-price-discounted {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 16px;
+  font-weight: 900;
+  color: #006837;
+}
+
+.footer-summary-btn {
+  background: transparent;
+  border: none;
+  color: #F7941D;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 0;
+  margin-top: 2px;
+  cursor: pointer;
+  text-align: left;
+  text-decoration: underline;
+  outline: none;
+}
+
+.footer-summary-btn:active {
+  color: #D87E18;
+}
+
+/* Updated Green Button for New Footer */
+.checkout-btn-green-new {
+  --background: #006837;
+  --background-activated: #005028;
+  --background-hover: #005028;
+  --border-radius: 12px;
+  --color: #ffffff;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  height: 52px;
+  min-width: 140px;
+  text-transform: none;
+  letter-spacing: 0;
+  margin: 0;
+  --box-shadow: 0 4px 12px rgba(0, 104, 55, 0.2);
+}
+
+.checkout-btn-green-new::part(native) {
+  box-shadow: 0 4px 12px rgba(0, 104, 55, 0.2);
+}
+
+.checkout-btn-green-new:active {
+  --box-shadow: 0 2px 6px rgba(0, 104, 55, 0.15);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 360px) {
+  .delivery-time-cards {
+    flex-direction: column;
+  }
+  
+  .delivery-time-card {
+    width: 100%;
+  }
+  
+  .footer-price-discounted {
+    font-size: 14px;
+  }
+  
+  .checkout-btn-green-new {
+    min-width: 120px;
+    font-size: 13px;
+  }
+}
+
+@media (min-width: 768px) {
+  .delivery-time-cards {
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .checkout-footer-new {
+    max-width: 600px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+/* ==============================
+   Ekspedisi Expand Section
+   ============================== */
+
+.ekspedisi-expand-section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(0, 104, 55, 0.15);
+}
+
+.ekspedisi-expand-btn {
+  width: 100%;
+  background: transparent;
+  border: 1px dashed rgba(0, 104, 55, 0.15);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: #8CC63F;
+  outline: none;
+}
+
+.ekspedisi-expand-btn:hover {
+  background: rgba(140, 198, 63, 0.05);
+  border-color: #8CC63F;
+}
+
+.ekspedisi-expand-btn:active {
+  transform: scale(0.98);
+}
+
+.ekspedisi-expand-btn ion-icon {
+  font-size: 16px;
+  color: #8CC63F;
+}
+
+.ekspedisi-options-list {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ekspedisi-option-item {
+  background: #F8F7F4;
+  border: 1px solid rgba(0, 104, 55, 0.08);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ekspedisi-option-item:hover {
+  background: #ffffff;
+}
+
+.ekspedisi-option-item.active {
+  background: #F9FCF8;
+  border-color: #8CC63F;
+}
+
+.ekspedisi-info {
+  flex: 1;
+}
+
+.ekspedisi-info h5 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #006837;
+  margin: 0 0 2px 0;
+}
+
+.ekspedisi-info p {
+  font-size: 10px;
+  color: #6B7A6F;
+  margin: 0;
+}
+
+.ekspedisi-price {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ekspedisi-price span {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #006837;
+}
+
+.ekspedisi-price ion-radio {
+  --color-checked: #8CC63F;
+  margin: 0;
+}
+
+.ekspedisi-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px;
+  justify-content: center;
+  color: #6B7A6F;
+  font-size: 11px;
+}
+
+.ekspedisi-loading ion-spinner {
+  --color: #8CC63F;
+}
+
+/* Update footer price to remove strikethrough */
+.footer-price-values {
+  display: flex;
+  align-items: center;
+}
+
+.footer-price-original {
+  display: none; /* Hide strikethrough price */
+}
+
+.footer-price-discounted {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 18px;
+  font-weight: 900;
+  color: #006837;
+}
+
+/* Responsive */
+@media (max-width: 360px) {
+  .ekspedisi-info h5 {
+    font-size: 10.5px;
+  }
+  
+  .ekspedisi-price span {
+    font-size: 10.5px;
+  }
+  
+  .footer-price-discounted {
+    font-size: 16px;
+  }
+}
+
+/* ==============================
+   Escrow Notice Hanging (Updated)
+   ============================== */
+
+/* Wrapper untuk pricing card + escrow notice */
+.pricing-breakdown-wrapper {
+  position: relative;
+  margin: 0 14px 16px;
+}
+
+.pricing-breakdown-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid rgba(0, 104, 55, 0.06);
+  box-shadow: 0 4px 12px rgba(0, 104, 55, 0.02);
+  margin-bottom: 0; /* Remove bottom margin karena escrow notice akan menggantung */
+}
+
+/* Escrow Notice menggantung di bawah */
+.escrow-notice-hanging {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  top: calc(100% - 20px); /* Menggantung 20px dari bawah pricing card */
+  background: #FFC107; /* Warna kuning cerah seperti screenshot */
+  padding: 12px 14px;
+  border-radius: 0 0 12px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 6px 16px rgba(255, 193, 7, 0.25);
+  z-index: 10;
+}
+
+.escrow-notice-hanging ion-icon {
+  font-size: 20px;
+  color: #000000; /* Icon hitam untuk kontras dengan kuning */
+  flex-shrink: 0;
+}
+
+.escrow-notice-hanging span {
+  font-size: 10.5px;
+  color: #000000; /* Text hitam untuk kontras dengan kuning */
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+/* Update pricing breakdown card untuk accommodate escrow notice */
+.pricing-breakdown-wrapper {
+  margin-bottom: 40px; /* Extra space untuk escrow notice yang menggantung */
+}
+
+/* Hide old escrow notice floating */
+.escrow-notice-floating {
+  display: none;
+}
+
+/* Responsive */
+@media (max-width: 360px) {
+  .escrow-notice-hanging {
+    left: 10px;
+    right: 10px;
+  }
+  
+  .escrow-notice-hanging span {
+    font-size: 10px;
+  }
+}
+
+/* ==============================
+   Checkout Header - Fixed Style
+   ============================== */
+
+.checkout-toolbar {
+  --background: #ffffff;
+  --border-width: 0;
+}
+
+.checkout-toolbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 12px 16px;
+}
+
+.checkout-back-btn {
+  position: absolute;
+  left: 12px;
+  background: rgba(0, 104, 55, 0.05);
+  border: 1px solid rgba(0, 104, 55, 0.1);
+  color: #006837;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  outline: none;
+  width: 40px;
+  height: 40px;
+  transition: all 0.2s ease;
+}
+
+.checkout-back-btn:active {
+  background: rgba(0, 104, 55, 0.1);
+  transform: scale(0.95);
+}
+
+.checkout-header-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f532a;
+  margin: 0;
+  text-align: center;
+}
+
+/* Remove old checkout header styles */
+.checkout-header {
+  display: none;
+}
+
+.back-icon {
+  display: none;
+}
+
+
+
+
+
+
+
+}

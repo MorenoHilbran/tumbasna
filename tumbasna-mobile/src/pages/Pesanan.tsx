@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   IonContent,
   IonHeader,
@@ -29,7 +29,7 @@ const Pesanan: React.FC<PesananProps> = ({ onSelectOrder, onNavigateToPayment })
   const { orders } = useApp();
   const [activeSegment, setActiveSegment] = useState<
     'Menunggu Pembayaran' | 'Diproses' | 'Dikirim' | 'Selesai' | 'Dibatalkan'
-  >('Diproses'); // Default to Diproses as there is a demo order there
+  >('Menunggu Pembayaran');
 
   const segments: ('Menunggu Pembayaran' | 'Diproses' | 'Dikirim' | 'Selesai' | 'Dibatalkan')[] = [
     'Menunggu Pembayaran',
@@ -65,9 +65,16 @@ const Pesanan: React.FC<PesananProps> = ({ onSelectOrder, onNavigateToPayment })
     return status;
   };
 
+  const handleOrderClick = (order: Order) => {
+    if (order.status === 'Menunggu Pembayaran') {
+      onNavigateToPayment(order.id);
+    } else {
+      onSelectOrder(order.id);
+    }
+  };
+
   return (
     <IonPage>
-      {/* Header */}
       <IonHeader className="ion-no-border">
         <IonToolbar className="orders-toolbar">
           <div className="orders-toolbar-inner">
@@ -77,14 +84,14 @@ const Pesanan: React.FC<PesananProps> = ({ onSelectOrder, onNavigateToPayment })
           </div>
         </IonToolbar>
         
-        {/* Horizontal Scrollable Tabs */}
         <div className="orders-tabs-scroll">
           {segments.map((seg) => {
             const count = orders.filter((o) => o.status === seg).length;
+            const isActive = activeSegment === seg;
             return (
               <button
                 key={seg}
-                className={`orders-tab-btn ${activeSegment === seg ? 'active' : ''}`}
+                className={isActive ? 'orders-tab-btn active' : 'orders-tab-btn'}
                 onClick={() => setActiveSegment(seg)}
               >
                 <span>{seg === 'Diproses' ? 'Diproses' : seg}</span>
@@ -106,9 +113,8 @@ const Pesanan: React.FC<PesananProps> = ({ onSelectOrder, onNavigateToPayment })
                 <div
                   key={order.id}
                   className="order-history-card"
-                  onClick={() => onSelectOrder(order.id)}
+                  onClick={() => handleOrderClick(order)}
                 >
-                  {/* Card Header */}
                   <div className="history-card-header">
                     <div className="history-header-left">
                       <IonIcon icon={storefrontOutline} />
@@ -119,7 +125,6 @@ const Pesanan: React.FC<PesananProps> = ({ onSelectOrder, onNavigateToPayment })
                     </IonBadge>
                   </div>
 
-                  {/* Card Body */}
                   <div className="history-card-body">
                     <div className="history-item-img-wrapper">
                       <img src={primaryItem.product.image} alt={primaryItem.product.name} />
@@ -134,7 +139,6 @@ const Pesanan: React.FC<PesananProps> = ({ onSelectOrder, onNavigateToPayment })
                     </div>
                   </div>
 
-                  {/* Card Footer */}
                   <div className="history-card-footer">
                     <div className="history-footer-left">
                       <span className="history-date-label">
@@ -157,7 +161,7 @@ const Pesanan: React.FC<PesananProps> = ({ onSelectOrder, onNavigateToPayment })
                             onNavigateToPayment(order.id);
                           }}
                         >
-                          Bayar QRIS
+                          Bayar Sekarang
                         </IonButton>
                       ) : (
                         <IonButton
@@ -165,8 +169,12 @@ const Pesanan: React.FC<PesananProps> = ({ onSelectOrder, onNavigateToPayment })
                           color="primary"
                           size="small"
                           className="history-action-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSelectOrder(order.id);
+                          }}
                         >
-                          Lacak <IonIcon icon={chevronForwardOutline} slot="end" />
+                          Lihat Detail <IonIcon icon={chevronForwardOutline} slot="end" />
                         </IonButton>
                       )}
                     </div>
@@ -175,13 +183,12 @@ const Pesanan: React.FC<PesananProps> = ({ onSelectOrder, onNavigateToPayment })
               );
             })
           ) : (
-            /* Empty State */
             <div className="empty-orders-container">
               <div className="empty-orders-icon">
                 <IonIcon icon={alertCircleOutline} />
               </div>
               <h3>Belum Ada Transaksi</h3>
-              <p>Tidak ada transaksi yang berstatus &ldquo;{activeSegment}&rdquo; untuk saat ini.</p>
+              <p>Tidak ada transaksi yang berstatus "{activeSegment}" untuk saat ini.</p>
             </div>
           )}
         </div>

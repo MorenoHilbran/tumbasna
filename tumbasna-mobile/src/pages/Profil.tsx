@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   IonContent,
   IonHeader,
@@ -165,7 +165,7 @@ const Profil: React.FC = () => {
           <div className="profile-header-main">
             <div className="profile-avatar-wrapper">
               <div className="profile-avatar-large">
-                {user.ownerName.charAt(0)}
+                {(user?.ownerName || 'U').charAt(0)}
               </div>
               <span className="profile-avatar-badge-check">
                 <IonIcon icon={shieldCheckmarkOutline} />
@@ -173,7 +173,7 @@ const Profil: React.FC = () => {
             </div>
             
             <div className="profile-header-details">
-              <h2 className="profile-user-name">{user.ownerName}</h2>
+              <h2 className="profile-user-name">{user?.ownerName || 'User'}</h2>
               <span className="profile-user-email">{user.email || 'Belum diatur'}</span>
               <div className="profile-shield-verified">
                 <span>Mitra Prioritas</span>
@@ -185,12 +185,12 @@ const Profil: React.FC = () => {
           <div className="profile-stats-grid">
             <div className="profile-stat-box">
               <span className="profile-stat-lbl">BELANJA BULAN INI</span>
-              <span className="profile-stat-val">Rp {user.purchasesThisMonth.toLocaleString('id-ID')}</span>
+              <span className="profile-stat-val">Rp {(user?.purchasesThisMonth || 0).toLocaleString('id-ID')}</span>
             </div>
             <div className="profile-stat-divider"></div>
             <div className="profile-stat-box">
               <span className="profile-stat-lbl">PESANAN AKTIF</span>
-              <span className="profile-stat-val">{user.activeOrdersCount} Aktif</span>
+              <span className="profile-stat-val">{user?.activeOrdersCount || 0} Aktif</span>
             </div>
           </div>
         </div>
@@ -299,7 +299,7 @@ const Profil: React.FC = () => {
         
         <div className="app-version-footer">
           <p>Tumbasna Mobile v1.0.0-Agritech</p>
-          <p>© 2026 PT Rantai Pangan Nusantara</p>
+          <p>Â© 2026 PT Rantai Pangan Nusantara</p>
         </div>
       </IonContent>
 
@@ -461,3 +461,5 @@ const Profil: React.FC = () => {
 };
 
 export default Profil;
+
+
