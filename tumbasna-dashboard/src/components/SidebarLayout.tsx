@@ -18,6 +18,7 @@ import {
     User,
     Wallet,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 // ----- Navigation items -----
 const navItems = [
@@ -192,7 +193,7 @@ function SidebarContent({
                             </p>
                         </div>
                     </div>
-                    <button className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-colors">
+                    <button onClick={handleLogout} className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-colors">
                         <LogOut className="w-3.5 h-3.5" />
                     </button>
                 </div>
@@ -284,4 +285,7 @@ export default function SidebarLayout({
         </div>
     );
 }
+
+
+
 
