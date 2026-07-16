@@ -74,6 +74,29 @@ function SidebarContent({
     pathname: string;
     onClose?: () => void;
 }) {
+    const router = useRouter();
+
+    const handleLogout = async () => {
+        try {
+            const res = await fetch('/api/auth/admin-logout', {
+                method: 'POST',
+            });
+
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                router.push('/login');
+                router.refresh();
+            } else {
+                console.error('Logout failed:', data.error);
+                router.push('/login');
+            }
+        } catch (error) {
+            console.error('Logout error:', error);
+            router.push('/login');
+        }
+    };
+
     return (
         <div className="flex flex-col h-full bg-white border-r border-slate-200/80">
             {/* Brand */}
