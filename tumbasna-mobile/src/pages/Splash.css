@@ -12,7 +12,7 @@
   justify-content: flex-start; /* Align logo content from top */
   align-items: center;
   height: 100vh;
-  background: url('/spsc.png') no-repeat center bottom;
+  background: url('/spsc.webp') no-repeat center bottom;
   background-size: cover;
   position: relative;
   overflow: hidden;
