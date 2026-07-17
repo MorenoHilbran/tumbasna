@@ -450,7 +450,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (cart.length === 0) return '';
     const orderId = `TRX-${Math.floor(100000 + Math.random() * 900000)}`;
     const itemsTotal = cart.reduce((acc, i) => acc + i.product.price * i.quantity, 0);
-    const totalAmount = itemsTotal + shippingCost;
+    const totalAmount = itemsTotal + shippingCost + 2000;
     const supplierName = cart[0].product.supplierName;
     const supplierLocation = cart[0].product.supplierLocation;
     const now = new Date();

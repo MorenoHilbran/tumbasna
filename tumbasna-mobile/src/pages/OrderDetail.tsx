@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   IonContent,
   IonHeader,
@@ -18,7 +18,7 @@ import {
   cashOutline
 } from 'ionicons/icons';
 import { useApp } from '../context/AppContext';
-import { QRCodeSVG } from 'qrcode.react';
+
 import './OrderDetail.css';
 
 interface OrderDetailProps {
@@ -29,13 +29,21 @@ interface OrderDetailProps {
 
 const PAYMENT_TIMEOUT = 900; // 15 menit = 900 detik
 
+const MIDTRANS_CLIENT_KEY = import.meta.env.VITE_MIDTRANS_CLIENT_KEY || 'Mid-client-PjI0Nu76GIkFIqVR';
+const IS_PRODUCTION = import.meta.env.VITE_MIDTRANS_IS_PRODUCTION === 'true';
+const SNAP_JS_URL = IS_PRODUCTION
+  ? 'https://app.midtrans.com/snap/snap.js'
+  : 'https://app.sandbox.midtrans.com/snap/snap.js';
+
 const OrderDetail: React.FC<OrderDetailProps> = ({ orderId, onBack, onPaymentSuccess }) => {
   const { orders, payOrder } = useApp();
   const [secondsLeft, setSecondsLeft] = useState(PAYMENT_TIMEOUT);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'qris' | 'va_bca' | 'gopay' | 'transfer' | 'cod'>('qris');
   const [showPaymentMethodModal, setShowPaymentMethodModal] = useState(false);
-  const [qrString, setQrString] = useState<string | null>(null);
+  const [snapToken, setSnapToken] = useState<string | null>(null);
+  const [snapError, setSnapError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [snapScriptReady, setSnapScriptReady] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
 
@@ -47,6 +55,20 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ orderId, onBack, onPaymentSuc
   const minutes = Math.floor(secondsLeft / 60);
   const seconds = secondsLeft % 60;
 
+  // Inject Midtrans Snap.js script once
+  useEffect(() => {
+    if (paymentMode !== 'api') return;
+    const existing = document.getElementById('midtrans-snap-js');
+    if (existing) { setSnapScriptReady(true); return; }
+    const script = document.createElement('script');
+    script.id = 'midtrans-snap-js';
+    script.src = SNAP_JS_URL;
+    script.setAttribute('data-client-key', MIDTRANS_CLIENT_KEY);
+    script.onload = () => setSnapScriptReady(true);
+    script.onerror = () => console.error('[Snap] Failed to load snap.js');
+    document.body.appendChild(script);
+  }, [paymentMode]);
+
   useEffect(() => {
     if (order?.paymentMethod) {
       setSelectedPaymentMethod(order.paymentMethod as any);
@@ -54,10 +76,10 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ orderId, onBack, onPaymentSuc
   }, [order]);
 
   useEffect(() => {
-    if (order && selectedPaymentMethod === 'qris') {
-      generateQRIS();
+    if (order && paymentMode === 'api') {
+      fetchSnapPayment();
     }
-  }, [order, selectedPaymentMethod]);
+  }, [order?.id]);
 
   useEffect(() => {
     if (secondsLeft > 0) {
@@ -68,29 +90,52 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ orderId, onBack, onPaymentSuc
     }
   }, [secondsLeft]);
 
-  const generateQRIS = async () => {
+  const fetchSnapPayment = async () => {
     if (!order) return;
     setIsLoading(true);
+    setSnapError(null);
     try {
-      if (paymentMode === 'demo') {
-        setQrString(`TUMBASNA-DEMO-${order.id}-Rp${order.totalAmount}`);
-      } else {
-        const res = await fetch(`${API_URL}/api/payments/create`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ orderId: order.id }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Gagal membuat QRIS');
-        setQrString(data.qrString);
-      }
+      const res = await fetch(`${API_URL}/api/payments/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: order.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Gagal membuat pembayaran');
+      setSnapToken(data.snapToken);
     } catch (err: any) {
-      if (paymentMode === 'demo') {
-        setQrString(`TUMBASNA-DEMO-${order.id}-Rp${order.totalAmount}`);
-      }
+      console.error('Snap payment error:', err);
+      setSnapToken(null);
+      setSnapError(err.message || 'Gagal menyiapkan pembayaran');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleOpenSnap = () => {
+    if (!snapToken || !(window as any).snap) return;
+    (window as any).snap.pay(snapToken, {
+      onSuccess: (result: any) => {
+        console.log('[Snap] Payment success:', result);
+        payOrder(order!.id);
+        setToastMessage('Pembayaran berhasil! Pesanan sedang diproses.');
+        setShowToast(true);
+        setTimeout(() => onPaymentSuccess(), 1500);
+      },
+      onPending: (result: any) => {
+        console.log('[Snap] Payment pending:', result);
+        setToastMessage('Pembayaran sedang diproses. Kami akan konfirmasi segera.');
+        setShowToast(true);
+      },
+      onError: (result: any) => {
+        console.error('[Snap] Payment error:', result);
+        setToastMessage('Pembayaran gagal. Silakan coba lagi.');
+        setShowToast(true);
+      },
+      onClose: () => {
+        console.log('[Snap] Popup closed by user.');
+      },
+    });
   };
 
   const handleSimulatePay = () => {
@@ -211,45 +256,67 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ orderId, onBack, onPaymentSuc
             </div>
           </div>
 
-          {/* Payment Instructions Based on Method */}
-          {selectedPaymentMethod === 'qris' && (
+          {/* Payment via Midtrans Snap Popup */}
+          {paymentMode === 'api' && (
             <div className="payment-instruction-card">
               <h3 className="section-title">Cara Pembayaran</h3>
               {isLoading ? (
                 <div style={{ textAlign: 'center', padding: 40 }}>
                   <IonSpinner name="crescent" />
-                  <p style={{ marginTop: 20, fontSize: 13, color: '#666' }}>Membuat QR Code...</p>
+                  <p style={{ marginTop: 16, fontSize: 13, color: '#666' }}>Menyiapkan pembayaran...</p>
                 </div>
-              ) : qrString ? (
-                <>
-                  <div className="qr-code-container">
-                    <QRCodeSVG value={qrString} size={220} level="H" />
-                  </div>
-                  <div className="instruction-steps">
-                    <div className="instruction-step">
-                      <div className="step-number">1</div>
-                      <div className="step-text">Buka aplikasi e-wallet atau m-banking</div>
-                    </div>
-                    <div className="instruction-step">
-                      <div className="step-number">2</div>
-                      <div className="step-text">Pilih menu Scan QR / QRIS</div>
-                    </div>
-                    <div className="instruction-step">
-                      <div className="step-number">3</div>
-                      <div className="step-text">Arahkan kamera ke QR code di atas</div>
-                    </div>
-                    <div className="instruction-step">
-                      <div className="step-number">4</div>
-                      <div className="step-text">Konfirmasi pembayaran</div>
-                    </div>
-                  </div>
-                </>
-              ) : (
+              ) : snapToken ? (
+                <div style={{ textAlign: 'center', padding: '16px 0' }}>
+                  <div style={{
+                    width: 64, height: 64, borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #006837, #00A651)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    margin: '0 auto 16px', fontSize: 28
+                  }}>🔒</div>
+                  <p style={{ fontSize: 13, color: '#374151', marginBottom: 20, lineHeight: 1.6 }}>
+                    Pembayaran disiapkan. Pilih metode yang Anda inginkan — QRIS, Transfer Bank, GoPay, OVO, dan lainnya.
+                  </p>
+                  <IonButton
+                    expand="block"
+                    disabled={!snapScriptReady || isExpired}
+                    style={{ '--background': '#006837', '--border-radius': '14px', '--padding-top': '14px', '--padding-bottom': '14px', fontWeight: 700, fontSize: 15 }}
+                    onClick={handleOpenSnap}
+                  >
+                    {snapScriptReady ? `💳  Bayar Rp ${totalAmount.toLocaleString('id-ID')}` : 'Memuat...'}
+                  </IonButton>
+                  <p style={{ fontSize: 11, color: '#9ca3af', marginTop: 12 }}>Popup pembayaran Midtrans akan terbuka</p>
+                </div>
+              ) : snapError ? (
                 <div style={{ textAlign: 'center', padding: 20 }}>
-                  <p style={{ color: '#E53935', fontSize: 13 }}>Gagal memuat QR Code</p>
-                  <IonButton size="small" onClick={generateQRIS}>Coba Lagi</IonButton>
+                  <div style={{ fontSize: 36, marginBottom: 12 }}>⚠️</div>
+                  <p style={{ color: '#E53935', fontSize: 13, marginBottom: 16 }}>{snapError}</p>
+                  <IonButton size="small" onClick={fetchSnapPayment} style={{ '--background': '#006837' }}>Coba Lagi</IonButton>
                 </div>
-              )}
+              ) : null}
+            </div>
+          )}
+
+          {paymentMode !== 'api' && selectedPaymentMethod === 'qris' && (
+            <div className="payment-instruction-card">
+              <h3 className="section-title">Cara Pembayaran</h3>
+              <div className="instruction-steps">
+                <div className="instruction-step">
+                  <div className="step-number">1</div>
+                  <div className="step-text">Buka aplikasi e-wallet atau m-banking</div>
+                </div>
+                <div className="instruction-step">
+                  <div className="step-number">2</div>
+                  <div className="step-text">Pilih menu Scan QR / QRIS</div>
+                </div>
+                <div className="instruction-step">
+                  <div className="step-number">3</div>
+                  <div className="step-text">Scan kode QRIS dari merchant</div>
+                </div>
+                <div className="instruction-step">
+                  <div className="step-number">4</div>
+                  <div className="step-text">Konfirmasi pembayaran</div>
+                </div>
+              </div>
             </div>
           )}
 
