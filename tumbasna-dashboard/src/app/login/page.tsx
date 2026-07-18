@@ -103,7 +103,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <p className="text-center text-xs text-gray-500 mt-8">
-          © 2024 Tumbasna. All rights reserved.
+          Â© 2024 Tumbasna. All rights reserved.
         </p>
       </div>
     </div>

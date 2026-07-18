@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-// Midtrans Core API — QRIS Only
-const MIDTRANS_BASE = process.env.MIDTRANS_IS_PRODUCTION === "true"
-  ? "https://api.midtrans.com"
-  : "https://api.sandbox.midtrans.com";
+// Midtrans Snap API
+const MIDTRANS_SNAP_BASE = process.env.MIDTRANS_IS_PRODUCTION === "true"
+  ? "https://app.midtrans.com"
+  : "https://app.sandbox.midtrans.com";
 
 const SERVER_KEY = process.env.MIDTRANS_SERVER_KEY || "";
 const AUTH_HEADER = "Basic " + Buffer.from(SERVER_KEY + ":").toString("base64");
@@ -28,15 +28,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    // Jika sudah ada payment aktif yang masih pending, kembalikan QR yang lama
+    // Jika sudah ada payment aktif yang masih pending DAN punya snapUrl, kembalikan snap URL yang lama
     const existingPayment = await prisma.payment.findUnique({
       where: { orderId },
     });
 
-    if (existingPayment && existingPayment.status === "PENDING" && existingPayment.snapToken) {
-      // snapToken kita gunakan untuk menyimpan qrString di mode QRIS
+    if (existingPayment && existingPayment.status === "PENDING" && existingPayment.snapUrl) {
       return NextResponse.json({
-        qrString: existingPayment.snapToken,
+        snapUrl: existingPayment.snapUrl,
+        snapToken: existingPayment.snapToken,
         midtransOrderId: existingPayment.midtransOrderId,
         grossAmount: Number(existingPayment.grossAmount),
       });
@@ -46,9 +46,35 @@ export async function POST(req: Request) {
     const midtransOrderId = `${order.id}-${Date.now()}`;
     const grossAmount = Number(order.totalAmount);
 
-    // Panggil Core API Midtrans — QRIS charge
-    const chargePayload = {
-      payment_type: "qris",
+    // Build item details
+    const itemDetails = [
+      ...order.items.map((item) => ({
+        id: item.id,
+        price: Number(item.price),
+        quantity: Number(item.qty),
+        name: item.commodity
+          .split(" ")
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(" "),
+      })),
+      ...(Number(order.shippingCost) > 0
+        ? [{
+            id: "SHIPPING",
+            price: Number(order.shippingCost),
+            quantity: 1,
+            name: `Ongkos Kirim (${order.courier})`,
+          }]
+        : []),
+      {
+        id: "SERVICE_FEE",
+        price: 2000,
+        quantity: 1,
+        name: "Biaya Layanan Aplikasi",
+      },
+    ];
+
+    // Panggil Snap API Midtrans
+    const snapPayload = {
       transaction_details: {
         order_id: midtransOrderId,
         gross_amount: grossAmount,
@@ -58,87 +84,58 @@ export async function POST(req: Request) {
         email: order.buyer?.email || "buyer@tumbasna.com",
         phone: order.buyer?.phoneNumber || "",
       },
-      item_details: [
-        ...order.items.map((item) => ({
-          id: item.id,
-          price: Number(item.price),
-          quantity: Number(item.qty),
-          name: item.commodity
-            .split(" ")
-            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-            .join(" "),
-        })),
-        ...(Number(order.shippingCost) > 0
-          ? [{
-              id: "SHIPPING",
-              price: Number(order.shippingCost),
-              quantity: 1,
-              name: `Ongkos Kirim (${order.courier})`,
-            }]
-          : []),
-        {
-          id: "SERVICE_FEE",
-          price: 2000,
-          quantity: 1,
-          name: "Biaya Layanan Aplikasi",
-        },
-      ],
+      item_details: itemDetails,
+      credit_card: {
+        secure: true,
+      },
     };
 
-    const midtransRes = await fetch(`${MIDTRANS_BASE}/v2/charge`, {
+    const snapRes = await fetch(`${MIDTRANS_SNAP_BASE}/snap/v1/transactions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
         Authorization: AUTH_HEADER,
       },
-      body: JSON.stringify(chargePayload),
+      body: JSON.stringify(snapPayload),
     });
 
-    const midtransData = await midtransRes.json();
+    const snapData = await snapRes.json();
 
-    if (!midtransRes.ok || midtransData.status_code !== "201") {
-      console.error("[MIDTRANS QRIS ERROR]", midtransData);
+    if (!snapRes.ok || !snapData.token) {
+      console.error("[MIDTRANS SNAP ERROR]", snapData);
       return NextResponse.json(
-        { error: midtransData.status_message || "Midtrans error" },
+        { error: snapData.error_messages?.[0] || snapData.message || "Midtrans Snap error" },
         { status: 500 }
       );
     }
 
-    // Ambil QR string dari response Midtrans
-    const qrString =
-      midtransData.qr_string ||
-      midtransData.actions?.find((a: any) => a.name === "generate-qr-code")?.url ||
-      "";
+    const snapToken = snapData.token;
+    const snapUrl = snapData.redirect_url;
 
-    // Simpan/update payment di DB
-    // Gunakan snapToken untuk menyimpan qrString (kolom yg sudah ada, tanpa migrasi)
-    if (existingPayment) {
-      await prisma.payment.update({
-        where: { id: existingPayment.id },
-        data: {
-          midtransOrderId,
-          snapToken: qrString,          // reuse kolom snapToken untuk qrString
-          snapUrl: midtransData.redirect_url || null,
-          grossAmount,
-          status: "PENDING",
-        },
-      });
-    } else {
-      await prisma.payment.create({
-        data: {
-          orderId: order.id,
-          midtransOrderId,
-          grossAmount,
-          snapToken: qrString,          // reuse kolom snapToken untuk qrString
-          snapUrl: midtransData.redirect_url || null,
-          status: "PENDING",
-        },
-      });
-    }
+    // Simpan/update payment di DB (upsert agar tidak crash jika payment sudah ada)
+    await prisma.payment.upsert({
+      where: { orderId: order.id },
+      update: {
+        midtransOrderId,
+        snapToken,
+        snapUrl,
+        grossAmount,
+        status: "PENDING",
+      },
+      create: {
+        orderId: order.id,
+        midtransOrderId,
+        grossAmount,
+        snapToken,
+        snapUrl,
+        status: "PENDING",
+      },
+    });
 
     return NextResponse.json({
-      qrString,
+      snapToken,
+      snapUrl,
       midtransOrderId,
       grossAmount,
     });
