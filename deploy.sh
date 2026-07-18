@@ -8,12 +8,13 @@ echo "========================================"
 echo "🚀 Memulai Deployment Tumbasna (Docker)"
 echo "========================================"
 
-# 1. Git Pull
+# 1. Git Pull (Force Sync)
 echo "📥 1. Mengambil update terbaru dari Git..."
-git pull origin main
+git fetch --all
+git reset --hard origin/main
 
 if [ $? -ne 0 ]; then
-    echo "❌ Gagal melakukan git pull. Cek koneksi atau konflik."
+    echo "❌ Gagal melakukan git sync. Cek koneksi."
     exit 1
 fi
 
