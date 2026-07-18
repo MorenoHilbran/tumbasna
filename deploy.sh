@@ -52,6 +52,19 @@ else
     echo "tumbasna-mobile directory not found!"
 fi
 
+# 3.1 Update Nginx Config to serve mobile statically on host
+echo "========================================"
+echo "🔧 3.1 Memperbarui Konfigurasi Nginx VPS..."
+echo "========================================"
+if [ -f "nginx-sites-tumbasna.conf" ]; then
+    echo "Applying nginx-sites-tumbasna.conf..."
+    sudo cp nginx-sites-tumbasna.conf /etc/nginx/sites-enabled/tumbasna
+    sudo nginx -t && sudo systemctl reload nginx
+    echo "✓ Nginx reloaded successfully!"
+else
+    echo "nginx-sites-tumbasna.conf not found!"
+fi
+
 # 4. Diagnostics (melihat konfigurasi Nginx dan status proses di VPS)
 echo "========================================"
 echo "🔍 4. Menjalankan Diagnostik VPS..."
