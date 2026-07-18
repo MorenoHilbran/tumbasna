@@ -56,12 +56,13 @@ fi
 echo "========================================"
 echo "🔍 4. Menjalankan Diagnostik VPS..."
 echo "========================================"
-DIAG_FILE="/opt/tumbasna/tumbasna-dashboard/public/diagnostics.txt"
+DIAG_FILE="/tmp/diagnostics.txt"
 echo "=== VPS Diagnostics Run at $(date) ===" > "$DIAG_FILE"
 
 echo "" >> "$DIAG_FILE"
 echo "--- Directory Structure ---" >> "$DIAG_FILE"
 ls -la /var/www >> "$DIAG_FILE" 2>&1
+ls -la /var/www/tumbasna-mobile >> "$DIAG_FILE" 2>&1
 echo "----------------------------------" >> "$DIAG_FILE"
 
 echo "" >> "$DIAG_FILE"
@@ -73,6 +74,7 @@ for config in /etc/nginx/sites-enabled/*; do
         echo "----------------------------------" >> "$DIAG_FILE"
     fi
 done
+
 
 echo "" >> "$DIAG_FILE"
 echo "--- PM2 Status ---" >> "$DIAG_FILE"
@@ -86,12 +88,23 @@ echo "" >> "$DIAG_FILE"
 echo "--- Mobile App Dist Modification Timestamp ---" >> "$DIAG_FILE"
 ls -la /opt/tumbasna/tumbasna-mobile/dist >> "$DIAG_FILE" 2>&1
 
+# Copy diagnostics ke Nginx web directories jika ada
+if [ -d "/var/www/tumbasna-mobile" ]; then
+    sudo cp "$DIAG_FILE" /var/www/tumbasna-mobile/diagnostics.txt
+    sudo chmod 644 /var/www/tumbasna-mobile/diagnostics.txt
+fi
+if [ -d "/var/www/html" ]; then
+    sudo cp "$DIAG_FILE" /var/www/html/diagnostics.txt
+    sudo chmod 644 /var/www/html/diagnostics.txt
+fi
+
 echo "========================================"
-echo "✅ Diagnostics written to $DIAG_FILE"
+echo "✅ Diagnostics copied to web root directories"
 echo "========================================"
 echo "========================================"
 echo "✅ Deployment Tumbasna Selesai!"
 echo "========================================"
 echo "Untuk melihat status container, jalankan: docker compose ps"
+
 
 
