@@ -36,9 +36,9 @@ echo "========================================"
 if [ -d "tumbasna-mobile" ]; then
     cd tumbasna-mobile
     echo "Installing mobile dependencies..."
-    npm install
+    npm install > /tmp/mobile_build.log 2>&1
     echo "Building mobile app..."
-    npm run build
+    npm run build >> /tmp/mobile_build.log 2>&1
     
     # Copy ke folder Nginx static jika ada
     if [ -d "/var/www/tumbasna-mobile" ]; then
@@ -73,10 +73,17 @@ DIAG_FILE="/tmp/diagnostics.txt"
 echo "=== VPS Diagnostics Run at $(date) ===" > "$DIAG_FILE"
 
 echo "" >> "$DIAG_FILE"
+echo "--- Mobile Build Log ---" >> "$DIAG_FILE"
+cat /tmp/mobile_build.log >> "$DIAG_FILE" 2>&1
+echo "----------------------------------" >> "$DIAG_FILE"
+
+echo "" >> "$DIAG_FILE"
 echo "--- Directory Structure ---" >> "$DIAG_FILE"
 ls -la /var/www >> "$DIAG_FILE" 2>&1
 ls -la /var/www/tumbasna-mobile >> "$DIAG_FILE" 2>&1
+ls -la /opt/tumbasna/tumbasna-mobile >> "$DIAG_FILE" 2>&1
 echo "----------------------------------" >> "$DIAG_FILE"
+
 
 echo "" >> "$DIAG_FILE"
 echo "--- Nginx Sites Configurations ---" >> "$DIAG_FILE"
