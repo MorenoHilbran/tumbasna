@@ -56,23 +56,42 @@ fi
 echo "========================================"
 echo "🔍 4. Menjalankan Diagnostik VPS..."
 echo "========================================"
-echo "--- Nginx Sites Configurations ---"
+DIAG_FILE="/opt/tumbasna/tumbasna-dashboard/public/diagnostics.txt"
+echo "=== VPS Diagnostics Run at $(date) ===" > "$DIAG_FILE"
+
+echo "" >> "$DIAG_FILE"
+echo "--- Directory Structure ---" >> "$DIAG_FILE"
+ls -la /var/www >> "$DIAG_FILE" 2>&1
+echo "----------------------------------" >> "$DIAG_FILE"
+
+echo "" >> "$DIAG_FILE"
+echo "--- Nginx Sites Configurations ---" >> "$DIAG_FILE"
 for config in /etc/nginx/sites-enabled/*; do
     if [ -f "$config" ]; then
-        echo "File: $config"
-        cat "$config"
-        echo "----------------------------------"
+        echo "File: $config" >> "$DIAG_FILE"
+        cat "$config" >> "$DIAG_FILE"
+        echo "----------------------------------" >> "$DIAG_FILE"
     fi
 done
 
-echo "--- PM2 Status ---"
-pm2 status 2>/dev/null || echo "PM2 not running or not in PATH"
+echo "" >> "$DIAG_FILE"
+echo "--- PM2 Status ---" >> "$DIAG_FILE"
+pm2 status >> "$DIAG_FILE" 2>&1 || echo "PM2 not running or not in PATH" >> "$DIAG_FILE"
 
-echo "--- Docker Containers ---"
-docker ps
+echo "" >> "$DIAG_FILE"
+echo "--- Docker Containers ---" >> "$DIAG_FILE"
+docker ps >> "$DIAG_FILE" 2>&1
 
+echo "" >> "$DIAG_FILE"
+echo "--- Mobile App Dist Modification Timestamp ---" >> "$DIAG_FILE"
+ls -la /opt/tumbasna/tumbasna-mobile/dist >> "$DIAG_FILE" 2>&1
+
+echo "========================================"
+echo "✅ Diagnostics written to $DIAG_FILE"
+echo "========================================"
 echo "========================================"
 echo "✅ Deployment Tumbasna Selesai!"
 echo "========================================"
 echo "Untuk melihat status container, jalankan: docker compose ps"
+
 
