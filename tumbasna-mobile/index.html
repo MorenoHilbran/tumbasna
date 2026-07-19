@@ -19,6 +19,7 @@
     <link rel="shortcut icon" type="image/png" href="/favicon.png" />
     
     <!-- Preload Critical Resources -->
+    <link rel="preload" href="/spsc.webp" as="image" type="image/webp" />
     <link rel="preload" href="/logotum.png" as="image" type="image/png" />
     <link rel="preload" href="/src/main.tsx" as="script" />
     
@@ -46,57 +47,55 @@
 
     <!-- Inline Critical CSS for Splash Screen -->
     <style>
-      /* Critical splash screen styles for instant render */
       body {
         margin: 0;
         padding: 0;
         font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
       }
       
       #root {
         min-height: 100vh;
-        background: #f4f8f2;
+        background: #f7f9f4;
       }
       
-      /* Initial loading state */
       .initial-loader {
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100vh;
-        background: linear-gradient(180deg, #f4f8f2 0%, #e8f2e5 40%, #dbebd7 75%, #cfe3ca 100%);
+        background: #f7f9f4 url('/spsc.webp') no-repeat center bottom;
+        background-size: cover;
         display: flex;
         flex-direction: column;
-        align-items: center;
         justify-content: space-between;
+        align-items: center;
         z-index: 9999;
         box-sizing: border-box;
       }
       
       .initial-loader-content {
-        text-align: center;
-        margin-top: 10vh;
         display: flex;
         flex-direction: column;
         align-items: center;
+        text-align: center;
+        margin-top: 13vh;
       }
       
-      .initial-loader-logo {
-        width: 84px;
-        height: 84px;
+      .initial-loader-logo-wrap {
+        width: 88px;
+        height: 88px;
         overflow: hidden;
         display: flex;
-        justify-content: flex-start;
         align-items: center;
-        margin: 0 auto 14px;
-        filter: drop-shadow(0 8px 18px rgba(0, 104, 55, 0.14));
+        justify-content: flex-start;
+        margin-bottom: 12px;
+        filter: drop-shadow(0 10px 20px rgba(0, 104, 55, 0.15));
       }
 
-      .initial-loader-logo img {
-        height: 84px;
+      .initial-loader-logo-img {
+        height: 88px;
         width: auto;
         max-width: none;
         object-fit: cover;
@@ -105,53 +104,90 @@
       
       .initial-loader-text {
         font-size: 40px;
-        font-weight: 800;
-        color: #154625;
+        font-weight: 900;
+        color: #006837;
         margin: 0;
         line-height: 1.1;
+        letter-spacing: -1.2px;
       }
       
       .initial-loader-text span {
-        color: #8cc63f;
+        color: #8CC63F;
       }
 
       .initial-loader-divider {
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 10px;
-        margin: 14px 0;
+        gap: 8px;
+        margin: 16px 0;
+        opacity: 0.85;
       }
 
-      .initial-loader-divider-line {
-        width: 50px;
+      .initial-loader-line {
+        width: 60px;
         height: 1.5px;
-        background: rgba(21, 70, 37, 0.22);
+        background: linear-gradient(90deg, transparent, #006837, transparent);
+      }
+
+      .initial-loader-diamond {
+        width: 7px;
+        height: 7px;
+        background: #006837;
+        transform: rotate(45deg);
+        border-radius: 1px;
       }
 
       .initial-loader-tagline {
-        font-size: 15px;
+        font-size: 16px;
         font-weight: 600;
-        color: #374e3e;
-        margin: 0;
+        color: #2D3748;
         line-height: 1.5;
+        margin: 0;
       }
 
       .initial-loader-tagline span {
         font-weight: 800;
         font-style: italic;
-        color: #154625;
+        color: #006837;
       }
 
-      .initial-loader-bottom {
-        width: 100%;
-        background: #f7faf4;
-        border-radius: 28px 28px 0 0;
-        padding: 24px 24px;
+      .initial-loader-card {
+        width: calc(100% - 36px);
+        max-width: 400px;
+        background: rgba(247, 249, 244, 0.92);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-radius: 28px;
+        padding: 18px 24px 22px;
+        margin-bottom: 28px;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.8);
         display: flex;
         flex-direction: column;
         align-items: center;
         box-sizing: border-box;
+      }
+
+      .initial-loader-progress {
+        width: 100%;
+        height: 8px;
+        background: #E2E8F0;
+        border-radius: 99px;
+        overflow: hidden;
+      }
+
+      .initial-loader-bar {
+        width: 40%;
+        height: 100%;
+        background: linear-gradient(90deg, #006837 0%, #8CC63F 60%, #F7941D 100%);
+        border-radius: 99px;
+        animation: initialPulse 1.5s ease-in-out infinite alternate;
+      }
+
+      @keyframes initialPulse {
+        0% { width: 20%; }
+        100% { width: 85%; }
       }
     </style>
   </head>
@@ -160,28 +196,30 @@
     <div id="root">
       <div class="initial-loader">
         <div class="initial-loader-content">
-          <div class="initial-loader-logo">
-            <img src="/logotum.png" alt="Tumbasna" />
+          <div class="initial-loader-logo-wrap">
+            <img src="/logotum.png" alt="Tumbasna" class="initial-loader-logo-img" />
           </div>
           <h1 class="initial-loader-text">Tumbas<span>Na</span></h1>
           <div class="initial-loader-divider">
-            <div class="initial-loader-divider-line"></div>
-            <span style="font-size: 7px; color: #154625;">◆</span>
-            <div class="initial-loader-divider-line"></div>
+            <div class="initial-loader-line"></div>
+            <div class="initial-loader-diamond"></div>
+            <div class="initial-loader-line"></div>
           </div>
           <p class="initial-loader-tagline">
             Pasar Digital Terpercaya<br />
             untuk <span>UMKM Indonesia</span>
           </p>
         </div>
-        <div class="initial-loader-bottom">
-          <p style="font-size: 13px; font-weight: 600; color: #27432e; margin: 0;">Memuat aplikasi...</p>
+        <div class="initial-loader-card">
+          <div class="initial-loader-progress">
+            <div class="initial-loader-bar"></div>
+          </div>
+          <p style="font-size: 13px; font-weight: 600; color: #006837; margin: 14px 0 0 0;">
+            Memuat pengalaman terbaik untuk Anda...
+          </p>
         </div>
       </div>
     </div>
-    
-    <!-- Midtrans Snap Script (diaktifkan saat VITE_PAYMENT_MODE=midtrans) -->
-    <!-- <script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="Mid-client-PjI0Nu76GIkFIqVR" defer></script> -->
     
     <!-- Main App Script -->
     <script type="module" src="/src/main.tsx"></script>

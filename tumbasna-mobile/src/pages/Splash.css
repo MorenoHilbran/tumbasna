@@ -1,203 +1,188 @@
-/* ==============================
-   Splash.css — Match Photo 2 Design Exactly
-   ============================== */
+/* ==========================================================================
+   Splash.css — Premium Full-Screen Illustration Splash (Matching Design)
+   ========================================================================== */
 
 .splash-content-wrapper {
-  --background: #f4f8f2;
+  --background: #f7f9f4;
 }
 
 .splash-container {
+  width: 100%;
+  height: 100vh;
+  background: #f7f9f4 url('/spsc.webp') no-repeat center bottom;
+  background-size: cover;
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: space-between;
-  height: 100vh;
-  width: 100%;
-  background: linear-gradient(180deg, #f4f8f2 0%, #e8f2e5 40%, #dbebd7 75%, #cfe3ca 100%);
+  align-items: center;
   position: relative;
   overflow: hidden;
   box-sizing: border-box;
+  padding: 0;
 }
 
-/* ── Floating Decorative Leaves ───────────────────────────── */
-.splash-leaf {
-  position: absolute;
-  z-index: 2;
-  pointer-events: none;
-  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.05));
-}
-
-.leaf-top-left {
-  top: 10%;
-  left: 8%;
-  transform: rotate(-25deg);
-  animation: floatLeaf 4s ease-in-out infinite alternate;
-}
-
-.leaf-top-right {
-  top: 12%;
-  right: 10%;
-  transform: rotate(35deg);
-  animation: floatLeaf 5s ease-in-out infinite alternate-reverse;
-}
-
-.leaf-mid-left {
-  top: 30%;
-  left: 6%;
-  transform: rotate(15deg);
-  animation: floatLeaf 4.5s ease-in-out infinite alternate;
-}
-
-.leaf-mid-right {
-  top: 34%;
-  right: 8%;
-  transform: rotate(-40deg);
-  animation: floatLeaf 5.5s ease-in-out infinite alternate-reverse;
-}
-
-@keyframes floatLeaf {
-  0% { transform: translateY(0) rotate(-10deg); }
-  100% { transform: translateY(-10px) rotate(12deg); }
-}
-
-/* ── Top Brand Section ──────────────────────────────────────── */
-.splash-brand-section {
+/* ── Main Top/Center Content ────────────────────────────────────────────── */
+.splash-main-content {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  margin-top: 10vh;
+  margin-top: 13vh;
   z-index: 10;
-  width: 100%;
-  padding: 0 24px;
-  box-sizing: border-box;
-  animation: splashFadeIn 0.8s ease-out;
+  animation: splashFadeDown 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* Crops logotum.png to isolate the shopping bag icon on the left */
-.splash-logo-icon-wrapper {
-  width: 84px;
-  height: 84px;
+/* Crops logotum.png to show ONLY the 3D green shopping bag icon on the left */
+.splash-logo-icon-wrap {
+  width: 88px;
+  height: 88px;
   overflow: hidden;
   display: flex;
-  justify-content: flex-start;
   align-items: center;
-  margin-bottom: 14px;
-  filter: drop-shadow(0 8px 18px rgba(0, 104, 55, 0.14));
+  justify-content: flex-start;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 10px 20px rgba(0, 104, 55, 0.15));
+  animation: splashFloat 3s ease-in-out infinite alternate;
 }
 
-.splash-logo-icon {
-  height: 84px;
+.splash-logo-img {
+  height: 88px;
   width: auto;
   max-width: none;
   object-fit: cover;
   object-position: left;
 }
 
-.splash-brand-title {
+/* Title: Tumbas (Dark Green), Na (Light Vibrant Green) */
+.splash-title {
   font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
   font-size: 40px;
-  font-weight: 800;
-  color: #154625;
+  font-weight: 900;
+  color: #006837;
   margin: 0;
+  padding: 0;
   line-height: 1.1;
-  letter-spacing: -0.5px;
+  letter-spacing: -1.2px;
 }
 
-.splash-brand-title span {
-  color: #8cc63f;
+.splash-title span {
+  color: #8CC63F;
 }
 
-/* Diamond Line Divider */
+/* Diamond Divider */
 .splash-divider {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  margin: 14px 0 14px 0;
-  width: 100%;
+  gap: 8px;
+  margin: 16px 0;
+  opacity: 0.85;
 }
 
 .splash-divider-line {
-  width: 50px;
+  width: 60px;
   height: 1.5px;
-  background: linear-gradient(90deg, transparent, rgba(21, 70, 37, 0.22), transparent);
+  background: linear-gradient(90deg, transparent, #006837, transparent);
 }
 
 .splash-divider-diamond {
-  font-size: 7px;
-  color: #154625;
-  line-height: 1;
+  width: 7px;
+  height: 7px;
+  background: #006837;
+  transform: rotate(45deg);
+  border-radius: 1px;
 }
 
 /* Tagline */
 .splash-tagline {
   font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
-  color: #374e3e;
+  color: #2D3748;
   line-height: 1.5;
   margin: 0;
+  letter-spacing: 0.1px;
 }
 
 .splash-tagline span {
   font-weight: 800;
   font-style: italic;
-  color: #154625;
+  color: #006837;
 }
 
-/* ── Bottom Illustration Area (spsc.webp) ────────────────────── */
-.splash-illustration {
-  width: 100%;
-  flex: 1;
-  background: url('/spsc.webp') no-repeat center bottom;
-  background-size: contain;
-  margin-bottom: -15px;
-  z-index: 3;
-}
-
-/* ── Bottom Floating Card ────────────────────────────────────── */
+/* ── Bottom Card Overlay ────────────────────────────────────────────────── */
 .splash-bottom-card {
-  width: 100%;
-  background: #f7faf4;
-  border-radius: 28px 28px 0 0;
-  padding: 24px 24px calc(24px + env(safe-area-inset-bottom, 0px)) 24px;
+  width: calc(100% - 36px);
+  max-width: 400px;
+  background: rgba(247, 249, 244, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 28px;
+  padding: 18px 24px 22px;
+  margin-bottom: 28px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.8);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   z-index: 10;
-  box-shadow: 0 -8px 25px rgba(21, 70, 37, 0.08);
   box-sizing: border-box;
+  animation: splashSlideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
 }
 
 .splash-progress-track {
-  width: 82%;
-  max-width: 280px;
-  height: 7px;
-  background: #e1ebd9;
-  border-radius: 10px;
+  width: 100%;
+  height: 8px;
+  background: #E2E8F0;
+  border-radius: 99px;
   overflow: hidden;
   position: relative;
 }
 
 .splash-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #154625 0%, #8cc63f 75%, #f7941d 100%);
-  border-radius: 10px;
-  transition: width 0.08s ease-out;
+  background: linear-gradient(90deg, #006837 0%, #8CC63F 60%, #F7941D 100%);
+  border-radius: 99px;
+  transition: width 0.1s linear;
 }
 
-.splash-loading-text {
+.splash-progress-text {
   font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
   font-size: 13px;
   font-weight: 600;
-  color: #27432e;
+  color: #006837;
   margin: 14px 0 0 0;
   text-align: center;
 }
 
-@keyframes splashFadeIn {
-  0% { opacity: 0; transform: translateY(-10px); }
-  100% { opacity: 1; transform: translateY(0); }
+/* ── Keyframes ─────────────────────────────────────────────────────────── */
+@keyframes splashFadeDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes splashSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes splashFloat {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-6px);
+  }
 }
