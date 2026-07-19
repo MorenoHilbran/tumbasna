@@ -1,140 +1,203 @@
 /* ==============================
-   Splash.css — Redesigned Premium Splash Screen
+   Splash.css — Match Photo 2 Design Exactly
    ============================== */
 
 .splash-content-wrapper {
-  --background: #ffffff;
+  --background: #f4f8f2;
 }
 
 .splash-container {
   display: flex;
   flex-direction: column;
-  justify-content: flex-start; /* Align logo content from top */
   align-items: center;
+  justify-content: space-between;
   height: 100vh;
-  background: url('/spsc.webp') no-repeat center bottom;
-  background-size: cover;
+  width: 100%;
+  background: linear-gradient(180deg, #f4f8f2 0%, #e8f2e5 40%, #dbebd7 75%, #cfe3ca 100%);
   position: relative;
   overflow: hidden;
-  padding: 0;
+  box-sizing: border-box;
 }
 
-/* ── Top Logo & Tagline Content ───────────────────────────── */
-.splash-top-content {
+/* ── Floating Decorative Leaves ───────────────────────────── */
+.splash-leaf {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.05));
+}
+
+.leaf-top-left {
+  top: 10%;
+  left: 8%;
+  transform: rotate(-25deg);
+  animation: floatLeaf 4s ease-in-out infinite alternate;
+}
+
+.leaf-top-right {
+  top: 12%;
+  right: 10%;
+  transform: rotate(35deg);
+  animation: floatLeaf 5s ease-in-out infinite alternate-reverse;
+}
+
+.leaf-mid-left {
+  top: 30%;
+  left: 6%;
+  transform: rotate(15deg);
+  animation: floatLeaf 4.5s ease-in-out infinite alternate;
+}
+
+.leaf-mid-right {
+  top: 34%;
+  right: 8%;
+  transform: rotate(-40deg);
+  animation: floatLeaf 5.5s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes floatLeaf {
+  0% { transform: translateY(0) rotate(-10deg); }
+  100% { transform: translateY(-10px) rotate(12deg); }
+}
+
+/* ── Top Brand Section ──────────────────────────────────────── */
+.splash-brand-section {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  margin-top: 12vh;
+  margin-top: 10vh;
   z-index: 10;
-  animation: fadeInDown 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
-  
-  /* Soft ambient glow to guarantee text legibility on all viewports */
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 60%, transparent 100%);
-  padding: 20px 40px;
-  border-radius: 40px;
+  width: 100%;
+  padding: 0 24px;
+  box-sizing: border-box;
+  animation: splashFadeIn 0.8s ease-out;
 }
 
-.splash-logo-vertical {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-/* Crops logotum.png to show ONLY the square icon on the left */
+/* Crops logotum.png to isolate the shopping bag icon on the left */
 .splash-logo-icon-wrapper {
-  width: 76px;
-  height: 76px;
+  width: 84px;
+  height: 84px;
   overflow: hidden;
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  filter: drop-shadow(0 8px 16px rgba(0, 104, 55, 0.12));
-  animation: logoBounce 1.2s ease-out;
+  margin-bottom: 14px;
+  filter: drop-shadow(0 8px 18px rgba(0, 104, 55, 0.14));
 }
 
 .splash-logo-icon {
-  height: 76px;
+  height: 84px;
   width: auto;
   max-width: none;
   object-fit: cover;
   object-position: left;
 }
 
-.splash-logo-title {
+.splash-brand-title {
   font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
-  font-size: 36px;
+  font-size: 40px;
   font-weight: 800;
-  color: #0b4526; /* Dark Green for "Tumbas" */
-  margin: 14px 0 0 0;
-  letter-spacing: -1px;
+  color: #154625;
+  margin: 0;
+  line-height: 1.1;
+  letter-spacing: -0.5px;
 }
 
-.splash-logo-title span {
-  color: #7cb324; /* Lighter/Vibrant Green for "Na" */
+.splash-brand-title span {
+  color: #8cc63f;
 }
 
-/* ── Ornamental Divider ───────────────────────────────────── */
+/* Diamond Line Divider */
 .splash-divider {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin: 18px 0;
-  animation: scaleIn 0.8s ease-out 0.3s both;
+  justify-content: center;
+  gap: 10px;
+  margin: 14px 0 14px 0;
+  width: 100%;
 }
 
 .splash-divider-line {
-  width: 55px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(11, 69, 38, 0.18), transparent);
+  width: 50px;
+  height: 1.5px;
+  background: linear-gradient(90deg, transparent, rgba(21, 70, 37, 0.22), transparent);
 }
 
 .splash-divider-diamond {
-  width: 6px;
-  height: 6px;
-  background: #0b4526;
-  transform: rotate(45deg);
-  border-radius: 1px;
+  font-size: 7px;
+  color: #154625;
+  line-height: 1;
 }
 
-/* ── Tagline ──────────────────────────────────────────────── */
+/* Tagline */
 .splash-tagline {
   font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
-  font-size: 14px;
-  color: #475569;
+  font-size: 15px;
   font-weight: 600;
-  line-height: 1.6;
+  color: #374e3e;
+  line-height: 1.5;
   margin: 0;
-  letter-spacing: 0.2px;
-  animation: fadeInText 0.8s ease-out 0.4s both;
 }
 
 .splash-tagline span {
-  font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
-  font-weight: 700;
+  font-weight: 800;
   font-style: italic;
-  color: #0b4526;
+  color: #154625;
 }
 
-/* ── Animations ───────────────────────────────────────────── */
+/* ── Bottom Illustration Area (spsc.webp) ────────────────────── */
+.splash-illustration {
+  width: 100%;
+  flex: 1;
+  background: url('/spsc.webp') no-repeat center bottom;
+  background-size: contain;
+  margin-bottom: -15px;
+  z-index: 3;
+}
 
-@keyframes fadeInText {
-  0% { opacity: 0; transform: translateY(4px); }
+/* ── Bottom Floating Card ────────────────────────────────────── */
+.splash-bottom-card {
+  width: 100%;
+  background: #f7faf4;
+  border-radius: 28px 28px 0 0;
+  padding: 24px 24px calc(24px + env(safe-area-inset-bottom, 0px)) 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  box-shadow: 0 -8px 25px rgba(21, 70, 37, 0.08);
+  box-sizing: border-box;
+}
+
+.splash-progress-track {
+  width: 82%;
+  max-width: 280px;
+  height: 7px;
+  background: #e1ebd9;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.splash-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #154625 0%, #8cc63f 75%, #f7941d 100%);
+  border-radius: 10px;
+  transition: width 0.08s ease-out;
+}
+
+.splash-loading-text {
+  font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #27432e;
+  margin: 14px 0 0 0;
+  text-align: center;
+}
+
+@keyframes splashFadeIn {
+  0% { opacity: 0; transform: translateY(-10px); }
   100% { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes fadeInDown {
-  0% { opacity: 0; transform: translateY(-16px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes scaleIn {
-  0% { opacity: 0; transform: scaleX(0); }
-  100% { opacity: 1; transform: scaleX(1); }
-}
-
-@keyframes logoBounce {
-  0% { transform: scale(0.85); opacity: 0; }
-  70% { transform: scale(1.05); }
-  100% { transform: scale(1); opacity: 1; }
 }

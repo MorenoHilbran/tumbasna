@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -57,7 +57,7 @@
       
       #root {
         min-height: 100vh;
-        background: #ffffff;
+        background: #f4f8f2;
       }
       
       /* Initial loading state */
@@ -67,50 +67,91 @@
         left: 0;
         width: 100%;
         height: 100vh;
-        background: #ffffff;
+        background: linear-gradient(180deg, #f4f8f2 0%, #e8f2e5 40%, #dbebd7 75%, #cfe3ca 100%);
         display: flex;
+        flex-direction: column;
         align-items: center;
-        justify-content: center;
+        justify-content: space-between;
         z-index: 9999;
+        box-sizing: border-box;
       }
       
       .initial-loader-content {
         text-align: center;
+        margin-top: 10vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
       }
       
       .initial-loader-logo {
-        width: 120px;
-        height: 120px;
-        margin: 0 auto 20px;
-        animation: fadeInScale 0.8s ease-out;
+        width: 84px;
+        height: 84px;
+        overflow: hidden;
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        margin: 0 auto 14px;
+        filter: drop-shadow(0 8px 18px rgba(0, 104, 55, 0.14));
+      }
+
+      .initial-loader-logo img {
+        height: 84px;
+        width: auto;
+        max-width: none;
+        object-fit: cover;
+        object-position: left;
       }
       
       .initial-loader-text {
-        font-size: 28px;
-        font-weight: 900;
-        color: #006837;
+        font-size: 40px;
+        font-weight: 800;
+        color: #154625;
         margin: 0;
-        animation: fadeIn 1s ease-out 0.3s both;
+        line-height: 1.1;
       }
       
       .initial-loader-text span {
-        color: #F7941D;
+        color: #8cc63f;
       }
-      
-      @keyframes fadeInScale {
-        from {
-          opacity: 0;
-          transform: scale(0.9);
-        }
-        to {
-          opacity: 1;
-          transform: scale(1);
-        }
+
+      .initial-loader-divider {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin: 14px 0;
       }
-      
-      @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
+
+      .initial-loader-divider-line {
+        width: 50px;
+        height: 1.5px;
+        background: rgba(21, 70, 37, 0.22);
+      }
+
+      .initial-loader-tagline {
+        font-size: 15px;
+        font-weight: 600;
+        color: #374e3e;
+        margin: 0;
+        line-height: 1.5;
+      }
+
+      .initial-loader-tagline span {
+        font-weight: 800;
+        font-style: italic;
+        color: #154625;
+      }
+
+      .initial-loader-bottom {
+        width: 100%;
+        background: #f7faf4;
+        border-radius: 28px 28px 0 0;
+        padding: 24px 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        box-sizing: border-box;
       }
     </style>
   </head>
@@ -120,9 +161,21 @@
       <div class="initial-loader">
         <div class="initial-loader-content">
           <div class="initial-loader-logo">
-            <img src="/logotum.png" alt="Tumbasna" style="width: 100%; height: 100%; object-fit: contain;" />
+            <img src="/logotum.png" alt="Tumbasna" />
           </div>
           <h1 class="initial-loader-text">Tumbas<span>Na</span></h1>
+          <div class="initial-loader-divider">
+            <div class="initial-loader-divider-line"></div>
+            <span style="font-size: 7px; color: #154625;">◆</span>
+            <div class="initial-loader-divider-line"></div>
+          </div>
+          <p class="initial-loader-tagline">
+            Pasar Digital Terpercaya<br />
+            untuk <span>UMKM Indonesia</span>
+          </p>
+        </div>
+        <div class="initial-loader-bottom">
+          <p style="font-size: 13px; font-weight: 600; color: #27432e; margin: 0;">Memuat aplikasi...</p>
         </div>
       </div>
     </div>
