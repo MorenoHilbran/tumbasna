@@ -40,13 +40,12 @@ if [ -d "tumbasna-mobile" ]; then
     echo "Building mobile app..."
     VITE_PAYMENT_MODE=api VITE_API_URL=https://api.tumbasna.my.id npm run build >> /tmp/mobile_build.log 2>&1
     
-    # Copy ke folder Nginx static jika ada
-    if [ -d "/var/www/tumbasna-mobile" ]; then
-        echo "Copying build to /var/www/tumbasna-mobile..."
-        sudo cp -r dist/* /var/www/tumbasna-mobile/
-    else
-        echo "Target directory /var/www/tumbasna-mobile not found, files are built in tumbasna-mobile/dist"
-    fi
+    # Copy ke folder Nginx static /var/www/tumbasna-mobile
+    echo "Copying build to /var/www/tumbasna-mobile..."
+    sudo mkdir -p /var/www/tumbasna-mobile
+    sudo cp -r dist/* /var/www/tumbasna-mobile/
+    sudo chmod -R 755 /var/www/tumbasna-mobile
+    sudo chmod -R 755 /opt/tumbasna/tumbasna-mobile/dist 2>/dev/null || true
     cd ..
 else
     echo "tumbasna-mobile directory not found!"
