@@ -49,7 +49,7 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ orderId, onBack, onPaymentSuc
 
   const order = orders.find((o) => o.id === orderId);
   const API_URL = import.meta.env.VITE_API_URL || 'https://api.tumbasna.my.id';
-  const paymentMode = import.meta.env.VITE_PAYMENT_MODE || 'demo';
+  const paymentMode = import.meta.env.VITE_PAYMENT_MODE || 'api';
 
   const isExpired = secondsLeft <= 0;
   const minutes = Math.floor(secondsLeft / 60);
@@ -320,7 +320,7 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ orderId, onBack, onPaymentSuc
             </div>
           )}
 
-          {selectedPaymentMethod === 'va_bca' && (
+          {paymentMode !== 'api' && selectedPaymentMethod === 'va_bca' && (
             <div className="payment-instruction-card">
               <h3 className="section-title">Cara Pembayaran</h3>
               <div className="va-number-display">
@@ -360,7 +360,7 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ orderId, onBack, onPaymentSuc
             </div>
           )}
 
-          {selectedPaymentMethod === 'gopay' && (
+          {paymentMode !== 'api' && selectedPaymentMethod === 'gopay' && (
             <div className="payment-instruction-card">
               <h3 className="section-title">Cara Pembayaran</h3>
               <div className="instruction-steps">
@@ -384,7 +384,7 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ orderId, onBack, onPaymentSuc
             </div>
           )}
 
-          {selectedPaymentMethod === 'transfer' && (
+          {paymentMode !== 'api' && selectedPaymentMethod === 'transfer' && (
             <div className="payment-instruction-card">
               <h3 className="section-title">Cara Pembayaran</h3>
               <div className="va-number-display">

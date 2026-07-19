@@ -38,7 +38,7 @@ if [ -d "tumbasna-mobile" ]; then
     echo "Installing mobile dependencies..."
     npm install > /tmp/mobile_build.log 2>&1
     echo "Building mobile app..."
-    npm run build >> /tmp/mobile_build.log 2>&1
+    VITE_PAYMENT_MODE=api VITE_API_URL=https://api.tumbasna.my.id npm run build >> /tmp/mobile_build.log 2>&1
     
     # Copy ke folder Nginx static jika ada
     if [ -d "/var/www/tumbasna-mobile" ]; then
