@@ -1,24 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { IonPage, IonContent } from '@ionic/react';
 import './Splash.css';
 
 const Splash: React.FC = () => {
-  const [progress, setProgress] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(timer);
-          return 100;
-        }
-        return prev + 4;
-      });
-    }, 70);
-
-    return () => clearInterval(timer);
-  }, []);
-
   return (
     <IonPage>
       <IonContent scrollY={false} className="splash-content-wrapper">
@@ -47,19 +31,6 @@ const Splash: React.FC = () => {
             <p className="splash-tagline">
               Pasar Digital Terpercaya<br />
               untuk <span>UMKM Indonesia</span>
-            </p>
-          </div>
-
-          {/* Bottom Card Progress Area */}
-          <div className="splash-bottom-card">
-            <div className="splash-progress-track">
-              <div
-                className="splash-progress-fill"
-                style={{ width: `${progress}%` }}
-              ></div>
-            </div>
-            <p className="splash-progress-text">
-              Memuat pengalaman terbaik untuk Anda...
             </p>
           </div>
 
