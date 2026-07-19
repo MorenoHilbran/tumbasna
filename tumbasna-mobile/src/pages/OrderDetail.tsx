@@ -36,7 +36,7 @@ const SNAP_JS_URL = IS_PRODUCTION
   : 'https://app.sandbox.midtrans.com/snap/snap.js';
 
 const OrderDetail: React.FC<OrderDetailProps> = ({ orderId, onBack, onPaymentSuccess }) => {
-  const { orders, payOrder } = useApp();
+  const { orders, payOrder, user } = useApp();
   const [secondsLeft, setSecondsLeft] = useState(PAYMENT_TIMEOUT);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'qris' | 'va_bca' | 'gopay' | 'transfer' | 'cod'>('qris');
   const [showPaymentMethodModal, setShowPaymentMethodModal] = useState(false);
@@ -98,7 +98,12 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ orderId, onBack, onPaymentSuc
       const res = await fetch(`${API_URL}/api/payments/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId: order.id }),
+        body: JSON.stringify({
+          orderId: order.id,
+          amount: order.totalAmount,
+          customerName: user?.ownerName || 'Pembeli Tumbasna',
+          customerPhone: user?.phone || '',
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Gagal membuat pembayaran');
