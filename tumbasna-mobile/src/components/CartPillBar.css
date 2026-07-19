@@ -1,93 +1,88 @@
-/* Cart Pill Bar - Redesigned */
-.cart-pill-bar {
+/* ==========================================================================
+   Cart Floating Action Button (FAB) — Fixed Bottom Right
+   ========================================================================== */
+
+.cart-fab-button {
   position: fixed;
-  bottom: 80px;
-  left: 16px;
-  right: 16px;
-  background: #006837;
-  border-radius: 50px;
-  padding: 12px 16px;
+  bottom: 84px;
+  right: 18px;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #F7941D 0%, #E65100 100%);
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 8px 22px rgba(247, 148, 29, 0.45), 0 3px 8px rgba(0, 0, 0, 0.12);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  /* box-shadow removed */
-  border: 1px solid rgba(140, 198, 63, 0.3);
+  justify-content: center;
   z-index: 1000;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  animation: slideUp 0.3s ease-out;
+  outline: none;
+  padding: 0;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
+  animation: fabBounceIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.cart-pill-bar:active {
-  transform: scale(0.98);
-  /* box-shadow removed */
+.cart-fab-button:hover {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 12px 28px rgba(247, 148, 29, 0.55), 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
-@keyframes slideUp {
-  from {
-    transform: translateY(100px);
+.cart-fab-button:active {
+  transform: scale(0.92);
+  box-shadow: 0 4px 12px rgba(247, 148, 29, 0.35);
+}
+
+.cart-fab-icon {
+  font-size: 26px;
+  color: #FFFFFF;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
+}
+
+/* Badge Count */
+.cart-fab-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #006837;
+  color: #FFFFFF;
+  font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  min-width: 22px;
+  height: 22px;
+  border-radius: 99px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+  animation: badgePop 0.3s ease-out;
+}
+
+@keyframes fabBounceIn {
+  0% {
+    transform: scale(0) rotate(-45deg);
     opacity: 0;
   }
-  to {
-    transform: translateY(0);
+  70% {
+    transform: scale(1.1) rotate(5deg);
+  }
+  100% {
+    transform: scale(1) rotate(0);
     opacity: 1;
   }
 }
 
-.cart-pill-content {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: 1;
+@keyframes badgePop {
+  0% {
+    transform: scale(0);
+  }
+  60% {
+    transform: scale(1.3);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
-
-.cart-pill-image {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  overflow: hidden;
-  background: #F8F7F4;
-  flex-shrink: 0;
-  border: 1px solid rgba(0, 104, 55, 0.08);
-}
-
-.cart-pill-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.cart-pill-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-}
-
-.cart-pill-title {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  color: #FFFFFF;
-}
-
-.cart-pill-items {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 12px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.cart-pill-price {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 15px;
-  font-weight: 800;
-  color: #FFA500;
-  flex-shrink: 0;
-  margin-left: 8px;
-}
-
-
-
-
-

@@ -1,4 +1,6 @@
 import React from 'react';
+import { IonIcon } from '@ionic/react';
+import { cart } from 'ionicons/icons';
 import { useApp } from '../context/AppContext';
 import './CartPillBar.css';
 
@@ -7,38 +9,17 @@ interface CartPillBarProps {
 }
 
 const CartPillBar: React.FC<CartPillBarProps> = ({ onNavigateToCart }) => {
-  const { cart } = useApp();
+  const { cart: cartItems } = useApp();
 
-  const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
-  const totalPrice = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
-  
-  // Get the latest product added to cart
-  const latestProduct = cart.length > 0 ? cart[cart.length - 1].product : null;
+  const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
-  if (cart.length === 0) return null;
+  if (totalItems === 0) return null;
 
   return (
-    <div className="cart-pill-bar" onClick={onNavigateToCart}>
-      <div className="cart-pill-content">
-        {/* Latest Product Image */}
-        {latestProduct && (
-          <div className="cart-pill-image">
-            <img src={latestProduct.image} alt={latestProduct.name} />
-          </div>
-        )}
-        
-        {/* Text Content */}
-        <div className="cart-pill-text">
-          <span className="cart-pill-title">Lihat Keranjang</span>
-          <span className="cart-pill-items">{totalItems} barang</span>
-        </div>
-      </div>
-      
-      {/* Price on the right */}
-      <div className="cart-pill-price">
-        Rp {totalPrice.toLocaleString('id-ID')}
-      </div>
-    </div>
+    <button className="cart-fab-button" onClick={onNavigateToCart} aria-label="Lihat Keranjang">
+      <IonIcon icon={cart} className="cart-fab-icon" />
+      <span className="cart-fab-badge">{totalItems}</span>
+    </button>
   );
 };
 
