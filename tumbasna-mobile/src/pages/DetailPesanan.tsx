@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   IonContent,
   IonHeader,
@@ -238,6 +238,11 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
   }
 
   const handleConfirmReceived = async () => {
+    if (order.status === 'Menunggu Pembayaran') {
+      setToastMsg('Selesaikan pembayaran terlebih dahulu sebelum mengonfirmasi barang diterima.');
+      setShowToast(true);
+      return;
+    }
     await confirmOrderReceived(orderId);
     setToastMsg('Transaksi selesai! Dana telah diteruskan ke rekening bank supplier.');
     setShowToast(true);
@@ -534,21 +539,50 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
         <div style={{ height: '120px' }}></div>
       </IonContent>
 
-      {/* â”€â”€ Floating confirm button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── Floating confirm button ──────────────────────── */}
       {order.status !== 'Selesai' && order.status !== 'Dibatalkan' && (
         <div className="floating-action-footer">
-          <div className="footer-notice-text">
-            <IonIcon icon={alertCircleOutline} />
-            <span>Pastikan barang sudah diterima dan sesuai sebelum konfirmasi.</span>
-          </div>
-          <IonButton
-            expand="block"
-            color="tertiary"
-            className="confirm-received-btn"
-            onClick={handleConfirmReceived}
-          >
-            Konfirmasi Barang Diterima
-          </IonButton>
+          {order.status === 'Menunggu Pembayaran' ? (
+            <>
+              <div className="footer-notice-text" style={{ background: '#FFF3CD', border: '1px solid #FFEBAA', color: '#856404' }}>
+                <IonIcon icon={alertCircleOutline} style={{ color: '#856404' }} />
+                <span>Selesaikan pembayaran terlebih dahulu sebelum mengonfirmasi barang diterima.</span>
+              </div>
+              {onNavigateToPayment && (
+                <IonButton
+                  expand="block"
+                  color="warning"
+                  style={{ fontWeight: 800, marginBottom: '8px' }}
+                  onClick={() => onNavigateToPayment(order.id)}
+                >
+                  Bayar Sekarang
+                </IonButton>
+              )}
+              <IonButton
+                expand="block"
+                color="tertiary"
+                className="confirm-received-btn button-disabled-custom"
+                disabled={true}
+              >
+                Konfirmasi Barang Diterima
+              </IonButton>
+            </>
+          ) : (
+            <>
+              <div className="footer-notice-text">
+                <IonIcon icon={alertCircleOutline} />
+                <span>Pastikan barang sudah diterima dan sesuai sebelum konfirmasi.</span>
+              </div>
+              <IonButton
+                expand="block"
+                color="tertiary"
+                className="confirm-received-btn"
+                onClick={handleConfirmReceived}
+              >
+                Konfirmasi Barang Diterima
+              </IonButton>
+            </>
+          )}
         </div>
       )}
 

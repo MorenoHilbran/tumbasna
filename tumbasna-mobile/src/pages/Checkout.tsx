@@ -577,48 +577,22 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
                 onClick={() => setPaymentMethod('qris')}
               >
                 <div className="payment-method-info">
-                  <h4>QRIS</h4>
-                  <p>Bayar dengan QRIS / E-Wallet</p>
+                  <h4>Pembayaran Digital (Midtrans)</h4>
+                  <p>QRIS, GoPay, OVO, ShopeePay, & Transfer VA Bank</p>
                 </div>
                 <IonRadio value="qris" checked={paymentMethod === 'qris'} />
               </div>
 
-              {paymentExpanded && (
-                <>
-                  <div
-                    className={`payment-method-card ${paymentMethod === 'transfer' ? 'active' : ''}`}
-                    onClick={() => setPaymentMethod('transfer')}
-                  >
-                    <div className="payment-method-info">
-                      <h4>Transfer Bank</h4>
-                      <p>Transfer ke rekening Tumbasna</p>
-                    </div>
-                    <IonRadio value="transfer" checked={paymentMethod === 'transfer'} />
-                  </div>
-
-                  <div
-                    className={`payment-method-card ${paymentMethod === 'cod' ? 'active' : ''}`}
-                    onClick={() => setPaymentMethod('cod')}
-                  >
-                    <div className="payment-method-info">
-                      <h4>Cash on Delivery (COD)</h4>
-                      <p>Bayar saat barang tiba</p>
-                    </div>
-                    <IonRadio value="cod" checked={paymentMethod === 'cod'} />
-                  </div>
-                </>
-              )}
-
-              <button 
-                className="payment-expand-btn"
-                onClick={() => setPaymentExpanded(!paymentExpanded)}
+              <div
+                className={`payment-method-card ${paymentMethod === 'cod' ? 'active' : ''}`}
+                onClick={() => setPaymentMethod('cod')}
               >
-                <span>{paymentExpanded ? 'Lihat Lebih Sedikit' : 'Lihat Metode Lainnya'}</span>
-                <IonIcon 
-                  icon={chevronDownOutline} 
-                  style={{ transform: paymentExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s' }}
-                />
-              </button>
+                <div className="payment-method-info">
+                  <h4>Bayar di Tempat (COD)</h4>
+                  <p>Bayar tunai saat komoditas tiba di lokasi Anda</p>
+                </div>
+                <IonRadio value="cod" checked={paymentMethod === 'cod'} />
+              </div>
             </div>
 
             <div className="checkout-section-title">Opsi Pengiriman</div>

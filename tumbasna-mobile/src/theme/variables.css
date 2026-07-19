@@ -204,11 +204,7 @@ ion-button[color="primary"] {
 
 /* ======================== PULSE CTA ======================== */
 
-/* Pulse animation removed - too distracting */
-  70%  { box-shadow: 0 0 0 10px rgba(247, 148, 29, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(247, 148, 29, 0); }
-}
-/* .pulse-button { animation: pulse 2.2s infinite; } */
+/* Pulse animation removed */
 
 /* ======================== TOAST ======================== */
 

@@ -822,6 +822,16 @@
   margin: 0;
 }
 
+.confirm-received-btn.button-disabled-custom,
+.confirm-received-btn[disabled] {
+  --background: #D1D5DB !important;
+  --color: #6B7280 !important;
+  --box-shadow: none !important;
+  opacity: 0.65;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 /* ── WhatsApp COD Location Section ─────────────────────────────────────────── */
 .wa-location-section {
   background: #ffffff;

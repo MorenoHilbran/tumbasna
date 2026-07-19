@@ -9,9 +9,9 @@
   width: 58px;
   height: 58px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #F7941D 0%, #E65100 100%);
-  border: 2px solid #FFFFFF;
-  box-shadow: 0 8px 22px rgba(247, 148, 29, 0.45), 0 3px 8px rgba(0, 0, 0, 0.12);
+  background: linear-gradient(135deg, #F99E3B 0%, #E87425 100%);
+  border: none;
+  box-shadow: 0 8px 22px rgba(232, 116, 37, 0.35), 0 3px 8px rgba(0, 0, 0, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -23,14 +23,34 @@
   animation: fabBounceIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/* Gelombang / Ripple Wave animation */
+.cart-fab-button::before,
+.cart-fab-button::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: rgba(249, 158, 59, 0.45);
+  z-index: -1;
+  pointer-events: none;
+  animation: cartRipple 2.5s cubic-bezier(0.1, 0.8, 0.3, 1) infinite;
+}
+
+.cart-fab-button::after {
+  animation-delay: 1.25s;
+}
+
 .cart-fab-button:hover {
   transform: translateY(-2px) scale(1.04);
-  box-shadow: 0 12px 28px rgba(247, 148, 29, 0.55), 0 4px 10px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 12px 28px rgba(232, 116, 37, 0.45), 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
 .cart-fab-button:active {
   transform: scale(0.92);
-  box-shadow: 0 4px 12px rgba(247, 148, 29, 0.35);
+  box-shadow: 0 4px 12px rgba(232, 116, 37, 0.3);
 }
 
 .cart-fab-icon {
@@ -59,6 +79,7 @@
   border: 2px solid #FFFFFF;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
   animation: badgePop 0.3s ease-out;
+  z-index: 2;
 }
 
 @keyframes fabBounceIn {
@@ -84,5 +105,16 @@
   }
   100% {
     transform: scale(1);
+  }
+}
+
+@keyframes cartRipple {
+  0% {
+    transform: scale(1);
+    opacity: 0.65;
+  }
+  100% {
+    transform: scale(1.75);
+    opacity: 0;
   }
 }
