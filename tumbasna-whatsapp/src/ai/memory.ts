@@ -48,9 +48,10 @@ export async function saveSessionHistory(sender: string, historyJson: any[], isC
     let nextHistory = [...historyJson];
     
     if (isCompletedOrCancelled) {
-        // Jika disuruh hapus, bersihkan semua chat history tetapi pertahankan entri metadata yang memiliki mappedPhone
+        // Keep last 10 messages for context, plus metadata
+        const recentMessages = nextHistory.slice(-10);
         const mappedPhoneMeta = metadataList.find((msg: any) => msg.mappedPhone);
-        nextHistory = mappedPhoneMeta ? [mappedPhoneMeta] : [];
+        nextHistory = mappedPhoneMeta ? [mappedPhoneMeta, ...recentMessages] : recentMessages;
         memoryFallback.set(phoneNumber, nextHistory);
     } else {
         // Gabungkan metadata yang ada saat ini ke history baru jika belum ada
@@ -134,4 +135,5 @@ export async function getLastImageUrl(sender: string): Promise<string | null> {
     const metadata = history.find((msg: any) => msg.role === 'metadata');
     return metadata?.lastImageUrl || null;
 }
+
 
