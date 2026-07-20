@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Deploy ke VPS via SSH
         uses: appleboy/ssh-action@v0.1.10
@@ -19,17 +19,15 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
           port: 22
-          # Force sync git repository and clean line endings on the VPS first, then execute deploy.sh
+          timeout: 15m
           script: |
             cd /opt/tumbasna
             echo "1. Fetching latest changes from origin..."
             git fetch --all
-            echo "2. Forcing reset to origin/main..."
             git reset --hard origin/main
-            echo "3. Enforcing Unix line endings on deploy.sh..."
+            echo "2. Enforcing Unix line endings on deploy.sh..."
             sed -i 's/\r$//' deploy.sh
-            echo "4. Making deploy.sh executable..."
-            echo "${{ secrets.VPS_PASSWORD }}" | sudo -S chmod +x deploy.sh
-            echo "5. Running deploy.sh..."
-            echo "${{ secrets.VPS_PASSWORD }}" | sudo -S ./deploy.sh
+            chmod +x deploy.sh
+            echo "3. Running deployment..."
+            echo "${{ secrets.VPS_PASSWORD }}" | sudo -S bash deploy.sh
 

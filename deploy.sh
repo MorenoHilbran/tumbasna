@@ -36,7 +36,7 @@ echo "========================================"
 if [ -d "tumbasna-mobile" ]; then
     cd tumbasna-mobile
     echo "Installing mobile dependencies..."
-    npm install > /tmp/mobile_build.log 2>&1
+    npm install --no-audit --no-fund --prefer-offline > /tmp/mobile_build.log 2>&1
     echo "Building mobile app..."
     VITE_PAYMENT_MODE=api VITE_API_URL=https://api.tumbasna.my.id npm run build >> /tmp/mobile_build.log 2>&1
     
