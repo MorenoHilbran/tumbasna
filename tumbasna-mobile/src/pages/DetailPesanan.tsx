@@ -378,7 +378,14 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
           <div className="order-items-list">
             {order.items.map((item, idx) => (
               <div key={idx} className="order-item-row">
-                <img src={item.product.image} alt={item.product.name} className="order-item-thumb" />
+                <img 
+                  src={item.product.image || '/logotum.png'} 
+                  alt={item.product.name} 
+                  className="order-item-thumb" 
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/logotum.png';
+                  }}
+                />
                 <div className="order-item-info">
                   <span className="order-item-name">{item.product.name}</span>
                   <span className="order-item-qty">{item.quantity} kg &middot; Rp {(item.product.price * item.quantity).toLocaleString('id-ID')}</span>

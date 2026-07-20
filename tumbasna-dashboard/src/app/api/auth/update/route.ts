@@ -1,5 +1,10 @@
-import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+function normalizePhone(phone: string): string {
+  let cleaned = phone.replace(/\D/g, '');
+  if (cleaned.startsWith('0')) {
+    cleaned = '62' + cleaned.substring(1);
+  }
+  return cleaned;
+}
 
 // POST /api/auth/update
 // Body: { id, name, businessName, email, address, businessType, bankName, bankAccount }

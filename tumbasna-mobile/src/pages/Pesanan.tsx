@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   IonContent,
   IonHeader,
@@ -127,7 +127,13 @@ const Pesanan: React.FC<PesananProps> = ({ onSelectOrder, onNavigateToPayment })
 
                   <div className="history-card-body">
                     <div className="history-item-img-wrapper">
-                      <img src={primaryItem.product.image} alt={primaryItem.product.name} />
+                      <img 
+                        src={primaryItem.product.image || '/logotum.png'} 
+                        alt={primaryItem.product.name} 
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = '/logotum.png';
+                        }}
+                      />
                     </div>
 
                     <div className="history-item-details">

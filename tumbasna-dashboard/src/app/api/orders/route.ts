@@ -1,5 +1,29 @@
-import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+function getProductImage(commodityName: string, userProvidedImg?: string | null): string {
+  if (userProvidedImg && typeof userProvidedImg === 'string' && userProvidedImg.startsWith('http')) {
+    return userProvidedImg.replace(/^(URL Foto:\s*|url foto:\s*)/i, '').trim();
+  }
+  const name = commodityName.toLowerCase();
+  if (name.includes('cabai merah') || name.includes('cabe merah')) return '/image/produk/cabaimerah.png';
+  if (name.includes('cabai rawit') || name.includes('cabe rawit') || name.includes('cabai') || name.includes('cabe')) return '/image/produk/cabairawit.png';
+  if (name.includes('bawang merah')) return '/image/produk/bawangmerah.png';
+  if (name.includes('bawang putih')) return '/image/produk/bawangputih.png';
+  if (name.includes('beras')) return '/image/produk/beras.png';
+  if (name.includes('jagung')) return '/image/produk/jagung.png';
+  if (name.includes('jahe')) return '/image/produk/jahe.png';
+  if (name.includes('kentang')) return '/image/produk/kentang.png';
+  if (name.includes('tomat')) return '/image/produk/tomat.png';
+  if (name.includes('melon')) return '/image/produk/melon.png';
+  if (name.includes('semangka')) return '/image/produk/semangka.png';
+  if (name.includes('wortel')) return '/image/produk/wortel.png';
+  if (name.includes('telur')) return '/image/produk/telur.png';
+  if (name.includes('daging') || name.includes('sapi')) return '/image/produk/dagingsapi.png';
+  if (name.includes('ayam')) return '/image/produk/dagingayam.png';
+  if (name.includes('ikan')) return '/image/produk/ikan.png';
+  if (name.includes('udang')) return '/image/produk/udang.png';
+  if (name.includes('minyak')) return '/image/produk/minyak.png';
+  if (name.includes('gula')) return '/image/produk/gula.png';
+  return '/image/produk/cabaimerah.png';
+}
 
 // GET /api/orders?userId=<uuid>  — ambil semua pesanan milik buyer
 export async function GET(req: Request) {
@@ -100,13 +124,7 @@ export async function GET(req: Request) {
           supplierName: item.supplierName,
           supplierLocation: order.supplierLocation,
           supplierRating: 4.8,
-          image: (() => {
-            let img = item.productEntry?.image;
-            if (img && typeof img === 'string') {
-              img = img.replace(/^(URL Foto:\s*|url foto:\s*)/i, '').trim();
-            }
-            return img || ('/image/produk/' + item.commodity.replace(/\s+/g, '').toLowerCase() + '.png');
-          })(),
+          image: getProductImage(item.commodity, item.productEntry?.image),
           description: `Komoditas ${item.commodity} dari ${order.supplierLocation}.`,
           shippingEstimate: '1-3 Hari',
           category: item.commodity,
