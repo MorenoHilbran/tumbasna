@@ -73,7 +73,7 @@ export const apiService = {
             return { success: false, data: [] };
         }
     },
-    async registerSupplier(data: { phone: string; name: string; location: string; bankName?: string; bankAccount?: string }) {
+    async registerSupplier(data: { phone: string; name: string; location: string; bankName?: string; bankAccount?: string; lat?: number | null; lng?: number | null }) {
         try {
             const response = await apiClient.post(`${API_URL}/api/auth/register`, {
                 phone: data.phone,
@@ -85,10 +85,27 @@ export const apiService = {
                 email: '',
                 bankName: data.bankName || '',
                 bankAccount: data.bankAccount || '',
+                lat: data.lat,
+                lng: data.lng,
             });
             return response.data;
         } catch (error: any) {
             console.error(`[API ERROR] Gagal registrasi supplier:`, error.message);
+            throw error;
+        }
+    },
+    async updateUserProfile(data: { phone: string; name?: string; location?: string; bankName?: string; bankAccount?: string }) {
+        try {
+            const response = await apiClient.post(`${API_URL}/api/auth/update`, {
+                phone: data.phone,
+                ...(data.name && { name: data.name, businessName: data.name }),
+                ...(data.location && { address: data.location }),
+                ...(data.bankName && { bankName: data.bankName }),
+                ...(data.bankAccount && { bankAccount: data.bankAccount }),
+            });
+            return response.data;
+        } catch (error: any) {
+            console.error(`[API ERROR] Gagal update profil supplier:`, error.message);
             throw error;
         }
     },

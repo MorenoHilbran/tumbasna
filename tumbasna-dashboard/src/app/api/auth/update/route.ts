@@ -6,14 +6,21 @@ import prisma from '@/lib/prisma';
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { id, name, businessName, email, address, businessType, bankName, bankAccount } = body;
+    const { id, phone, name, businessName, email, address, businessType, bankName, bankAccount, lat, lng } = body;
 
-    if (!id) {
-      return NextResponse.json({ error: 'User ID wajib disertakan' }, { status: 400 });
+    let userId = id;
+    if (!userId && phone) {
+      const p = normalizePhone(phone);
+      const userObj = await prisma.user.findUnique({ where: { phoneNumber: p } });
+      if (userObj) userId = userObj.id;
+    }
+
+    if (!userId) {
+      return NextResponse.json({ error: 'User ID atau nomor HP wajib disertakan' }, { status: 400 });
     }
 
     // Cek apakah user ada
-    const userExist = await prisma.user.findUnique({ where: { id } });
+    const userExist = await prisma.user.findUnique({ where: { id: userId } });
     if (!userExist) {
       return NextResponse.json({ error: 'User tidak ditemukan' }, { status: 404 });
     }
@@ -28,7 +35,7 @@ export async function POST(req: Request) {
 
     // Update user di database
     const updated = await prisma.user.update({
-      where: { id },
+      where: { id: userId },
       data: {
         name: name !== undefined ? name : undefined,
         businessName: businessName !== undefined ? businessName : undefined,

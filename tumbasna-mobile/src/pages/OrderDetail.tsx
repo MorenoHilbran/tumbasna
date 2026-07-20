@@ -55,18 +55,35 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ orderId, onBack, onPaymentSuc
   const minutes = Math.floor(secondsLeft / 60);
   const seconds = secondsLeft % 60;
 
-  // Inject Midtrans Snap.js script once
-  useEffect(() => {
-    if (paymentMode !== 'api') return;
-    const existing = document.getElementById('midtrans-snap-js');
-    if (existing) { setSnapScriptReady(true); return; }
+  // Inject Midtrans Snap.js script dynamically based on mode
+  const loadSnapScript = (isSandbox: boolean) => {
+    const scriptId = 'midtrans-snap-js';
+    const targetUrl = isSandbox
+      ? 'https://app.sandbox.midtrans.com/snap/snap.js'
+      : 'https://app.midtrans.com/snap/snap.js';
+
+    const existing = document.getElementById(scriptId) as HTMLScriptElement | null;
+    if (existing) {
+      if (existing.src === targetUrl) {
+        setSnapScriptReady(true);
+        return;
+      }
+      existing.remove();
+    }
+
+    setSnapScriptReady(false);
     const script = document.createElement('script');
-    script.id = 'midtrans-snap-js';
-    script.src = SNAP_JS_URL;
+    script.id = scriptId;
+    script.src = targetUrl;
     script.setAttribute('data-client-key', MIDTRANS_CLIENT_KEY);
     script.onload = () => setSnapScriptReady(true);
     script.onerror = () => console.error('[Snap] Failed to load snap.js');
     document.body.appendChild(script);
+  };
+
+  useEffect(() => {
+    if (paymentMode !== 'api') return;
+    loadSnapScript(!IS_PRODUCTION);
   }, [paymentMode]);
 
   useEffect(() => {
@@ -108,6 +125,10 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ orderId, onBack, onPaymentSuc
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Gagal membuat pembayaran');
       setSnapToken(data.snapToken);
+      if (data.snapUrl) {
+        const isSandbox = data.snapUrl.includes('sandbox.midtrans.com');
+        loadSnapScript(isSandbox);
+      }
     } catch (err: any) {
       console.error('Snap payment error:', err);
       setSnapToken(null);
@@ -276,8 +297,14 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ orderId, onBack, onPaymentSuc
                     width: 64, height: 64, borderRadius: '50%',
                     background: 'linear-gradient(135deg, #006837, #00A651)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    margin: '0 auto 16px', fontSize: 28
-                  }}>🔒</div>
+                    margin: '0 auto 16px', color: '#ffffff',
+                    boxShadow: '0 8px 20px rgba(0, 104, 55, 0.25)'
+                  }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                  </div>
                   <p style={{ fontSize: 13, color: '#374151', marginBottom: 20, lineHeight: 1.6 }}>
                     Pembayaran disiapkan. Pilih metode yang Anda inginkan — QRIS, Transfer Bank, GoPay, OVO, dan lainnya.
                   </p>
@@ -287,13 +314,29 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ orderId, onBack, onPaymentSuc
                     style={{ '--background': '#006837', '--border-radius': '14px', '--padding-top': '14px', '--padding-bottom': '14px', fontWeight: 700, fontSize: 15 }}
                     onClick={handleOpenSnap}
                   >
-                    {snapScriptReady ? `💳  Bayar Rp ${totalAmount.toLocaleString('id-ID')}` : 'Memuat...'}
+                    {snapScriptReady ? (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                          <line x1="1" y1="10" x2="23" y2="10"></line>
+                        </svg>
+                        <span>BAYAR RP {totalAmount.toLocaleString('id-ID')}</span>
+                      </div>
+                    ) : (
+                      'Memuat...'
+                    )}
                   </IonButton>
                   <p style={{ fontSize: 11, color: '#9ca3af', marginTop: 12 }}>Popup pembayaran Midtrans akan terbuka</p>
                 </div>
               ) : snapError ? (
                 <div style={{ textAlign: 'center', padding: 20 }}>
-                  <div style={{ fontSize: 36, marginBottom: 12 }}>⚠️</div>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: '#E53935' }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+                      <line x1="12" y1="9" x2="12" y2="13"></line>
+                      <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                  </div>
                   <p style={{ color: '#E53935', fontSize: 13, marginBottom: 16 }}>{snapError}</p>
                   <IonButton size="small" onClick={fetchSnapPayment} style={{ '--background': '#006837' }}>Coba Lagi</IonButton>
                 </div>

@@ -125,7 +125,7 @@ export async function processIncomingMessage(
 
     // 2. Tampilkan Menu Cepat (Numeric / Keyword Shortcuts)
     const menuKeywords = ['menu', 'help', 'bantuan', 'hallo', 'halo', 'p'];
-    const numberKeywords = ['1', '2', '3', '4', '5', '6', 'profil', 'rekening', 'saldo', 'listing', 'produk', 'pesanan', 'order', 'jual', 'tambah', 'cs', 'bantuan'];
+    const numberKeywords = ['1', '2', '3', '4', '5', '6', '7', 'profil', 'rekening', 'saldo', 'listing', 'produk', 'pesanan', 'order', 'jual', 'tambah', 'cs', 'bantuan', 'edit', 'ubah'];
 
     if (menuKeywords.includes(cleanText) || numberKeywords.includes(cleanText)) {
         if (isRegistered && userInfo) {
@@ -137,7 +137,8 @@ export async function processIncomingMessage(
                     `*3* 📦 Lihat Daftar Listing Produk Aktif\n` +
                     `*4* 🛒 Lihat Pesanan Masuk (Order)\n` +
                     `*5* ✍️ Cara Jual / Daftarkan Komoditas\n` +
-                    `*6* 📞 Hubungi Bantuan / CS\n\n` +
+                    `*6* 📞 Hubungi Bantuan / CS\n` +
+                    `*7* ✏️ Edit Profil / Rekening Bank\n\n` +
                     `💡 _Atau Juragan bisa langsung mengetik pesan teks bebas untuk menawarkan hasil tani Juragan secara otomatis._`;
                 await sendMessage(sender, { text: menuText });
                 return;
@@ -159,7 +160,7 @@ export async function processIncomingMessage(
                     `*INFORMASI REKENING BANK*\n` +
                     `• Nama Bank: *${bankName}*\n` +
                     `• No. Rekening: *${bankAccount}*\n\n` +
-                    `_Catatan: Informasi profil dan rekening bank dapat diubah oleh Admin TPID melalui dashboard._\n\n` +
+                    `💡 _Ketik *7* atau *EDIT* jika ingin memperbarui informasi profil atau rekening bank Juragan._\n\n` +
                     `💡 Ketik *MENU* untuk kembali ke menu utama.`;
                 await sendMessage(sender, { text: profileText });
                 return;
@@ -266,6 +267,22 @@ export async function processIncomingMessage(
                 await sendMessage(sender, { text: helpText });
                 return;
             }
+
+            if (cleanText === '7' || cleanText === 'edit' || cleanText === 'ubah') {
+                const editText = `*MENU EDIT DATA JURAGAN* ✏️\n\n` +
+                    `Juragan dapat mengubah data profil atau rekening bank kapan saja dengan mudah:\n\n` +
+                    `*1. Ubah Rekening Bank:*\n` +
+                    `   Ketik: _"Ubah rekening saya ke BCA 1234567890"_\n` +
+                    `   atau _"Ganti bank ke BRI 9876543210"_\n\n` +
+                    `*2. Ubah Nama / Nama Usaha:*\n` +
+                    `   Ketik: _"Ubah nama usaha saya jadi Kelompok Tani Subur"_\n\n` +
+                    `*3. Ubah Lokasi Kebun/Gudang:*\n` +
+                    `   Kirimkan *Share Location* terbaru dari WhatsApp (tombol 📎 -> Lokasi).\n\n` +
+                    `💡 _Asisten AI kami akan membaca dan memperbarui data Juragan secara otomatis tanpa repot!_\n\n` +
+                    `Ketik *MENU* untuk kembali ke menu utama.`;
+                await sendMessage(sender, { text: editText });
+                return;
+            }
         } else {
             // Jika user BELUM terdaftar di database
             if (menuKeywords.includes(cleanText)) {
@@ -325,7 +342,9 @@ export async function processIncomingMessage(
                         name, 
                         location, 
                         bankName, 
-                        bankAccount 
+                        bankAccount,
+                        lat: embeddedLat,
+                        lng: embeddedLng
                     });
                     console.log(`✅ [REGISTER] Supplier ${name} berhasil didaftarkan:`, result);
                     if (result.success !== false) {
@@ -421,6 +440,34 @@ export async function processIncomingMessage(
                 } catch (error: any) {
                     console.error(`❌ [ERROR API] Gagal mengirim item ${item.commodity}:`, error.message);
                 }
+            }
+        }
+
+        // ─── EDIT: Update Profil / Rekening / Lokasi ───
+        if (parsedData.intent === 'EDIT') {
+            try {
+                const updatePayload: any = { phone: phoneNumber };
+                if (parsedData.supplier_name) updatePayload.name = parsedData.supplier_name;
+                if (parsedData.supplier_location) updatePayload.location = parsedData.supplier_location;
+                if (parsedData.bank_name) updatePayload.bankName = parsedData.bank_name;
+                if (parsedData.bank_account) updatePayload.bankAccount = parsedData.bank_account;
+
+                const res = await apiService.updateUserProfile(updatePayload);
+                console.log(`✅ [EDIT] Profile updated for ${phoneNumber}:`, res);
+
+                parsedData.reply_message = `✅ *DATA BERHASIL DIPERBARUI!*\n\n` +
+                    `Data profil Juragan telah diperbarui di sistem Tumbasna:\n` +
+                    (parsedData.supplier_name ? `• Nama: *${parsedData.supplier_name}*\n` : '') +
+                    (parsedData.supplier_location ? `• Lokasi: *${parsedData.supplier_location}*\n` : '') +
+                    (parsedData.bank_name ? `• Bank: *${parsedData.bank_name}*\n` : '') +
+                    (parsedData.bank_account ? `• Rekening: *${parsedData.bank_account}*\n` : '') +
+                    `\n💡 Ketik *1* untuk melihat profil lengkap atau *MENU* untuk kembali.`;
+
+                const { saveSessionHistory } = await import('../ai/memory');
+                await saveSessionHistory(sender, [], true);
+            } catch (err: any) {
+                console.error(`❌ [EDIT ERROR] Gagal update profil:`, err.message);
+                parsedData.reply_message = `Maaf, terjadi kesalahan saat memperbarui data Juragan. Silakan coba beberapa saat lagi.`;
             }
         }
 

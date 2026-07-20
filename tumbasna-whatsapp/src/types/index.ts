@@ -6,7 +6,7 @@ export interface ParsedItem {
 }
 
 export interface ParsedData {
-    intent: "SUPPLY" | "DEMAND" | "CANCEL" | "INQUIRY" | "UNKNOWN" | "LIST" | "REGISTER" | "STATUS";
+    intent: "SUPPLY" | "DEMAND" | "CANCEL" | "INQUIRY" | "UNKNOWN" | "LIST" | "REGISTER" | "STATUS" | "EDIT";
     items: ParsedItem[];
     supplier_name?: string | null;
     supplier_location?: string | null;

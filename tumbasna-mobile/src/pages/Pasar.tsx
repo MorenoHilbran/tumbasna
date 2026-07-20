@@ -209,8 +209,8 @@ const Pasar: React.FC<PasarProps> = ({ onSelectProduct, onNavigateToCart }) => {
                     alt={product.name} 
                     className="product-image" 
                     onError={(e) => {
-                      // Fallback ke gambar default dari Unsplash jika URL rusak/kosong
-                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80';
+                      // Fallback ke logo Tumbasna jika URL gambar rusak/kosong
+                      (e.target as HTMLImageElement).src = '/logotum.png';
                     }}
                   />
                   <span className="product-category-badge">{product.category}</span>

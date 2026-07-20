@@ -263,26 +263,26 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
                 order.courier.toLowerCase().includes('ambil sendiri') ||
                 order.courier.toLowerCase().includes('kurir lokal');
 
-  // Custom divIcons to bypass asset path resolving issues
+  // Custom divIcons with SVG vectors for maximum compatibility
   const supplierIcon = L.divIcon({
     className: 'custom-div-icon',
-    html: `<div style="font-size: 26px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">ðŸ¢</div>`,
-    iconSize: [30, 30],
-    iconAnchor: [15, 30]
+    html: `<div style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;background:#006837;color:white;border-radius:50%;border:2px solid white;box-shadow:0 3px 8px rgba(0,0,0,0.3);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 18h6v-4H9v4z"/><path d="M9 10h2v2H9v-2z"/><path d="M13 10h2v2h-2v-2z"/></svg></div>`,
+    iconSize: [34, 34],
+    iconAnchor: [17, 17]
   });
 
   const buyerIcon = L.divIcon({
     className: 'custom-div-icon',
-    html: `<div style="font-size: 26px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">ðŸ“</div>`,
-    iconSize: [30, 30],
-    iconAnchor: [15, 30]
+    html: `<div style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;background:#ea580c;color:white;border-radius:50%;border:2px solid white;box-shadow:0 3px 8px rgba(0,0,0,0.3);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>`,
+    iconSize: [34, 34],
+    iconAnchor: [17, 17]
   });
 
   const courierIcon = L.divIcon({
     className: 'custom-div-icon',
-    html: `<div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; background: #006837; color: white; border-radius: 50%; font-size: 16px; border: 2.5px solid white; box-shadow: 0 3px 8px rgba(0,0,0,0.3); animation: pulse-ring 1.5s infinite;">ðŸšš</div>`,
-    iconSize: [34, 34],
-    iconAnchor: [17, 17]
+    html: `<div style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;background:#2563eb;color:white;border-radius:50%;border:2.5px solid white;box-shadow:0 3px 8px rgba(0,0,0,0.3);animation:pulse-ring 1.5s infinite;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>`,
+    iconSize: [36, 36],
+    iconAnchor: [18, 18]
   });
 
   return (
