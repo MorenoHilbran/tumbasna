@@ -204,17 +204,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
 
   useEffect(() => {
     if (navigator.geolocation && !buyerAddressLabel) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setBuyerCoords([latitude, longitude]);
-          reverseGeocode(latitude, longitude);
-        },
-        (error) => {
-          console.error('Geolocation error:', error);
-          reverseGeocode(buyerCoords[0], buyerCoords[1]);
-        }
-      );
+      navigator.geolocation.getCurrentPosition((position) => {const { latitude, longitude } = position.coords;setBuyerCoords([latitude, longitude]);reverseGeocode(latitude, longitude);}, (error) => {reverseGeocode(buyerCoords[0], buyerCoords[1]);}, { timeout: 10000, enableHighAccuracy: false });
     } else if (!buyerAddressLabel) {
       reverseGeocode(buyerCoords[0], buyerCoords[1]);
     }
@@ -251,19 +241,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
   const handleGetGPS = () => {
     setIsGettingGps(true);
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setBuyerCoords([latitude, longitude]);
-          reverseGeocode(latitude, longitude);
-          setIsGettingGps(false);
-        },
-        (error) => {
-          console.error('GPS error:', error);
-          alert('Gagal mendapatkan lokasi GPS. Pastikan GPS Anda aktif.');
-          setIsGettingGps(false);
-        }
-      );
+      navigator.geolocation.getCurrentPosition((position) => {const { latitude, longitude } = position.coords;setBuyerCoords([latitude, longitude]);reverseGeocode(latitude, longitude);setIsGettingGps(false);}, (error) => {alert('Gagal mendapatkan lokasi GPS. Pastikan GPS Anda aktif.');setIsGettingGps(false);}, { timeout: 10000, enableHighAccuracy: false });
     } else {
       alert('Browser tidak mendukung Geolocation.');
       setIsGettingGps(false);
@@ -466,8 +444,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
       
 
       
-      const orderId = await checkout(
-        selectedCourier,
+      const orderId = await checkout(checkoutItems, selectedCourier,
         dynamicShippingCost,
         buyerCoords,
         supplierCoords,
@@ -827,6 +804,10 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
 };
 
 export default Checkout;
+
+
+
+
 
 
 

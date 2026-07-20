@@ -1,8 +1,7 @@
-'use client';
+﻿'use client';
 
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -39,31 +38,65 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-orange-50">
-      <div className="w-full max-w-md p-8 bg-white rounded-2xl shadow-2xl">
-        {/* Logo */}
-        <div className="flex justify-center mb-8">
-          <Image src="/logotum.png" alt="Tumbasna" width={120} height={120} />
+    <div style={{ 
+      minHeight: '100vh', 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center',
+      backgroundColor: '#FAFAFA',
+      fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, sans-serif'
+    }}>
+      <div style={{ 
+        width: '100%', 
+        maxWidth: '400px', 
+        padding: '0 24px'
+      }}>
+        
+        {/* Logo & Title */}
+        <div style={{ marginBottom: '40px' }}>
+          <h1 style={{ 
+            fontSize: '28px', 
+            fontWeight: '700',
+            color: '#006837',
+            margin: '0 0 8px 0',
+            letterSpacing: '-0.5px'
+          }}>
+            Tumbasna
+          </h1>
+          <p style={{ 
+            fontSize: '15px',
+            color: '#6B7280',
+            margin: 0
+          }}>
+            Admin Dashboard
+          </p>
         </div>
 
-        {/* Title */}
-        <h1 className="text-3xl font-bold text-center text-[#006837] mb-2">
-          Admin Dashboard
-        </h1>
-        <p className="text-center text-gray-600 mb-8">
-          Silakan login untuk mengakses dashboard
-        </p>
-
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit}>
+          
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+            <div style={{ 
+              padding: '12px 16px',
+              backgroundColor: '#FEE2E2',
+              border: '1px solid #FCA5A5',
+              borderRadius: '8px',
+              marginBottom: '24px',
+              fontSize: '14px',
+              color: '#991B1B'
+            }}>
               {error}
             </div>
           )}
 
-          <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+          <div style={{ marginBottom: '20px' }}>
+            <label htmlFor="username" style={{ 
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '500',
+              color: '#374151',
+              marginBottom: '8px'
+            }}>
               Username
             </label>
             <input
@@ -71,14 +104,32 @@ export default function LoginPage() {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#006837] focus:border-transparent outline-none transition"
               placeholder="Masukkan username"
               required
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                fontSize: '15px',
+                border: '1px solid #D1D5DB',
+                borderRadius: '8px',
+                outline: 'none',
+                backgroundColor: '#FFFFFF',
+                transition: 'border-color 0.2s',
+                boxSizing: 'border-box'
+              }}
+              onFocus={(e) => e.currentTarget.style.borderColor = '#006837'}
+              onBlur={(e) => e.currentTarget.style.borderColor = '#D1D5DB'}
             />
           </div>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+          <div style={{ marginBottom: '28px' }}>
+            <label htmlFor="password" style={{ 
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '500',
+              color: '#374151',
+              marginBottom: '8px'
+            }}>
               Password
             </label>
             <input
@@ -86,25 +137,65 @@ export default function LoginPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#006837] focus:border-transparent outline-none transition"
               placeholder="Masukkan password"
               required
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                fontSize: '15px',
+                border: '1px solid #D1D5DB',
+                borderRadius: '8px',
+                outline: 'none',
+                backgroundColor: '#FFFFFF',
+                transition: 'border-color 0.2s',
+                boxSizing: 'border-box'
+              }}
+              onFocus={(e) => e.currentTarget.style.borderColor = '#006837'}
+              onBlur={(e) => e.currentTarget.style.borderColor = '#D1D5DB'}
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-[#006837] text-white font-semibold rounded-lg hover:bg-[#005030] transition disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              width: '100%',
+              padding: '14px',
+              fontSize: '15px',
+              fontWeight: '600',
+              color: '#FFFFFF',
+              backgroundColor: loading ? '#9CA3AF' : '#006837',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              transition: 'background-color 0.2s'
+            }}
+            onMouseOver={(e) => {
+              if (!loading) e.currentTarget.style.backgroundColor = '#005028';
+            }}
+            onMouseOut={(e) => {
+              if (!loading) e.currentTarget.style.backgroundColor = '#006837';
+            }}
           >
-            {loading ? 'Loading...' : 'Login'}
+            {loading ? 'Memproses...' : 'Masuk'}
           </button>
         </form>
 
         {/* Footer */}
-        <p className="text-center text-xs text-gray-500 mt-8">
-          © 2024 Tumbasna. All rights reserved.
-        </p>
+        <div style={{ 
+          marginTop: '32px',
+          paddingTop: '24px',
+          borderTop: '1px solid #E5E7EB'
+        }}>
+          <p style={{ 
+            fontSize: '13px',
+            color: '#9CA3AF',
+            margin: 0,
+            textAlign: 'center'
+          }}>
+            © 2026 Tumbasna
+          </p>
+        </div>
       </div>
     </div>
   );

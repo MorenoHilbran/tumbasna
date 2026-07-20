@@ -20,7 +20,7 @@ export interface Order {
   courier: string; shippingCost: number; totalAmount: number; date: string;
   status: 'Menunggu Pembayaran' | 'Diproses' | 'Dikirim' | 'Selesai' | 'Dibatalkan';
   paymentQrCode: string; trackingTimeline: TrackingStep[];
-  paymentCountdown: number; fundsReleased: boolean; notes?: string;
+  paymentCountdown: number; fundsReleased: boolean; notes?: string; paymentMethod?: string;
 }
 export interface ChatMessage {
   id: string; sender: 'buyer' | 'supplier'; text: string;
@@ -48,14 +48,12 @@ interface AppContextType {
   removeFromCart: (productId: string) => void;
   updateCartQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
-  checkout: (
-    courier: string, 
+  checkout: (items: CartItem[], courier: string, 
     shippingCost: number, 
     buyerCoords?: [number, number], 
     supplierCoords?: [number, number],
     buyerAddress?: string,
-    supplierAddress?: string
-  ) => Promise<string>;
+    supplierAddress?: string, paymentMethod?: string) => Promise<string>;
   payOrder: (orderId: string) => Promise<void>;
   confirmOrderReceived: (orderId: string) => Promise<void>;
   sendMessage: (supplierName: string, text: string, supplierPhone?: string) => void;
@@ -439,20 +437,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const clearCart = () => setCart([]);
 
   // ── Checkout — simpan order ke Supabase ──────────────────────────────────
-  const checkout = async (
-    courier: string, 
+  const checkout = async (items: CartItem[], courier: string, 
     shippingCost: number, 
     buyerCoords?: [number, number], 
     supplierCoords?: [number, number],
     buyerAddress?: string,
     supplierAddress?: string
   ): Promise<string> => {
-    if (cart.length === 0) return '';
+    if (items.length === 0) return '';
     const orderId = `TRX-${Math.floor(100000 + Math.random() * 900000)}`;
-    const itemsTotal = cart.reduce((acc, i) => acc + i.product.price * i.quantity, 0);
+    const itemsTotal = items.reduce((acc, i) => acc + i.product.price * i.quantity, 0);
     const totalAmount = itemsTotal + shippingCost + 2000;
-    const supplierName = cart[0].product.supplierName;
-    const supplierLocation = cart[0].product.supplierLocation;
+    const supplierName = items[0].product.supplierName;
+    const supplierLocation = items[0].product.supplierLocation;
     const now = new Date();
     const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 
@@ -467,14 +464,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const notesStr = JSON.stringify(notesObj);
 
     const newOrder: Order = {
-      id: orderId, items: [...cart], supplierName, supplierLocation, courier,
+      id: orderId, items: [...items], supplierName, supplierLocation, courier,
       shippingCost, totalAmount,
       date: now.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }),
       status: 'Menunggu Pembayaran',
       paymentQrCode: `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=tumbasna-qris-${orderId}`,
       fundsReleased: false, paymentCountdown: 300, trackingTimeline,
-      notes: notesStr,
-    };
+      notes: notesStr, paymentMethod,};
 
     // Simpan ke Supabase
     try {
@@ -489,7 +485,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           trackingTimeline,
           paymentQrCode: newOrder.paymentQrCode,
           notes: notesStr,
-          items: cart.map((i) => ({
+          items: items.map((i) => ({
             productEntryId: i.product.id.startsWith('prod-') ? null : i.product.id,
             commodity: i.product.category || i.product.name,
             price: i.product.price,
@@ -502,8 +498,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       console.warn('[checkout] Gagal simpan order ke Supabase, tetap tersimpan lokal.');
     }
 
-    setOrders((prev) => [newOrder, ...prev]);
-    clearCart();
+    setOrders((prev) => [newOrder, ...prev]); items.forEach(item => removeFromCart(item.product.id));
     if (user) setUser({ ...user, activeOrdersCount: user.activeOrdersCount + 1 });
     return orderId;
   };
@@ -749,3 +744,11 @@ export const useApp = () => {
   if (!context) throw new Error('useApp must be used within an AppProvider');
   return context;
 };
+
+
+
+
+
+
+
+
