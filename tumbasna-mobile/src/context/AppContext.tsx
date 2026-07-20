@@ -417,7 +417,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.removeItem('tumbasna_user');
     localStorage.removeItem('tumbasna_cart');
     localStorage.removeItem('tumbasna_chats');
-    setUser(null);`n    setOrders([]);`n    setCart([]);`n    setChats([]);
+    setUser(null);
+    setOrders([]);
+    setCart([]);
+    setChats([]);
   };
 
   // ── Cart ─────────────────────────────────────────────────────────────────
@@ -745,6 +748,7 @@ export const useApp = () => {
   if (!context) throw new Error('useApp must be used within an AppProvider');
   return context;
 };
+
 
 
 
