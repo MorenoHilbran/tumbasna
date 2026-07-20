@@ -375,7 +375,7 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ orderId, onBack, onPaymentSuc
                 <div className="va-label">Nomor Virtual Account</div>
                 <div className="va-number">8808 {order.id.slice(4, 16)}</div>
                 <button className="copy-va-btn" onClick={() => {
-                  navigator.clipboard.writeText(8808);
+                  navigator.clipboard.writeText('8808');
                   setToastMessage('Nomor VA disalin!');
                   setShowToast(true);
                 }}>

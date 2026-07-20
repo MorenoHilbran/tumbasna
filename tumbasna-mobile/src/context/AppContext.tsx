@@ -406,9 +406,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         purchasesThisMonth: 0,
         activeOrdersCount: 0,
       });
-      return true;
       setOrders([]); // Clear orders untuk user baru
       setCart([]);   // Clear cart untuk user baru
+      return true;
     }
   };
 
@@ -474,7 +474,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status: 'Menunggu Pembayaran',
       paymentQrCode: `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=tumbasna-qris-${orderId}`,
       fundsReleased: false, paymentCountdown: 300, trackingTimeline,
-      notes: notesStr, paymentMethod,};
+      notes: notesStr,
+      paymentMethod,
+    };
 
     // Simpan ke Supabase
     try {
