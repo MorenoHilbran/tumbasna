@@ -294,8 +294,7 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ initialIsLogin = true, on
                 type="button"
                 className="login-help-btn-pill"
                 onClick={() => {
-                  setToastMessage('Hubungi customer service kami di 0812-3456-7890');
-                  setShowToast(true);
+                  window.open('https://wa.me/6285190943468?text=Halo%20Tumbasna,%20saya%20butuh%20bantuan%20login', '_blank');
                 }}
               >
                 <IonIcon icon={helpCircleOutline} />
@@ -537,6 +536,7 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ initialIsLogin = true, on
 };
 
 export default LoginRegister;
+
 
 
 

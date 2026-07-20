@@ -111,10 +111,9 @@ const MainAppShell: React.FC = () => {
               onBack={() => setViewState('tabs')}
               onNavigateToCart={() => setViewState('keranjang')}
               onNavigateToChat={(supplierName, supplierPhone) => {
-                setSelectedChatPartner(supplierName);
-                setSelectedChatPartnerPhone(supplierPhone);
-                setViewState('tabs');
-                setActiveTab('chat');
+                // Redirect to WhatsApp bot Tumbasna
+                const message = encodeURIComponent(\Halo, saya tertarik dengan produk dari \\);
+                window.open(\https://wa.me/6285190943468?text=\\, '_blank');
               }}
               onSelectProduct={(p) => setSelectedProduct(p)}
             />
@@ -297,6 +296,7 @@ const MainAppShell: React.FC = () => {
 };
 
 export default MainAppShell;
+
 
 
 
