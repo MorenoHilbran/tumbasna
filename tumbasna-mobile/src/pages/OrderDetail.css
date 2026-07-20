@@ -1,4 +1,4 @@
-﻿/* OrderDetail.css */
+/* OrderDetail.css */
 
 .order-detail-header {
   --background: #ffffff;
@@ -31,7 +31,7 @@
   border-radius: 8px;
   cursor: pointer;
   outline: none;
-}
+  z-index: 1000;  pointer-events: auto;}
 
 .order-detail-header-title {
   font-family: 'Plus Jakarta Sans', sans-serif;
@@ -610,3 +610,4 @@
   color: #9EA8A2;
   line-height: 1.4;
 }
+

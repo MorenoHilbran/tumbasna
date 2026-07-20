@@ -146,7 +146,7 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ orderId, onBack, onPaymentSuc
         payOrder(order!.id);
         setToastMessage('Pembayaran berhasil! Pesanan sedang diproses.');
         setShowToast(true);
-        setTimeout(() => onPaymentSuccess(), 1500);
+        setTimeout(() => { try { onPaymentSuccess(); } catch (err) { console.error('Payment success callback error:', err); onBack(); } }, 1500);
       },
       onPending: (result: any) => {
         console.log('[Snap] Payment pending:', result);
@@ -603,6 +603,7 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ orderId, onBack, onPaymentSuc
 };
 
 export default OrderDetail;
+
 
 
 

@@ -1,5 +1,5 @@
-﻿/* ==============================
-   Checkout.css – Modern Classic
+/* ==============================
+   Checkout.css � Modern Classic
    ============================== */
 
 .checkout-toolbar {
@@ -276,7 +276,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
+  pointer-events: auto;  user-select: none;}
 
 .payment-method-card.active {
   border-color: #8CC63F;
@@ -1147,8 +1147,9 @@
   .payment-method-card {
     margin-bottom: 5px;
     padding: 10px;
-  }
+    pointer-events: auto;  user-select: none;}
 }
+
 
 
 

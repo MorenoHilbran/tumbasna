@@ -70,7 +70,7 @@
   padding: 12px 16px 0;
   overflow-x: auto;
   scrollbar-width: none;
-}
+  pointer-events: auto;  position: relative;  z-index: 10;}
 .filter-chips-row::-webkit-scrollbar { display: none; }
 
 .filter-chip {
@@ -85,7 +85,7 @@
   white-space: nowrap;
   cursor: pointer;
   transition: all 0.18s ease;
-}
+  pointer-events: auto;  user-select: none;  z-index: 10;}
 
 .filter-chip.active {
   background: #006837;
@@ -358,3 +358,5 @@
   font-size: 12px;
   color: #6B7A6F;
 }
+
+

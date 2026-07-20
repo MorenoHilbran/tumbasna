@@ -597,7 +597,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
             <div className="payment-method-section">
               <div
                 className={`payment-method-card ${paymentMethod === 'qris' ? 'active' : ''}`}
-                onClick={() => setPaymentMethod('qris')}
+                onClick={(e) => { e.stopPropagation(); console.log('Payment method changed to QRIS'); setPaymentMethod('qris'); }}
               >
                 <div className="payment-method-info">
                   <h4>Pembayaran Digital (Midtrans)</h4>
@@ -608,7 +608,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
 
               <div
                 className={`payment-method-card ${paymentMethod === 'cod' ? 'active' : ''}`}
-                onClick={() => setPaymentMethod('cod')}
+                onClick={(e) => { e.stopPropagation(); console.log('Payment method changed to COD'); setPaymentMethod('cod'); }}
               >
                 <div className="payment-method-info">
                   <h4>Bayar di Tempat (COD)</h4>
@@ -804,6 +804,8 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
 };
 
 export default Checkout;
+
+
 
 
 

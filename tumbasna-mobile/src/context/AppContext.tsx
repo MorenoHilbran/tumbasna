@@ -387,6 +387,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         purchasesThisMonth: 0,
         activeOrdersCount: 0,
       });
+      setOrders([]); // Clear orders untuk user baru
+      setCart([]);   // Clear cart untuk user baru
       return true;
     } catch {
       console.warn('[AppContext] API offline, mock register success.');
@@ -405,6 +407,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         activeOrdersCount: 0,
       });
       return true;
+      setOrders([]); // Clear orders untuk user baru
+      setCart([]);   // Clear cart untuk user baru
     }
   };
 
@@ -413,9 +417,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.removeItem('tumbasna_user');
     localStorage.removeItem('tumbasna_cart');
     localStorage.removeItem('tumbasna_chats');
-    setUser(null);
-    setOrders([]);
-    setCart([]);
+    setUser(null);`n    setOrders([]);`n    setCart([]);`n    setChats([]);
   };
 
   // ── Cart ─────────────────────────────────────────────────────────────────
@@ -743,6 +745,7 @@ export const useApp = () => {
   if (!context) throw new Error('useApp must be used within an AppProvider');
   return context;
 };
+
 
 
 

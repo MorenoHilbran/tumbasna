@@ -283,7 +283,7 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ initialIsLogin = true, on
             </button>
 
             <div className="login-register-redirect">
-              Belum terdaftar sebagai pedagang?{' '}
+              Belum punya akun?{' '}
               <span className="register-highlight-btn" onClick={() => setIsLogin(false)}>
                 Registrasi Akun Baru
               </span>
@@ -537,6 +537,7 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ initialIsLogin = true, on
 };
 
 export default LoginRegister;
+
 
 
 
