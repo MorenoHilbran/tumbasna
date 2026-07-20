@@ -112,8 +112,8 @@ const MainAppShell: React.FC = () => {
               onNavigateToCart={() => setViewState('keranjang')}
               onNavigateToChat={(supplierName, supplierPhone) => {
                 // Redirect to WhatsApp bot Tumbasna
-                const message = encodeURIComponent(\Halo, saya tertarik dengan produk dari \\);
-                window.open(\https://wa.me/6285190943468?text=\\, '_blank');
+                const message = encodeURIComponent(`Halo, saya tertarik dengan produk dari ${supplierName}`);
+                window.open(`https://wa.me/6285190943468?text=${message}`, '_blank');
               }}
               onSelectProduct={(p) => setSelectedProduct(p)}
             />
@@ -296,6 +296,7 @@ const MainAppShell: React.FC = () => {
 };
 
 export default MainAppShell;
+
 
 
 
