@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { promptPWAInstall, canInstallPWA } from '../utils/pwaInstall';
+import React, { useState } from 'react';
 import { IonPage, IonContent, IonIcon } from '@ionic/react';
 import {
   arrowForwardOutline,
@@ -13,19 +12,6 @@ interface WelcomeProps {
 
 const Welcome: React.FC<WelcomeProps> = ({ onGetStarted }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [showInstallBtn, setShowInstallBtn] = useState(false);
-
-  useEffect(() => {
-    // Check if PWA can be installed
-    setTimeout(() => setShowInstallBtn(canInstallPWA()), 1000);
-  }, []);
-
-  const handleInstallPWA = async () => {
-    const installed = await promptPWAInstall();
-    if (installed) {
-      setShowInstallBtn(false);
-    }
-  };
   const totalSlides = 3;
 
   const handleNext = () => {
@@ -167,7 +153,12 @@ const Welcome: React.FC<WelcomeProps> = ({ onGetStarted }) => {
                   <span>Mulai Belanja Sekarang</span>
                   <IonIcon icon={arrowForwardOutline} />
                 </button>
-                <button `n                  className="welcome-btn-secondary"`n                  onClick={() => onGetStarted('login')}`n                >`n                  Sudah punya akun? Masuk`n                </button>`n                {showInstallBtn && (`n                  <button `n                    className="welcome-btn-install"`n                    onClick={handleInstallPWA}`n                  >`n                    ?? Install Aplikasi`n                  </button>`n                )}
+                <button 
+                  className="welcome-btn-secondary"
+                  onClick={() => onGetStarted('login')}
+                >
+                  Sudah punya akun? Masuk
+                </button>
               </div>
             ) : (
               <button className="welcome-btn-primary" onClick={handleNext}>
@@ -184,5 +175,3 @@ const Welcome: React.FC<WelcomeProps> = ({ onGetStarted }) => {
 };
 
 export default Welcome;
-
-
