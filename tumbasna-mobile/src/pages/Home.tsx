@@ -102,16 +102,13 @@ const Home: React.FC<HomeProps> = ({ onNavigateToPasar, onNavigateToPesanan, onN
                 <button className="act-btn" onClick={onNavigateToAiChat} aria-label="Chat">
                   <i className="fa-regular fa-comment-dots"></i>
                 </button>
-                <button className="act-btn" aria-label="Notifikasi">
-                  <i className="fa-solid fa-bell"></i>
-                  <span className="n-dot"></span>
-                </button>
+                <button className="act-btn" aria-label="Notifikasi" onClick={onNavigateToPesanan}>`n                  <i className="fa-solid fa-bell"></i>`n                  <span className="n-dot"></span>`n                </button>
               </div>
             </div>
 
             {/* Greeting */}
             <div className="greeting">
-              <p className="greet-hi">Selamat Pagi,</p>
+              {(() => {`n                const hour = new Date().getHours();`n                if (hour < 11) return <p className="greet-hi">Selamat Pagi,</p>;`n                if (hour < 15) return <p className="greet-hi">Selamat Siang,</p>;`n                if (hour < 18) return <p className="greet-hi">Selamat Sore,</p>;`n                return <p className="greet-hi">Selamat Malam,</p>;`n              })()}
               <h1 className="greet-name">{user.ownerName}</h1>
               <div className="greet-loc">
                 <i className="fa-solid fa-location-dot"></i>
@@ -212,10 +209,7 @@ const Home: React.FC<HomeProps> = ({ onNavigateToPasar, onNavigateToPesanan, onN
                 <span className="qm-box"><i className="fa-solid fa-comment-dots"></i></span>
                 <span className="qm-lbl">Pesan</span>
               </button>
-              <button className="qm">
-                <span className="qm-box"><i className="fa-solid fa-chart-column"></i></span>
-                <span className="qm-lbl">Laporan</span>
-              </button>
+              <button className="qm" onClick={onNavigateToPesanan}>`n                <span className="qm-box"><i className="fa-solid fa-chart-column"></i></span>`n                <span className="qm-lbl">Laporan</span>`n              </button>
             </div>
 
             {/* Rekomendasi AI */}
@@ -335,6 +329,9 @@ const Home: React.FC<HomeProps> = ({ onNavigateToPasar, onNavigateToPesanan, onN
 };
 
 export default Home;
+
+
+
 
 
 
