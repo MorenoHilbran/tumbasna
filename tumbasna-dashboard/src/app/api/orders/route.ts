@@ -1,3 +1,6 @@
+import { NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
+
 function getProductImage(commodityName: string, userProvidedImg?: string | null): string {
   if (userProvidedImg && typeof userProvidedImg === 'string' && userProvidedImg.startsWith('http')) {
     return userProvidedImg.replace(/^(URL Foto:\s*|url foto:\s*)/i, '').trim();
