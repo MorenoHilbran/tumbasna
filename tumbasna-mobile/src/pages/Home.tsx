@@ -218,7 +218,9 @@ const Home: React.FC<HomeProps> = ({ onNavigateToPasar, onNavigateToPesanan, onN
                 <span className="qm-box"><i className="fa-solid fa-comment-dots"></i></span>
                 <span className="qm-lbl">Pesan</span>
               </button>
-              <button className="qm" onClick={onNavigateToPesanan}><span className="qm-box"><i className="fa-solid fa-chart-column"></i></span><span className="qm-lbl">Laporan</span>
+<button className="qm" onClick={onNavigateToPesanan}>
+                <span className="qm-box"><i className="fa-solid fa-chart-column"></i></span>
+                <span className="qm-lbl">Laporan</span>
               </button>
             </div>
 
@@ -339,6 +341,7 @@ const Home: React.FC<HomeProps> = ({ onNavigateToPasar, onNavigateToPesanan, onN
 };
 
 export default Home;
+
 
 
 

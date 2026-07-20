@@ -272,7 +272,10 @@ const Profil: React.FC = () => {
             </div>
           </button>
 
-          <button className="profile-menu-item" onClick={() => window.open('https://wa.me/6285190943468?text=Halo%20Tumbasna,%20saya%20butuh%20bantuan', '_blank')}><div className="menu-left"><div className="menu-icon-wrapper help-bg"><IonIcon icon={helpCircleOutline} />
+<button className="profile-menu-item" onClick={() => window.open('https://wa.me/6285190943468?text=Halo%20Tumbasna,%20saya%20butuh%20bantuan', '_blank')}>
+            <div className="menu-left">
+              <div className="menu-icon-wrapper help-bg">
+                <IonIcon icon={helpCircleOutline} />
               </div>
               <div className="menu-text-col">
                 <span className="menu-title">Pusat Bantuan</span>
@@ -458,6 +461,7 @@ const Profil: React.FC = () => {
 };
 
 export default Profil;
+
 
 
 
