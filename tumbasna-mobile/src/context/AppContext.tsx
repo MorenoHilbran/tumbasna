@@ -442,8 +442,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     buyerCoords?: [number, number], 
     supplierCoords?: [number, number],
     buyerAddress?: string,
-    supplierAddress?: string
-  ): Promise<string> => {
+    supplierAddress?: string, paymentMethod?: string): Promise<string> => {
     if (items.length === 0) return '';
     const orderId = `TRX-${Math.floor(100000 + Math.random() * 900000)}`;
     const itemsTotal = items.reduce((acc, i) => acc + i.product.price * i.quantity, 0);
@@ -744,11 +743,6 @@ export const useApp = () => {
   if (!context) throw new Error('useApp must be used within an AppProvider');
   return context;
 };
-
-
-
-
-
 
 
 
