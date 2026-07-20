@@ -4,25 +4,25 @@
   "description": "Platform rantai pasok pangan digital yang menghubungkan UMKM dengan supplier dan petani lokal.",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "loglog.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon-192.png",
+      "src": "loglog.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "icon-512.png",
+      "src": "loglog.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon-512.png",
+      "src": "loglog.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
