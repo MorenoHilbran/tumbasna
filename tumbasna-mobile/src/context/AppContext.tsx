@@ -1,4 +1,4 @@
-﻿import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { apiGet, apiPost, apiPatch, checkApiHealth } from '../utils/api';
 
@@ -307,6 +307,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     
     if (result.success && result.data) {
       const d = result.data;
+      setOrders([]); // Bersihkan orders akun sebelumnya dulu
       setUser({
         id: d.id,
         ownerName: d.name || d.phoneNumber,
@@ -326,6 +327,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
     
     console.warn('[AppContext] API login failed, using mock login');
+    // Mock login — tidak ada orders
+    setOrders([]);
     setUser({
       id: `mock-${Date.now()}`,
       ownerName: 'Pembeli Demo',
