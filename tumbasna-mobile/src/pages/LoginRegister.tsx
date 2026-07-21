@@ -629,7 +629,7 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ initialIsLogin = true, on
                       <IonSelectOption value="Rumah Makan / Restoran">Rumah Makan / Restoran</IonSelectOption>
                       <IonSelectOption value="Katering">Katering / Jasa Boga</IonSelectOption>
                       <IonSelectOption value="Warung Sembako / Toko Kelontong">Warung Sembako</IonSelectOption>
-                      <IonSelectOption value="Pedagang Sayur Pasar">Pedagang Pasar / Sayur Keliling</IonSelectOption>
+                      <IonSelectOption value="Pedagang Sayur Pasar">Pengecer Pasar / Sayur Keliling</IonSelectOption>
                       <IonSelectOption value="Usaha Olahan Makanan">Usaha Olahan Makanan (Home Industry)</IonSelectOption>
                     </IonSelect>
                   </div>
