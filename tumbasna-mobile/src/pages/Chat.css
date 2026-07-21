@@ -200,16 +200,24 @@
 }
 
 /* Conversation */
-.conversation-container { display: flex; flex-direction: column; height: 100%; }
+.conversation-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
 
 .messages-scroller {
-  flex-grow: 1;
+  flex: 1;
   overflow-y: auto;
-  padding: 14px 14px 150px;
+  padding: 14px 14px 14px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   background: #F8F7F4;
+  /* Pastikan scroll tidak tertutup input bar */
+  -webkit-overflow-scrolling: touch;
 }
 
 .sync-disclaimer {
@@ -286,15 +294,19 @@
 
 /* Input bar */
 .chat-input-bar {
-  position: absolute;
-  bottom: calc(64px + env(safe-area-inset-bottom, 0px));
-  left: 0; right: 0;
+  flex-shrink: 0;
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
   background: #ffffff;
-  border-top: 1px solid rgba(0, 104, 55,0.09);
-  padding: 10px 14px 18px;
+  border-top: 1px solid rgba(0, 104, 55, 0.09);
+  padding: 10px 14px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
   display: flex;
   gap: 8px;
   align-items: center;
+  z-index: 10;
 }
 
 .chat-text-input {
