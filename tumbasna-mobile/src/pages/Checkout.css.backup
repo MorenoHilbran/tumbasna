@@ -52,19 +52,6 @@
   --background: #F8F7F4;
 }
 
-/* Map fullscreen mode - remove padding */
-.checkout-content.map-mode {
-  --padding-top: 0;
-  --padding-bottom: 0;
-  --padding-start: 0;
-  --padding-end: 0;
-  --overflow: hidden;
-}
-
-.checkout-content.map-mode::part(scroll) {
-  overflow: hidden !important;
-}
-
 .checkout-section-title {
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 11px;
@@ -793,10 +780,9 @@
 
 .map-container-wrapper {
   width: 100%;
-  height: calc(100vh - 160px);
+  height: calc(100vh - 220px);
   position: relative;
   overflow: hidden;
-  touch-action: none;
 }
 
 /* Fixed center pin like Gojek/Shopee */
@@ -804,7 +790,7 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -100%);
   z-index: 1000;
   pointer-events: none;
   animation: pinBounce 0.5s ease-out;
@@ -818,7 +804,7 @@
 
 @keyframes pinBounce {
   0% {
-    transform: translate(-50%, -50%) translateY(-20px);
+    transform: translate(-50%, -100%) translateY(-20px);
     opacity: 0;
   }
   60% {
@@ -838,20 +824,14 @@
   height: 100%;
   z-index: 1;
 }
-.map-bottom-card {
+
+.map-address-display {
   position: absolute;
-  bottom: 0;
+  bottom: 64px;
   left: 0;
   right: 0;
   background: #ffffff;
   border-radius: 16px 16px 0 0;
-  z-index: 1000;
-  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.1);
-}
-
-
-.map-address-display {
-  background: transparent;
   padding: 16px 20px;
   display: flex;
   align-items: flex-start;
@@ -878,7 +858,11 @@
 }
 
 .map-confirm-footer {
-  background: transparent;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #ffffff;
   padding: 16px 20px;
   z-index: 1001;
 }
@@ -1191,17 +1175,6 @@
     padding: 10px;
     pointer-events: auto;  user-select: none;}
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
 

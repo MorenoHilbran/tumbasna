@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   IonContent,
   IonHeader,
@@ -299,7 +299,7 @@ const Profil: React.FC = () => {
         
         <div className="app-version-footer">
           <p>Tumbasna Mobile v1.0.0-Agritech</p>
-          <p>© 2026 PT Rantai Pangan Nusantara</p>
+          <p>Â© 2026 PT Rantai Pangan Nusantara</p>
         </div>
       </IonContent>
 
@@ -461,6 +461,8 @@ const Profil: React.FC = () => {
 };
 
 export default Profil;
+
+
 
 
 

@@ -1,10 +1,10 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"),
   title: {
-    default: "Tumbasna — Admin Dashboard Komoditas Pangan",
+    default: "Tumbasna â€” Admin Dashboard Komoditas Pangan",
     template: "%s | Tumbasna Admin",
   },
   description:
@@ -22,13 +22,13 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Tim Tumbasna" }],
   icons: {
-    icon: "/logo.png",
-    apple: "/logo.png",
+    icon: "/favicon.ico",
+    apple: "/favicon.png",
   },
   openGraph: {
     type: "website",
     siteName: "Tumbasna",
-    title: "Tumbasna — Admin Dashboard Komoditas Pangan",
+    title: "Tumbasna â€” Admin Dashboard Komoditas Pangan",
     description:
       "Platform monitoring komoditas pangan cerdas berbasis AI. Pantau distribusi, harga pasar, transaksi, dan logistik secara real-time.",
     images: [
@@ -58,3 +58,4 @@ export default function RootLayout({
     </html>
   );
 }
+

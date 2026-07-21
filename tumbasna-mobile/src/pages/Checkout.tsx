@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   IonContent,
   IonHeader,
@@ -21,7 +21,8 @@ import {
   searchOutline,
   navigateOutline,
   timeOutline,
-  chevronDownOutline
+  chevronDownOutline,
+  locationSharp
 } from 'ionicons/icons';
 import { useApp, CartItem } from '../context/AppContext';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
@@ -495,7 +496,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
         </IonToolbar>
       </IonHeader>
 
-      <IonContent className="checkout-content">
+      <IonContent className={`checkout-content ${step === 'map' ? 'map-mode' : ''}`} scrollY={step !== 'map'}>
         {step === 'map' ? (
           <>
             <div className="map-search-bar">
@@ -527,6 +528,10 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
             )}
 
             <div className="map-container-wrapper">
+              {/* Fixed center pin - stays in center while map moves */}
+              <div className="map-center-pin">
+                <IonIcon icon={locationSharp} />
+              </div>
               <MapContainer
                 center={buyerCoords}
                 zoom={16}
@@ -537,11 +542,12 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                   attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>'
                 />
-                <Marker position={buyerCoords} icon={customIcon} />
-                <MapController center={buyerCoords} onMoveEnd={(pos) => setBuyerCoords(pos)} />
+                
+                <MapController center={buyerCoords} onMoveEnd={(pos) => { setBuyerCoords(pos); reverseGeocode(pos[0], pos[1]); }} />
               </MapContainer>
             </div>
 
+            <div className="map-bottom-card">
             <div className="map-address-display">
               <IonIcon icon={locationOutline} />
               <p>{buyerAddressLabel || 'Geser peta untuk memilih lokasi'}</p>
@@ -552,6 +558,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
                 <IonIcon icon={checkmarkCircle} slot="start" />
                 Konfirmasi Lokasi Ini
               </IonButton>
+            </div>
             </div>
           </>
         ) : (
@@ -804,6 +811,14 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
 };
 
 export default Checkout;
+
+
+
+
+
+
+
+
 
 
 

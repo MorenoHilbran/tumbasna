@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
 import {
   IonContent,
   IonPage,
@@ -154,14 +154,14 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ initialIsLogin = true, on
         });
 
         if (loginRes.ok) {
-          // User sudah terdaftar → langsung login
+          // User sudah terdaftar â†’ langsung login
           const loginData = await loginRes.json();
           localStorage.setItem('tumbasna_user', JSON.stringify(loginData.data));
           window.location.reload();
           return;
         }
 
-        // User belum terdaftar → arahkan ke form Register dengan data Google
+        // User belum terdaftar â†’ arahkan ke form Register dengan data Google
         setOwnerName(userInfo.name || '');
         setEmail(userInfo.email || '');
         setPassword('google-oauth-linked');
@@ -378,7 +378,7 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ initialIsLogin = true, on
                     <div className="reg-input-wrapper">
                       <input
                         type="password"
-                        placeholder="••••••••••••"
+                        placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
@@ -536,6 +536,8 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ initialIsLogin = true, on
 };
 
 export default LoginRegister;
+
+
 
 
 

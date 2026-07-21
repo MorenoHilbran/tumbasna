@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -99,7 +99,7 @@ const LandingPage = () => {
                 Aplikasi Buyer (Mobile)
               </a>
               <a 
-                href="https://wa.me/6285190859889"
+                href="https://wa.me/6285190943468"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full sm:w-auto flex items-center justify-center gap-3 bg-[#F7941D] text-white px-8 py-4 rounded-xl text-sm md:text-base font-bold hover:bg-[#d4831b] hover:scale-[1.02] transition-all active:scale-95 shadow-xl shadow-[#F7941D]/20"
@@ -420,7 +420,7 @@ const LandingPage = () => {
                  Buka Aplikasi Buyer
                  <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
               </a>
-              <a href="https://wa.me/6285190859889" target="_blank" rel="noopener noreferrer" className="w-full md:w-auto inline-flex items-center justify-center gap-4 bg-[#F7941D] px-10 py-5 rounded-2xl text-lg font-bold text-white shadow-xl hover:bg-[#d4831b] hover:scale-105 transition-all active:scale-95 group">
+              <a href="https://wa.me/6285190943468" target="_blank" rel="noopener noreferrer" className="w-full md:w-auto inline-flex items-center justify-center gap-4 bg-[#F7941D] px-10 py-5 rounded-2xl text-lg font-bold text-white shadow-xl hover:bg-[#d4831b] hover:scale-105 transition-all active:scale-95 group">
                  Mulai Jadi Supplier (WA)
                  <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
               </a>
@@ -439,7 +439,7 @@ const LandingPage = () => {
                 <a key={item} href="#" className="text-xs font-semibold text-[#6B7A6F] hover:text-[#006837] transition-colors">{item}</a>
               ))}
             </div>
-            <p className="text-[#6B7A6F] text-xs font-medium">© 2026 Tumbasna. Hak Cipta Dilindungi.</p>
+            <p className="text-[#6B7A6F] text-xs font-medium">Â© 2026 Tumbasna. Hak Cipta Dilindungi.</p>
          </div>
       </footer>
     </div>
@@ -447,3 +447,4 @@ const LandingPage = () => {
 };
 
 export default LandingPage;
+
