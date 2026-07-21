@@ -43,12 +43,7 @@ export async function GET(req: Request) {
       if (!uuidRegex.test(userId)) {
         whereClause = { buyerUserId: null };
       } else {
-        whereClause = {
-          OR: [
-            { buyerUserId: userId },
-            { buyerUserId: null }
-          ]
-        };
+        whereClause = { buyerUserId: userId };
       }
     } else if (phone) {
       const normalizedPhone = phone.replace(/^\+/, '').replace(/^0/, '62');
