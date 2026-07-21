@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   IonContent,
   IonPage,
@@ -9,7 +9,8 @@ import {
   IonSelect,
   IonSelectOption,
   IonToast,
-  IonLoading
+  IonLoading,
+  IonSpinner
 } from '@ionic/react';
 import {
   arrowBackOutline,
@@ -23,11 +24,45 @@ import {
   eyeOutline,
   eyeOffOutline,
   helpCircleOutline,
-  locationOutline
+  locationOutline,
+  searchOutline,
+  navigateOutline,
+  locationSharp,
+  checkmarkCircle
 } from 'ionicons/icons';
 import { useGoogleLogin } from '@react-oauth/google';
 import { useApp } from '../context/AppContext';
+import { MapContainer, TileLayer, useMapEvents } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 import './LoginRegister.css';
+
+// Fix Leaflet default icon issue with bundlers
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+const MapController = ({ center, onMoveEnd }: { center: [number, number], onMoveEnd: (pos: [number, number]) => void }) => {
+  const map = useMapEvents({
+    moveend() {
+      const c = map.getCenter();
+      onMoveEnd([c.lat, c.lng]);
+    }
+  });
+
+  React.useEffect(() => {
+    const current = map.getCenter();
+    const dist = map.distance(current, center);
+    if (dist > 10) {
+      map.setView(center, 16, { animate: true });
+    }
+  }, [center, map]);
+
+  return null;
+};
 
 interface LoginRegisterProps {
   initialIsLogin?: boolean;
@@ -43,6 +78,98 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ initialIsLogin = true, on
   const [showToast, setShowToast] = useState(false);
   const [isGoogleRegister, setIsGoogleRegister] = useState(false);
   const [locating, setLocating] = useState(false);
+
+  // Map Picker State
+  const [showMapPicker, setShowMapPicker] = useState(false);
+  const [buyerCoords, setBuyerCoords] = useState<[number, number]>([-7.5151, 109.2941]);
+  const [tempAddress, setTempAddress] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  const reverseGeocode = async (lat: number, lng: number) => {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.display_name) {
+          setTempAddress(data.display_name);
+        } else {
+          setTempAddress(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+        }
+      } else {
+        setTempAddress(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+      }
+    } catch (err) {
+      console.error('Reverse geocode error:', err);
+      setTempAddress(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+    }
+  };
+
+  const handleOpenMapPicker = () => {
+    setShowMapPicker(true);
+    if (address) {
+      setTempAddress(address);
+    } else {
+      setTempAddress('Memuat lokasi...');
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const coords: [number, number] = [position.coords.latitude, position.coords.longitude];
+            setBuyerCoords(coords);
+            reverseGeocode(coords[0], coords[1]);
+          },
+          () => {
+            reverseGeocode(buyerCoords[0], buyerCoords[1]);
+          },
+          { timeout: 5000, enableHighAccuracy: false }
+        );
+      } else {
+        reverseGeocode(buyerCoords[0], buyerCoords[1]);
+      }
+    }
+  };
+
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
+    setIsSearching(true);
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}`);
+      const data = await res.json();
+      setSearchResults(data);
+    } catch (err) {
+      console.error('Search error:', err);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleSelectSearchResult = (result: any) => {
+    const lat = parseFloat(result.lat);
+    const lon = parseFloat(result.lon);
+    setBuyerCoords([lat, lon]);
+    setTempAddress(result.display_name);
+    setSearchResults([]);
+    setSearchQuery('');
+  };
+
+  const handleGetGPS = () => {
+    setLocating(true);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        const { latitude, longitude } = position.coords;
+        setBuyerCoords([latitude, longitude]);
+        reverseGeocode(latitude, longitude);
+        setLocating(false);
+      }, (error) => {
+        alert('Gagal mendapatkan lokasi GPS. Pastikan GPS Anda aktif.');
+        setLocating(false);
+      }, { timeout: 10000, enableHighAccuracy: false });
+    } else {
+      alert('Browser tidak mendukung Geolocation.');
+      setLocating(false);
+    }
+  };
 
   const handleGetCurrentLocation = async () => {
     setLocating(true);
@@ -185,35 +312,137 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ initialIsLogin = true, on
 
   return (
     <IonPage>
-      {/* Dynamic Header based on Login / Register */}
-      <div className="auth-header-bar">
-        <button
-          className="auth-header-back-btn"
-          onClick={() => {
-            if (!isLogin) {
-              setIsLogin(true);
-            } else if (onBackToWelcome) {
-              onBackToWelcome();
-            } else {
-              setToastMessage('Silakan masuk atau daftar terlebih dahulu.');
-              setShowToast(true);
-            }
-          }}
-        >
-          <IonIcon icon={arrowBackOutline} />
-        </button>
-        {isLogin ? (
-          <img src="/logo.png" alt="Tumbasna" className="auth-header-logo-centered" />
-        ) : (
-          <span className="auth-header-title-centered">
-            {isGoogleRegister ? 'Lengkapi Profil' : 'Informasi Akun'}
-          </span>
-        )}
-        <div className="auth-header-placeholder"></div>
-      </div>
+      {/* Dynamic Header based on Login / Register / Map Picker */}
+      {showMapPicker ? (
+        <div className="auth-header-bar">
+          <button
+            className="auth-header-back-btn"
+            onClick={() => setShowMapPicker(false)}
+          >
+            <IonIcon icon={arrowBackOutline} />
+          </button>
+          <span className="auth-header-title-centered">Pilih Lokasi Usaha</span>
+          <div className="auth-header-placeholder"></div>
+        </div>
+      ) : (
+        <div className="auth-header-bar">
+          <button
+            className="auth-header-back-btn"
+            onClick={() => {
+              if (!isLogin) {
+                setIsLogin(true);
+              } else if (onBackToWelcome) {
+                onBackToWelcome();
+              } else {
+                setToastMessage('Silakan masuk atau daftar terlebih dahulu.');
+                setShowToast(true);
+              }
+            }}
+          >
+            <IonIcon icon={arrowBackOutline} />
+          </button>
+          {isLogin ? (
+            <img src="/logo.png" alt="Tumbasna" className="auth-header-logo-centered" />
+          ) : (
+            <span className="auth-header-title-centered">
+              {isGoogleRegister ? 'Lengkapi Profil' : 'Informasi Akun'}
+            </span>
+          )}
+          <div className="auth-header-placeholder"></div>
+        </div>
+      )}
 
-      <IonContent className="auth-content">
-        {isLogin ? (
+      <IonContent className={`auth-content ${showMapPicker ? 'map-mode' : ''}`} scrollY={!showMapPicker}>
+        {showMapPicker ? (
+          /* MAP PICKER SCREEN */
+          <>
+            <div className="map-search-bar">
+              <input
+                type="text"
+                placeholder="Cari alamat..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                className="map-search-input"
+              />
+              <button onClick={handleSearch} disabled={isSearching} className="map-search-btn">
+                {isSearching ? <IonSpinner name="crescent" style={{ width: '16px', height: '16px' }} /> : <IonIcon icon={searchOutline} />}
+              </button>
+              <button onClick={handleGetGPS} disabled={locating} className="map-gps-btn">
+                {locating ? <IonSpinner name="crescent" style={{ width: '16px', height: '16px' }} /> : <IonIcon icon={navigateOutline} />}
+              </button>
+            </div>
+
+            {searchResults.length > 0 && (
+              <div className="map-search-results">
+                {searchResults.map((result, idx) => (
+                  <div key={idx} className="search-result-item" onClick={() => handleSelectSearchResult(result)}>
+                    <IonIcon icon={locationOutline} />
+                    <span>{result.display_name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="map-container-wrapper">
+              <div className="map-center-pin">
+                <IonIcon icon={locationSharp} />
+              </div>
+              <MapContainer
+                center={buyerCoords}
+                zoom={16}
+                style={{ height: '100%', width: '100%' }}
+                zoomControl={false}
+              >
+                <TileLayer
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>'
+                />
+                <MapController center={buyerCoords} onMoveEnd={(pos) => { setBuyerCoords(pos); reverseGeocode(pos[0], pos[1]); }} />
+              </MapContainer>
+            </div>
+
+            <div className="map-bottom-card">
+              <div className="map-address-display">
+                <IonIcon icon={locationOutline} />
+                <p>{tempAddress || 'Geser peta untuk memilih lokasi'}</p>
+              </div>
+
+              <div className="map-confirm-footer" style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowMapPicker(false)}
+                  style={{
+                    flex: 1,
+                    background: '#f1f5f9',
+                    color: '#475569',
+                    borderRadius: '12px',
+                    fontSize: '13px',
+                    fontWeight: '800',
+                    height: '48px',
+                    cursor: 'pointer',
+                    border: '1px solid #cbd5e1'
+                  }}
+                >
+                  Batal
+                </button>
+                <IonButton
+                  expand="block"
+                  color="primary"
+                  onClick={() => {
+                    setAddress(tempAddress);
+                    setShowMapPicker(false);
+                  }}
+                  className="confirm-location-btn"
+                  style={{ flex: 1, margin: 0 }}
+                >
+                  <IonIcon icon={checkmarkCircle} slot="start" />
+                  Konfirmasi
+                </IonButton>
+              </div>
+            </div>
+          </>
+        ) : isLogin ? (
           /* LOGIN SCREEN */
           <form onSubmit={handleAuth} className="login-screen-form">
             <div className="login-welcome-section">
@@ -409,32 +638,55 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ initialIsLogin = true, on
                 <div className="reg-input-group">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                     <label className="reg-field-label" style={{ margin: 0 }}>Alamat Lengkap Usaha</label>
-                    <button
-                      type="button"
-                      onClick={handleGetCurrentLocation}
-                      disabled={locating}
-                      style={{
-                        background: '#f0fdf4',
-                        color: '#16a34a',
-                        border: '1px solid #dcfce7',
-                        borderRadius: '8px',
-                        padding: '4px 10px',
-                        fontSize: '10px',
-                        fontWeight: 'bold',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        transition: 'all 0.2s'
-                      }}
-                    >
-                      {locating ? 'Mencari...' : (
-                        <>
-                          <IonIcon icon={locationOutline} style={{ fontSize: '14px' }} />
-                          Gunakan Lokasi
-                        </>
-                      )}
-                    </button>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <button
+                        type="button"
+                        onClick={handleGetCurrentLocation}
+                        disabled={locating}
+                        style={{
+                          background: '#f0fdf4',
+                          color: '#16a34a',
+                          border: '1px solid #dcfce7',
+                          borderRadius: '8px',
+                          padding: '4px 10px',
+                          fontSize: '10px',
+                          fontWeight: 'bold',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        {locating ? 'Mencari...' : (
+                          <>
+                            <IonIcon icon={locationOutline} style={{ fontSize: '14px' }} />
+                            Gunakan GPS
+                          </>
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleOpenMapPicker}
+                        style={{
+                          background: '#fff7ed',
+                          color: '#ea580c',
+                          border: '1px solid #ffedd5',
+                          borderRadius: '8px',
+                          padding: '4px 10px',
+                          fontSize: '10px',
+                          fontWeight: 'bold',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        <IonIcon icon={mapOutline} style={{ fontSize: '14px' }} />
+                        Pilih di Peta
+                      </button>
+                    </div>
                   </div>
                   <div className="reg-input-wrapper">
                     <input

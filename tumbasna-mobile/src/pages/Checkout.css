@@ -1,4 +1,4 @@
-﻿/* ==============================
+/* ==============================
    Checkout.css – Modern Classic
    ============================== */
 
@@ -968,8 +968,10 @@
   margin: 0;
 }
 
+.map-modal-body {
   flex: 1;
   position: relative;
+}
 
 
 .map-controls {
