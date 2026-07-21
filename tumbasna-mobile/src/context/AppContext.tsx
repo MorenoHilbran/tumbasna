@@ -543,77 +543,75 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     if (supplierName === 'Tumbasna AI Pintar') {
       (async () => {
+        // Siapkan context produk & prompt (dipakai oleh Groq maupun Gemini)
+        const productContext = products.map(p =>
+          `- ${p.name} (Harga: Rp${p.price.toLocaleString('id-ID')}, Stok: ${p.stock}, Supplier: ${p.supplierName} - ${p.supplierLocation})`
+        ).join('\n');
+
+        const systemPrompt = `Anda adalah "Tumbasna AI Pintar", perwakilan mitra bisnis profesional resmi di aplikasi Tumbasna (pasar komoditas untuk warung/toko).
+Jawablah dengan gaya bahasa pebisnis yang profesional, hangat, sopan, efisien, dan berorientasi pada perdagangan komoditas. Hindari gaya bicara robotik atau bahasa asisten AI umum (seperti "Sebagai AI...", "Saya adalah model...", "Tentu, saya bisa bantu..."). Bicaralah selayaknya rekan bisnis atau pengelola pasar yang berpengalaman. Gunakan sapaan hangat seperti "Juragan" untuk pembeli. Gunakan format cetak tebal dengan tanda bintang tunggal seperti *Kata* untuk menyoroti hal penting seperti nama supplier, harga, dan nama komoditas (seperti gaya format WhatsApp). Hindari tanda bintang ganda (**) atau format markdown lain.
+
+Berikut adalah data produk terkini yang ada di sistem database Tumbasna:
+${productContext}
+
+Tugas Anda:
+1. Jika pengguna bertanya tentang harga, ketersediaan, atau mencari barang, gunakan data produk di atas untuk merekomendasikannya.
+2. Jika barang tidak ada di data, beritahu dengan sopan bahwa barang saat ini belum tersedia di Tumbasna.`;
+
+        const addReply = (responseText: string) => {
+          const reply: ChatMessage = {
+            id: `msg-${Date.now() + 1}`,
+            sender: 'supplier',
+            text: responseText,
+            timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+            status: 'read'
+          };
+          setChats((prev) => prev.map((t) => t.supplierName === supplierName
+            ? { ...t, lastMessage: responseText, lastTime: reply.timestamp, unreadCount: t.unreadCount + 1, messages: [...t.messages, reply] }
+            : t
+          ));
+        };
+
+        // ── UTAMA: Groq (llama-3.1-8b-instant — sangat cepat) ──────────────
+        try {
+          const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${import.meta.env.VITE_GROQ_API_KEY || ''}`
+            },
+            body: JSON.stringify({
+              model: 'llama-3.1-8b-instant',
+              messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: text }
+              ],
+              temperature: 0.3,
+              max_tokens: 512
+            })
+          });
+
+          if (!groqRes.ok) throw new Error(`Groq API error: ${groqRes.status}`);
+          const groqData = await groqRes.json();
+          addReply(groqData.choices[0].message.content);
+          return; // sukses, tidak perlu fallback
+        } catch (groqError: any) {
+          console.warn('[AI] Groq gagal, fallback ke Gemini...', groqError);
+        }
+
+        // ── FALLBACK: Gemini ────────────────────────────────────────────────
         try {
           const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
           const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
-          
-          // Mempersiapkan data dari state (database lokal/API) untuk AI
-          const productContext = products.map(p => 
-            `- ${p.name} (Harga: Rp${p.price.toLocaleString('id-ID')}, Stok: ${p.stock}, Supplier: ${p.supplierName} - ${p.supplierLocation})`
-          ).join('\n');
-
-          const prompt = `Anda adalah "Tumbasna AI Pintar", perwakilan mitra bisnis profesional resmi di aplikasi Tumbasna (pasar komoditas untuk warung/toko).
-Jawablah dengan gaya bahasa pebisnis yang profesional, hangat, sopan, efisien, dan berorientasi pada perdagangan komoditas. Hindari gaya bicara robotik atau bahasa asisten AI umum (seperti "Sebagai AI...", "Saya adalah model...", "Tentu, saya bisa bantu..."). Bicaralah selayaknya rekan bisnis atau pengelola pasar yang berpengalaman. Gunakan sapaan hangat seperti "Juragan" untuk pembeli. Gunakan format cetak tebal dengan tanda bintang tunggal seperti *Kata* untuk menyoroti hal penting seperti nama supplier, harga, dan nama komoditas (seperti gaya format WhatsApp). Hindari tanda bintang ganda (**) atau format markdown lain.
-
-Berikut adalah data produk terkini yang ada di sistem database Tumbasna:
-${productContext}
-
-Tugas Anda:
-1. Jika pengguna bertanya tentang harga, ketersediaan, atau mencari barang, gunakan data produk di atas untuk merekomendasikannya.
-2. Jika barang tidak ada di data, beritahu dengan sopan bahwa barang saat ini belum tersedia di Tumbasna.
-
-Pertanyaan pengguna: ${text}`;
-          const result = await model.generateContent(prompt);
-          const responseText = result.response.text();
-          const reply: ChatMessage = { id: `msg-${Date.now() + 1}`, sender: 'supplier', text: responseText, timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }), status: 'read' };
-          setChats((prev) => prev.map((t) => t.supplierName === supplierName ? { ...t, lastMessage: responseText, lastTime: reply.timestamp, unreadCount: t.unreadCount + 1, messages: [...t.messages, reply] } : t));
-        } catch (error: any) {
-          console.warn("Gemini AI error, attempting fallback to Groq...", error);
-          try {
-            const productContext = products.map(p => 
-              `- ${p.name} (Harga: Rp${p.price.toLocaleString('id-ID')}, Stok: ${p.stock}, Supplier: ${p.supplierName} - ${p.supplierLocation})`
-            ).join('\n');
-
-            const prompt = `Anda adalah "Tumbasna AI Pintar", perwakilan mitra bisnis profesional resmi di aplikasi Tumbasna (pasar komoditas untuk warung/toko).
-Jawablah dengan gaya bahasa pebisnis yang profesional, hangat, sopan, efisien, dan berorientasi pada perdagangan komoditas. Hindari gaya bicara robotik atau bahasa asisten AI umum (seperti "Sebagai AI...", "Saya adalah model...", "Tentu, saya bisa bantu..."). Bicaralah selayaknya rekan bisnis atau pengelola pasar yang berpengalaman. Gunakan sapaan hangat seperti "Juragan" untuk pembeli. Gunakan format cetak tebal dengan tanda bintang tunggal seperti *Kata* untuk menyoroti hal penting seperti nama supplier, harga, dan nama komoditas (seperti gaya format WhatsApp). Hindari tanda bintang ganda (**) atau format markdown lain.
-
-Berikut adalah data produk terkini yang ada di sistem database Tumbasna:
-${productContext}
-
-Tugas Anda:
-1. Jika pengguna bertanya tentang harga, ketersediaan, atau mencari barang, gunakan data produk di atas untuk merekomendasikannya.
-2. Jika barang tidak ada di data, beritahu dengan sopan bahwa barang saat ini belum tersedia di Tumbasna.
-
-Pertanyaan pengguna: ${text}`;
-
-            const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${import.meta.env.VITE_GROQ_API_KEY || ''}`
-              },
-              body: JSON.stringify({
-                model: 'llama-3.1-8b-instant',
-                messages: [{ role: 'user', content: prompt }],
-                temperature: 0.2
-              })
-            });
-
-            if (!groqRes.ok) throw new Error(`Groq API returned status ${groqRes.status}`);
-            const groqData = await groqRes.json();
-            const responseText = groqData.choices[0].message.content;
-
-            const reply: ChatMessage = { id: `msg-${Date.now() + 1}`, sender: 'supplier', text: responseText, timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }), status: 'read' };
-            setChats((prev) => prev.map((t) => t.supplierName === supplierName ? { ...t, lastMessage: responseText, lastTime: reply.timestamp, unreadCount: t.unreadCount + 1, messages: [...t.messages, reply] } : t));
-          } catch (groqError: any) {
-            console.error("Groq fallback also failed:", groqError);
-            let fallbackMsg = "Maaf, koneksi ke asisten AI sedang terganggu.";
-            if (error.message && error.message.includes("503")) {
-              fallbackMsg = "Maaf, asisten AI saat ini sedang menerima banyak permintaan (sibuk). Silakan coba lagi dalam beberapa saat ya.";
-            }
-            const reply: ChatMessage = { id: `msg-${Date.now() + 1}`, sender: 'supplier', text: fallbackMsg, timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }), status: 'read' };
-            setChats((prev) => prev.map((t) => t.supplierName === supplierName ? { ...t, lastMessage: fallbackMsg, lastTime: reply.timestamp, unreadCount: t.unreadCount + 1, messages: [...t.messages, reply] } : t));
+          const result = await model.generateContent(`${systemPrompt}\n\nPertanyaan pengguna: ${text}`);
+          addReply(result.response.text());
+        } catch (geminiError: any) {
+          console.error('[AI] Gemini fallback juga gagal:', geminiError);
+          let fallbackMsg = 'Maaf, koneksi ke asisten AI sedang terganggu. Silakan coba lagi.';
+          if (geminiError.message?.includes('503')) {
+            fallbackMsg = 'Asisten AI sedang sibuk. Silakan coba lagi dalam beberapa saat ya, Juragan.';
           }
+          addReply(fallbackMsg);
         }
       })();
     } else {
