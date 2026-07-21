@@ -1,9 +1,10 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+﻿import React, { createContext, useContext, useState, useEffect } from 'react';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { apiGet, apiPost, apiPatch, checkApiHealth } from '../utils/api';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://api.tumbasna.my.id';
 
-// ── Interfaces ────────────────────────────────────────────────────────────────
+// â”€â”€ Interfaces â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export interface Product {
   id: string; name: string; price: number; stock: number;
   supplierName: string; supplierLocation: string; supplierRating: number;
@@ -41,6 +42,7 @@ export interface User {
 interface AppContextType {
   user: User | null; products: Product[]; cart: CartItem[];
   orders: Order[]; chats: ChatThread[];
+  isApiOnline: boolean;
   login: (phone: string) => Promise<boolean>;
   register: (userData: Omit<User, 'balance' | 'purchasesThisMonth' | 'activeOrdersCount'>) => Promise<boolean>;
   logout: () => void;
@@ -64,7 +66,7 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-// ── Fallback produk mock (dipakai jika API offline) ────────────────────────────
+// â”€â”€ Fallback produk mock (dipakai jika API offline) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const FALLBACK_PRODUCTS: Product[] = [
   {
     id: 'prod-1', name: 'Cabai Rawit Merah Super', price: 48000, stock: 150,
@@ -149,8 +151,9 @@ const INITIAL_CHATS: ChatThread[] = [
   },
 ];
 
-// ── Provider ──────────────────────────────────────────────────────────────────
+// â”€â”€ Provider â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [isApiOnline, setIsApiOnline] = useState(true);
   const [products, setProducts] = useState<Product[]>(FALLBACK_PRODUCTS);
   const [user, setUser] = useState<User | null>(() => {
     const saved = localStorage.getItem('tumbasna_user');
@@ -167,7 +170,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : INITIAL_CHATS;
   });
 
-  // ── Persist user & cart ──────────────────────────────────────────────────
+  // â”€â”€ Persist user & cart â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     if (user) localStorage.setItem('tumbasna_user', JSON.stringify(user));
     else localStorage.removeItem('tumbasna_user');
@@ -181,24 +184,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem('tumbasna_chats', JSON.stringify(chats));
   }, [chats]);
 
-  // ── Fetch supplier nyata dari DB dan merge ke daftar chat ────────────────
+  // â”€â”€ Fetch supplier nyata dari DB dan merge ke daftar chat â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     const fetchSuppliers = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/api/chat/suppliers`);
-        if (!res.ok) return;
-        const json = await res.json();
-        if (!json.success || !json.data?.length) return;
-
+      const result = await apiGet('/api/chat/suppliers', { timeout: 5000, retry: 1 });
+      if (result.success && result.data?.length) {
         setChats(prev => {
           const existingNames = new Set(prev.map(c => c.supplierName));
-          const newThreads: ChatThread[] = json.data
+          const newThreads: ChatThread[] = result.data
             .filter((s: any) => !existingNames.has(s.name))
             .map((s: any) => ({
               supplierName: s.name,
               supplierPhone: s.phone,
               lastMessage: s.activeProducts[0]
-                ? `Menjual: ${s.activeProducts[0].commodity} — Rp${s.activeProducts[0].price.toLocaleString('id-ID')}/kg`
+                ? `Menjual: ${s.activeProducts[0].commodity} ? Rp${s.activeProducts[0].price.toLocaleString('id-ID')}/kg`
                 : 'Supplier terdaftar via WhatsApp',
               lastTime: '',
               unreadCount: 0,
@@ -212,17 +211,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             }));
           return [...prev, ...newThreads];
         });
-      } catch {
-        console.warn('[AppContext] Gagal fetch suppliers dari API.');
       }
     };
     fetchSuppliers();
   }, []);
 
-  // ── Fetch products dari dashboard API ────────────────────────────────────
+  // â”€â”€ Fetch products dari dashboard API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const refreshProducts = async () => {
     try {
-      // Get user location for distance filtering
       let queryParams = '';
       if (navigator.geolocation) {
         try {
@@ -230,31 +226,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             navigator.geolocation.getCurrentPosition(resolve, reject, {
               enableHighAccuracy: false,
               timeout: 3000,
-              maximumAge: 300000 // Cache for 5 minutes
+              maximumAge: 300000
             });
           });
           queryParams = `?lat=${position.coords.latitude}&lng=${position.coords.longitude}&maxDistance=100`;
         } catch (geoErr) {
-          console.warn('[refreshProducts] Geolocation error, fetching all products:', geoErr);
+          console.warn('[refreshProducts] Geolocation error:', geoErr);
         }
       }
-      const res = await fetch(`${API_BASE}/api/products${queryParams}`);
-      if (res.ok) {
-        const json = await res.json();
-        if (json.success && json.data?.length > 0) {
-          setProducts(json.data);
-        }
+      
+      const result = await apiGet(`/api/products${queryParams}`, { timeout: 6000, retry: 1 });
+      if (result.success && result.data?.length > 0) {
+        setProducts(result.data);
+        setIsApiOnline(true);
+      } else {
+        console.warn('[refreshProducts] No products from API, using fallback');
+        setIsApiOnline(false);
       }
     } catch (err) {
-      console.warn('[AppContext] Dashboard offline atau gagal refresh products:', err);
+      console.warn('[AppContext] Failed to refresh products:', err);
+      setIsApiOnline(false);
     }
   };
+
+
 
   useEffect(() => {
     refreshProducts();
   }, []);
 
-  // ── Fetch orders dari Supabase via API (saat user login) ─────────────────
+  // â”€â”€ Fetch orders dari Supabase via API (saat user login) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const refreshOrders = async () => {
     if (!user?.id) return;
     try {
@@ -268,34 +269,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  // ── Fetch profile terbaru dari Supabase (sinkronisasi multi-device) ──────
+  // â”€â”€ Fetch profile terbaru dari Supabase (sinkronisasi multi-device) â”€â”€â”€â”€â”€â”€
   const refreshProfile = async () => {
     if (!user?.id) return;
-    try {
-      const res = await fetch(`${API_BASE}/api/auth/profile?userId=${user.id}`);
-      if (res.ok) {
-        const json = await res.json();
-        if (json.success) {
-          const d = json.data;
-          setUser(prev => prev ? {
-            ...prev,
-            ownerName: d.name || prev.ownerName,
-            businessName: d.businessName || prev.businessName,
-            email: d.email || prev.email,
-            address: d.address || prev.address,
-            businessType: d.businessType || prev.businessType,
-            bankName: d.bankName || prev.bankName,
-            bankAccount: d.bankAccount || prev.bankAccount,
-            balance: d.balance ?? prev.balance,
-            activeOrdersCount: d.activeOrdersCount ?? prev.activeOrdersCount,
-            purchasesThisMonth: d.purchasesThisMonth ?? prev.purchasesThisMonth,
-          } : null);
-        }
-      }
-    } catch {
-      console.warn('[AppContext] Gagal sinkronisasi profil terbaru dari API.');
+    const result = await apiGet(`/api/auth/profile?userId=${user.id}`, { timeout: 5000 });
+    if (result.success && result.data) {
+      const d = result.data;
+      setUser(prev => prev ? {
+        ...prev,
+        ownerName: d.name || prev.ownerName,
+        businessName: d.businessName || prev.businessName,
+        email: d.email || prev.email,
+        address: d.address || prev.address,
+        businessType: d.businessType || prev.businessType,
+        bankName: d.bankName || prev.bankName,
+        bankAccount: d.bankAccount || prev.bankAccount,
+        balance: d.balance ?? prev.balance,
+        activeOrdersCount: d.activeOrdersCount ?? prev.activeOrdersCount,
+        purchasesThisMonth: d.purchasesThisMonth ?? prev.purchasesThisMonth,
+      } : null);
     }
   };
+
+
 
   useEffect(() => {
     refreshOrders();
@@ -303,19 +299,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
-  // ── Auth ─────────────────────────────────────────────────────────────────
+  // â”€â”€ Auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const login = async (phone: string): Promise<boolean> => {
     if (!phone) return false;
-    try {
-      const res = await fetch(`${API_BASE}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone }),
-      });
-      const json = await res.json();
-      if (!res.ok || !json.success) return false;
-
-      const d = json.data;
+    
+    const result = await apiPost('/api/auth/login', { phone }, { timeout: 10000, retry: 2 });
+    
+    if (result.success && result.data) {
+      const d = result.data;
       setUser({
         id: d.id,
         ownerName: d.name || d.phoneNumber,
@@ -330,49 +321,46 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         purchasesThisMonth: 0,
         activeOrdersCount: d.activeOrdersCount ?? 0,
       });
-      return true;
-    } catch {
-      console.warn('[AppContext] API offline, mock login success.');
-      setUser({
-        id: `mock-${Date.now()}`,
-        ownerName: 'Pembeli Demo',
-        businessName: 'Toko Sembako Demo',
-        phone: phone,
-        email: 'demo@tumbasna.com',
-        address: 'Jl. Pasar Tradisional No 1',
-        businessType: 'Warung Sembako',
-        bankName: 'BCA',
-        bankAccount: '1234567890',
-        balance: 5000000,
-        purchasesThisMonth: 0,
-        activeOrdersCount: 0,
-      });
+      setIsApiOnline(true);
       return true;
     }
+    
+    console.warn('[AppContext] API login failed, using mock login');
+    setUser({
+      id: `mock-${Date.now()}`,
+      ownerName: 'Pembeli Demo',
+      businessName: 'Toko Sembako Demo',
+      phone: phone,
+      email: 'demo@tumbasna.com',
+      address: 'Jl. Pasar Tradisional No 1',
+      businessType: 'Warung Sembako',
+      bankName: 'BCA',
+      bankAccount: '1234567890',
+      balance: 5000000,
+      purchasesThisMonth: 0,
+      activeOrdersCount: 0,
+    });
+    setIsApiOnline(false);
+    return true;
   };
+
 
   const register = async (
     userData: Omit<User, 'balance' | 'purchasesThisMonth' | 'activeOrdersCount'>
   ): Promise<boolean> => {
-    try {
-      const res = await fetch(`${API_BASE}/api/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ownerName: userData.ownerName,
-          businessName: userData.businessName,
-          phone: userData.phone,
-          email: userData.email,
-          address: userData.address,
-          businessType: userData.businessType,
-          bankName: userData.bankName,
-          bankAccount: userData.bankAccount,
-        }),
-      });
-      const json = await res.json();
-      if (!res.ok || !json.success) return false;
+    const result = await apiPost('/api/auth/register', {
+      ownerName: userData.ownerName,
+      businessName: userData.businessName,
+      phone: userData.phone,
+      email: userData.email,
+      address: userData.address,
+      businessType: userData.businessType,
+      bankName: userData.bankName,
+      bankAccount: userData.bankAccount,
+    }, { timeout: 10000, retry: 2 });
 
-      const d = json.data;
+    if (result.success && result.data) {
+      const d = result.data;
       setUser({
         id: d.id,
         ownerName: userData.ownerName,
@@ -387,30 +375,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         purchasesThisMonth: 0,
         activeOrdersCount: 0,
       });
-      setOrders([]); // Clear orders untuk user baru
-      setCart([]);   // Clear cart untuk user baru
-      return true;
-    } catch {
-      console.warn('[AppContext] API offline, mock register success.');
-      setUser({
-        id: `mock-${Date.now()}`,
-        ownerName: userData.ownerName,
-        businessName: userData.businessName,
-        phone: userData.phone,
-        email: userData.email,
-        address: userData.address,
-        businessType: userData.businessType,
-        bankName: userData.bankName,
-        bankAccount: userData.bankAccount,
-        balance: 0,
-        purchasesThisMonth: 0,
-        activeOrdersCount: 0,
-      });
-      setOrders([]); // Clear orders untuk user baru
-      setCart([]);   // Clear cart untuk user baru
+      setOrders([]);
+      setCart([]);
+      setIsApiOnline(true);
       return true;
     }
+
+    console.warn('[AppContext] API register failed, using mock register');
+    setUser({
+      id: `mock-${Date.now()}`,
+      ownerName: userData.ownerName,
+      businessName: userData.businessName,
+      phone: userData.phone,
+      email: userData.email,
+      address: userData.address,
+      businessType: userData.businessType,
+      bankName: userData.bankName,
+      bankAccount: userData.bankAccount,
+      balance: 0,
+      purchasesThisMonth: 0,
+      activeOrdersCount: 0,
+    });
+    setOrders([]);
+    setCart([]);
+    setIsApiOnline(false);
+    return true;
   };
+
 
   const logout = () => {
     // Bersihkan semua data sesi dari localStorage agar tidak ada sisa data lama
@@ -423,7 +414,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setChats([]);
   };
 
-  // ── Cart ─────────────────────────────────────────────────────────────────
+  // â”€â”€ Cart â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const addToCart = (product: Product, quantity: number) => {
     setCart((prev) => {
       const existing = prev.find((i) => i.product.id === product.id);
@@ -441,7 +432,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const clearCart = () => setCart([]);
 
-  // ── Checkout — simpan order ke Supabase ──────────────────────────────────
+  // â”€â”€ Checkout â€” simpan order ke Supabase â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const checkout = async (items: CartItem[], courier: string, 
     shippingCost: number, 
     buyerCoords?: [number, number], 
@@ -478,38 +469,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       paymentMethod,
     };
 
-    // Simpan ke Supabase
-    try {
-      await fetch(`${API_BASE}/api/orders`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: orderId,
-          buyerUserId: user?.id || null,
-          supplierName, supplierLocation, courier,
-          shippingCost, totalAmount,
-          trackingTimeline,
-          paymentQrCode: newOrder.paymentQrCode,
-          notes: notesStr,
-          items: items.map((i) => ({
-            productEntryId: i.product.id.startsWith('prod-') ? null : i.product.id,
-            commodity: i.product.category || i.product.name,
-            price: i.product.price,
-            qty: i.quantity,
-            supplierName: i.product.supplierName,
-          })),
-        }),
-      });
-    } catch {
-      console.warn('[checkout] Gagal simpan order ke Supabase, tetap tersimpan lokal.');
-    }
+    // Simpan ke Supabase dengan timeout
+    await apiPost('/api/orders', {
+      id: orderId,
+      buyerUserId: user?.id || null,
+      supplierName, supplierLocation, courier,
+      shippingCost, totalAmount,
+      trackingTimeline,
+      paymentQrCode: newOrder.paymentQrCode,
+      notes: notesStr,
+      items: items.map((i) => ({
+        productEntryId: i.product.id.startsWith('prod-') ? null : i.product.id,
+        commodity: i.product.category || i.product.name,
+        price: i.product.price,
+        qty: i.quantity,
+        supplierName: i.product.supplierName,
+      })),
+    }, { timeout: 8000, retry: 1 });
 
     setOrders((prev) => [newOrder, ...prev]); items.forEach(item => removeFromCart(item.product.id));
     if (user) setUser({ ...user, activeOrdersCount: user.activeOrdersCount + 1 });
     return orderId;
   };
 
-  // ── Pay Order — update status ke Supabase ────────────────────────────────
+  // â”€â”€ Pay Order â€” update status ke Supabase â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const payOrder = async (orderId: string) => {
     const currentTime = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
     setOrders((prev) =>
@@ -521,19 +504,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return { ...order, status: 'Diproses', trackingTimeline: updatedTimeline };
       })
     );
-    try {
-      const order = orders.find((o) => o.id === orderId);
-      const updatedTimeline = order ? [...order.trackingTimeline] : [];
-      await fetch(`${API_BASE}/api/orders/${orderId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'DIPROSES', trackingTimeline: updatedTimeline }),
-      });
-      await refreshProducts();
-    } catch { console.warn('[payOrder] Gagal update status ke Supabase.'); }
+    const order = orders.find((o) => o.id === orderId);
+    const updatedTimeline = order ? [...order.trackingTimeline] : [];
+    await apiPatch(`/api/orders/${orderId}`, { status: 'DIPROSES', trackingTimeline: updatedTimeline }, { timeout: 5000 });
+    await refreshProducts();
   };
 
-  // ── Confirm Received — selesaikan order ──────────────────────────────────
+  // â”€â”€ Confirm Received â€” selesaikan order â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const confirmOrderReceived = async (orderId: string) => {
     const currentTime = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
     setOrders((prev) =>
@@ -549,17 +526,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const cost = order?.totalAmount ?? 0;
       setUser((prev) => prev ? { ...prev, purchasesThisMonth: prev.purchasesThisMonth + cost, activeOrdersCount: Math.max(0, prev.activeOrdersCount - 1) } : null);
     }
-    try {
-      await fetch(`${API_BASE}/api/orders/${orderId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'SELESAI', fundsReleased: true }),
-      });
-      await refreshProducts();
-    } catch { console.warn('[confirmOrderReceived] Gagal update ke Supabase.'); }
+    await apiPatch(`/api/orders/${orderId}`, { status: 'SELESAI', fundsReleased: true }, { timeout: 5000 });
   };
 
-  // ── Chat ─────────────────────────────────────────────────────────────────
+  // â”€â”€ Chat â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const sendMessage = (supplierName: string, text: string, supplierPhone?: string) => {
     const newMessage: ChatMessage = { id: `msg-${Date.now()}`, sender: 'buyer', text, timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }), status: 'sent' };
     setChats((prev) => {
@@ -644,7 +614,7 @@ Pertanyaan pengguna: ${text}`;
         }
       })();
     } else {
-      // ── Relay pesan ke supplier nyata via WA ─────────────────────────────
+      // â”€â”€ Relay pesan ke supplier nyata via WA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       (async () => {
         try {
           const thread = chats.find(c => c.supplierName === supplierName);
@@ -693,53 +663,29 @@ Pertanyaan pengguna: ${text}`;
   };
 
   const updateProfile = async (userData: Partial<User>): Promise<{ success: boolean; error?: string }> => {
-    if (!user?.id) return { success: false, error: 'ID Pengguna tidak ditemukan' };
-    try {
-      const res = await fetch(`${API_BASE}/api/auth/update`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: user.id,
-          name: userData.ownerName,
-          businessName: userData.businessName,
-          email: userData.email,
-          address: userData.address,
-          businessType: userData.businessType,
-          bankName: userData.bankName,
-          bankAccount: userData.bankAccount,
-        }),
-      });
+    if (!user?.id) return { success: false, error: 'User not logged in' };
 
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        return { success: false, error: json.error || 'Gagal memperbarui profil' };
-      }
+    const result = await apiPatch(`/api/auth/profile/${user.id}`, {
+      name: userData.ownerName,
+      businessName: userData.businessName,
+      email: userData.email,
+      address: userData.address,
+      businessType: userData.businessType,
+      bankName: userData.bankName,
+      bankAccount: userData.bankAccount,
+    }, { timeout: 8000, retry: 1 });
 
-      const d = json.data;
-      setUser({
-        ...user,
-        ownerName: d.name || user.ownerName,
-        businessName: d.businessName || user.businessName,
-        email: d.email || user.email,
-        address: d.address || user.address,
-        businessType: d.businessType || user.businessType,
-        bankName: d.bankName || user.bankName,
-        bankAccount: d.bankAccount || user.bankAccount,
-      });
-
-      return { success: true };
-    } catch {
-      console.warn('[AppContext] API offline, mock update profile success.');
-      setUser({
-        ...user,
-        ...userData,
-      } as User);
+    if (result.success) {
+      setUser(prev => prev ? { ...prev, ...userData } : null);
       return { success: true };
     }
+
+    return { success: false, error: result.error || 'Failed to update profile' };
   };
 
+
   return (
-    <AppContext.Provider value={{ user, products, cart, orders, chats, login, register, logout, addToCart, removeFromCart, updateCartQuantity, clearCart, checkout, payOrder, confirmOrderReceived, sendMessage, refreshOrders, refreshProducts, updateProfile }}>
+    <AppContext.Provider value={{ user, products, cart, orders, chats, isApiOnline, login, register, logout, addToCart, removeFromCart, updateCartQuantity, clearCart, checkout, payOrder, confirmOrderReceived, sendMessage, refreshOrders, refreshProducts, updateProfile }}>
       {children}
     </AppContext.Provider>
   );
