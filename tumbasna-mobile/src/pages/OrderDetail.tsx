@@ -41,6 +41,7 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ orderId, onBack, onPaymentSuc
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'qris' | 'va_bca' | 'gopay' | 'transfer' | 'cod'>('qris');
   const [showPaymentMethodModal, setShowPaymentMethodModal] = useState(false);
   const [snapToken, setSnapToken] = useState<string | null>(null);
+  const [midtransOrderId, setMidtransOrderId] = useState<string | null>(null);
   const [snapError, setSnapError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [snapScriptReady, setSnapScriptReady] = useState(false);
@@ -137,6 +138,9 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ orderId, onBack, onPaymentSuc
       
       const data = await res.json();
       setSnapToken(data.snapToken);
+      if (data.midtransOrderId) {
+        setMidtransOrderId(data.midtransOrderId);
+      }
       if (data.snapUrl) {
         const isSandbox = data.snapUrl.includes('sandbox.midtrans.com');
         loadSnapScript(isSandbox);
@@ -158,8 +162,6 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ orderId, onBack, onPaymentSuc
     }
   };
 
-
-
   const handleOpenSnap = () => {
     if (!snapToken || !(window as any).snap) return;
     (window as any).snap.pay(snapToken, {
@@ -180,8 +182,26 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ orderId, onBack, onPaymentSuc
         setToastMessage('Pembayaran gagal. Silakan coba lagi.');
         setShowToast(true);
       },
-      onClose: () => {
+      onClose: async () => {
         console.log('[Snap] Popup closed by user.');
+        if (!order) return;
+        try {
+          const mOrderId = midtransOrderId || order.id;
+          const res = await fetch(`${API_URL}/api/payments/status?midtransOrderId=${mOrderId}`);
+          if (res.ok) {
+            const statusData = await res.json();
+            if (statusData.isPaid || statusData.transactionStatus === 'settlement' || statusData.transactionStatus === 'capture') {
+              payOrder(order.id);
+              setToastMessage('Pembayaran berhasil dikonfirmasi! Pesanan sedang diproses.');
+              setShowToast(true);
+              setTimeout(() => {
+                try { onPaymentSuccess(); } catch (err) { onBack(); }
+              }, 1500);
+            }
+          }
+        } catch (checkErr) {
+          console.warn('[Snap] Failed checking status on close:', checkErr);
+        }
       },
     });
   };

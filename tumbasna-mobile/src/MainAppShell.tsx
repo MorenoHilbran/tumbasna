@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { IonApp, IonIcon } from '@ionic/react';
 import { 
   homeOutline, home, 
@@ -39,7 +39,7 @@ const TABS: { id: TabState; label: string; iconActive: string; iconInactive: str
 ];
 
 const MainAppShell: React.FC = () => {
-  const { user, refreshProducts } = useApp();
+  const { user, refreshProducts, payOrder, refreshOrders } = useApp();
 
   const [activeTab, setActiveTab] = useState<TabState>('beranda');
   const [viewState, setViewState] = useState<ViewState>('tabs');
@@ -71,8 +71,34 @@ const MainAppShell: React.FC = () => {
 
   useEffect(() => {
     if (user) {
-      setActiveTab('beranda');
-      setViewState('tabs');
+      // Cek apakah ada parameter redirect dari Midtrans
+      const searchParams = new URLSearchParams(window.location.search);
+      const appOrderId = searchParams.get('app_order_id');
+      const midtransOrderId = searchParams.get('order_id');
+      const statusCode = searchParams.get('status_code');
+      const transactionStatus = searchParams.get('transaction_status');
+
+      let targetOrderId: string | null = null;
+      if (appOrderId) {
+        targetOrderId = appOrderId;
+      } else if (midtransOrderId) {
+        const parts = midtransOrderId.split('-');
+        if (parts.length >= 2) {
+          targetOrderId = `${parts[0]}-${parts[1]}`;
+        }
+      }
+
+      if (targetOrderId && (statusCode === '200' || transactionStatus === 'settlement' || transactionStatus === 'capture')) {
+        payOrder(targetOrderId);
+        refreshOrders();
+        setSelectedOrderId(targetOrderId);
+        setActiveTab('pesanan');
+        setViewState('detail_pesanan');
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } else {
+        setActiveTab('beranda');
+        setViewState('tabs');
+      }
     } else {
       setShowWelcome(true);
     }
