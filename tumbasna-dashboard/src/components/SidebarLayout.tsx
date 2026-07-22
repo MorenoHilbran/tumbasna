@@ -17,6 +17,7 @@ import {
     LogOut,
     User,
     Wallet,
+    MessageSquare,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -63,6 +64,12 @@ const navItems = [
         href: '/dashboard/saldo',
         icon: Wallet,
         description: 'Pencairan dana supplier',
+    },
+    {
+        label: 'Ulasan & Rating',
+        href: '/dashboard/ulasan',
+        icon: MessageSquare,
+        description: 'Ulasan pembeli & bintang',
     },
 ];
 

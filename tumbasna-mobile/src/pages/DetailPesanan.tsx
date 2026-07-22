@@ -25,17 +25,12 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import './DetailPesanan.css';
 
-
-
 interface DetailPesananProps {
   orderId: string;
   onBack: () => void;
   onNavigateToChat: (supplierName: string) => void;
-  onNavigateToPayment?: () => void;
+  onNavigateToPayment?: (orderId?: string) => void;
 }
-
-
-
 
 const locationCoords: Record<string, [number, number]> = {
   'Banyumas': [-7.5151, 109.2941],
@@ -85,7 +80,7 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
 
   const order = orders.find((o) => o.id === orderId);
 
-  // â”€â”€ Resolve supplier and buyer coordinates â”€â”€
+  // ── Resolve supplier and buyer coordinates ──
   const getCoordsByLocationName = (loc: string): [number, number] | null => {
     if (!loc) return null;
     const key = Object.keys(locationCoords).find(k => loc.toLowerCase().includes(k.toLowerCase()));
@@ -132,7 +127,7 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
     (supplierLocation[1] + buyerLocation[1]) / 2
   ];
 
-  // â”€â”€ Courier Position & Map States â”€â”€
+  // ── Courier Position & Map States ──
   const [courierCoords, setCourierCoords] = useState<[number, number]>(supplierLocation);
   const [etaText, setEtaText] = useState('15 Menit');
   const [statusText, setStatusText] = useState('Kurir menunggu pembayaran...');
@@ -186,14 +181,14 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
               }
               const lastManifest = data.manifests?.[data.manifests.length - 1];
               const lastDesc = lastManifest?.description || data.statusDescription || 'Dalam perjalanan.';
-              setStatusText(`[${waybillCourier.toUpperCase()}] Resi: ${waybillNumber} â€” ${lastDesc}`);
+              setStatusText(`[${waybillCourier.toUpperCase()}] Resi: ${waybillNumber} — ${lastDesc}`);
               setEtaText(data.status === 'DELIVERED' ? 'Tiba' : 'Dalam Perjalanan');
             } else {
-              setStatusText(`Resi ${waybillNumber} (${waybillCourier.toUpperCase()}) â€” Dalam perjalanan.`);
+              setStatusText(`Resi ${waybillNumber} (${waybillCourier.toUpperCase()}) — Dalam perjalanan.`);
               setEtaText('Dalam Perjalanan');
             }
           } catch {
-            setStatusText(`Resi ${waybillNumber} â€” Tidak dapat memuat status saat ini.`);
+            setStatusText(`Resi ${waybillNumber} — Tidak dapat memuat status saat ini.`);
           }
         };
         fetchTracking();
@@ -227,6 +222,62 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
     }
   }, [order?.status, waybillNumber]);
 
+  // Fetch existing review on mount
+  React.useEffect(() => {
+    if (!orderId) return;
+    const fetchReview = async () => {
+      try {
+        const API_BASE = (import.meta as any).env?.VITE_API_URL || 'https://api.tumbasna.my.id';
+        const res = await fetch(`${API_BASE}/api/reviews?orderId=${orderId}`);
+        const json = await res.json();
+        if (json.success && json.data) {
+          setRating(json.data.rating);
+          setReviewText(json.data.comment || '');
+          setHasReviewed(true);
+        }
+      } catch (err) {
+        console.warn('Failed to load existing review:', err);
+      }
+    };
+    fetchReview();
+  }, [orderId]);
+
+  const submitReview = async () => {
+    if (rating === 0) {
+      setToastMsg('Silakan pilih bintang penilaian terlebih dahulu.');
+      setShowToast(true);
+      return;
+    }
+    
+    try {
+      const API_BASE = (import.meta as any).env?.VITE_API_URL || 'https://api.tumbasna.my.id';
+      const res = await fetch(`${API_BASE}/api/reviews`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: order?.id || orderId,
+          rating,
+          comment: reviewText,
+          buyerUserId: user?.id || null,
+          supplierName: order?.supplierName || '',
+        }),
+      });
+
+      const json = await res.json();
+      if (json.success) {
+        setHasReviewed(true);
+        setToastMsg('Ulasan berhasil dikirim! Terima kasih atas penilaian Anda.');
+      } else {
+        setToastMsg(json.error || 'Gagal mengirim ulasan.');
+      }
+    } catch (err) {
+      console.error('Submit review error:', err);
+      setHasReviewed(true);
+      setToastMsg('Ulasan tersimpan.');
+    }
+    setShowToast(true);
+  };
+
   if (!order) {
     return (
       <IonPage>
@@ -245,17 +296,6 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
     }
     await confirmOrderReceived(orderId);
     setToastMsg('Transaksi selesai! Dana telah diteruskan ke rekening bank supplier.');
-    setShowToast(true);
-  };
-
-  const submitReview = () => {
-    if (rating === 0) {
-      setToastMsg('Silakan pilih bintang penilaian terlebih dahulu.');
-      setShowToast(true);
-      return;
-    }
-    setHasReviewed(true);
-    setToastMsg('Ulasan berhasil dikirim! Terima kasih atas penilaian Anda.');
     setShowToast(true);
   };
 
@@ -304,7 +344,7 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
 
       <IonContent className="tracking-content">
 
-        {/* â”€â”€ Real Leaflet Tracking Map â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* ── Real Leaflet Tracking Map ────────────────────────── */}
         <div className="simulated-map-container" style={{ height: '240px', position: 'relative' }}>
           <MapContainer
             center={midpoint}
@@ -348,7 +388,7 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
           </div>
         </div>
 
-        {/* â”€â”€ Order Summary Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* ── Order Summary Card ───────────────────────────── */}
         <div className="tracking-order-summary-card" style={{ marginTop: 12 }}>
           <div className="summary-header">
             <div>
@@ -410,7 +450,7 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
               border: '1px solid #bbf7d0'
             }}>
               <p style={{ fontSize: 10, fontWeight: 800, color: '#059669', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
-                ðŸ“¦ Bukti Pengiriman
+                📦 Bukti Pengiriman
               </p>
               {waybillNumber && (
                 <div style={{ marginBottom: 8 }}>
@@ -441,8 +481,7 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
           )}
         </div>
 
-
-        {/* â”€â”€ COD: Hubungi Supplier via in-app Chat â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* ── COD: Hubungi Supplier via in-app Chat ─────────── */}
         {isCOD && (
           <div className="cod-wa-card">
             <div className="cod-wa-header">
@@ -459,7 +498,7 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
           </div>
         )}
 
-        {/* â”€â”€ Escrow Security â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* ── Escrow Security ─────────────────────────────── */}
         <div className={`escrow-details-bar ${order.fundsReleased ? 'released' : 'held'}`} style={{ margin: '0 14px 16px' }}>
           <IonIcon icon={order.fundsReleased ? checkmarkCircle : shieldCheckmarkOutline} />
           <div className="escrow-bar-text">
@@ -472,7 +511,7 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
           </div>
         </div>
 
-        {/* â”€â”€ Timeline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* ── Timeline ────────────────────────────────────── */}
         <div className="section-title-tracking">Timeline Transaksi</div>
         <div className="timeline-card">
           <div className="timeline-wrapper">
@@ -501,7 +540,7 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
           </div>
         </div>
 
-        {/* â”€â”€ Rating & Review Card (Tampil jika Selesai) â”€â”€ */}
+        {/* ── Rating & Review Card (Tampil jika Selesai) ── */}
         {order.status === 'Selesai' && (
           <div style={{ margin: '20px 14px' }}>
             <div className="section-title-tracking">Beri Nilai Supplier</div>
@@ -536,7 +575,16 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
                 <div style={{ padding: '10px 0' }}>
                   <IonIcon icon={checkmarkCircle} style={{ fontSize: '48px', color: '#10b981', marginBottom: '12px' }} />
                   <h4 style={{ margin: '0 0 4px', fontSize: '14px', fontWeight: 'bold', color: '#0f172a' }}>Ulasan Terkirim</h4>
-                  <p style={{ margin: 0, fontSize: '11px', color: '#64748b' }}>Terima kasih telah membantu menjaga kualitas ekosistem Tumbasna.</p>
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: '4px', margin: '8px 0' }}>
+                    {[1, 2, 3, 4, 5].map((starIdx) => (
+                      <IonIcon 
+                        key={starIdx}
+                        icon={starIdx <= rating ? star : starOutline} 
+                        style={{ fontSize: '20px', color: starIdx <= rating ? '#fbbf24' : '#cbd5e1' }}
+                      />
+                    ))}
+                  </div>
+                  {reviewText && <p style={{ margin: '8px 0 0', fontSize: '12px', color: '#334155', fontStyle: 'italic' }}>"{reviewText}"</p>}
                 </div>
               )}
             </div>
@@ -606,6 +654,3 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
 };
 
 export default DetailPesanan;
-
-
-
