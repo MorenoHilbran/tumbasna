@@ -173,7 +173,7 @@ const Chat: React.FC<ChatProps> = ({ initialPartner, initialPartnerPhone, onClea
         </IonToolbar>
       </IonHeader>
 
-      <IonContent className="chat-content">
+      <IonContent className="chat-content" scrollY={!activeThread}>
         {!activeThread ? (
           /* THREAD LIST VIEW */
           <div className="threads-list-wrapper">

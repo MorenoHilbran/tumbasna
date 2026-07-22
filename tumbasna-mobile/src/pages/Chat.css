@@ -206,6 +206,8 @@
   height: 100%;
   position: relative;
   overflow: hidden;
+  padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
 }
 
 .messages-scroller {
@@ -295,14 +297,10 @@
 /* Input bar */
 .chat-input-bar {
   flex-shrink: 0;
-  position: sticky;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  position: relative;
   background: #ffffff;
   border-top: 1px solid rgba(0, 104, 55, 0.09);
   padding: 10px 14px;
-  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
   display: flex;
   gap: 8px;
   align-items: center;
