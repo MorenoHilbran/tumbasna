@@ -282,7 +282,6 @@ const MainAppShell: React.FC = () => {
   };
 
   const pageKey = viewState + '-' + activeTab;
-  const navClass = 'bottom-nav-item' + (activeTab === 'active' ? ' active' : '');
 
   return (
     <IonApp style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
