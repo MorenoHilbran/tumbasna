@@ -1,0 +1,135 @@
+﻿=======================================================
+PREVIEW PERUBAHAN - Pesanan.tsx (List Transaksi)
+=======================================================
+
+FILE 2: Pesanan.tsx
+=======================================================
+
+PERUBAHAN 1: Status Badge Color
+--------------------------------
+BEFORE (Line 44-56):
+const getStatusColor = (status: Order['status']) => {
+  switch (status) {
+    case 'Menunggu Pembayaran':
+      return 'warning';  // ← Ini warna orange/kuning tidak jelas
+    case 'Diproses':
+      return 'info';
+    case 'Dikirim':
+      return 'primary';
+    case 'Selesai':
+      return 'success';
+    case 'Dibatalkan':
+      return 'danger';
+    default:
+      return 'medium';
+  }
+};
+
+AFTER:
+const getStatusColor = (status: Order['status']) => {
+  switch (status) {
+    case 'Menunggu Pembayaran':
+      return 'custom-yellow';  // ← Custom yellow (#FFC107)
+    case 'Diproses':
+      return 'info';
+    case 'Dikirim':
+      return 'primary';
+    case 'Selesai':
+      return 'success';
+    case 'Dibatalkan':
+      return 'danger';
+    default:
+      return 'medium';
+  }
+};
+
+PERUBAHAN 2: Button "Bayar Sekarang" Style
+-------------------------------------------
+BEFORE (Line 161-170):
+<IonButton
+  color="tertiary"
+  size="small"
+  className="history-action-btn"
+  onClick={(e) => {
+    e.stopPropagation();
+    onNavigateToPayment(order.id);
+  }}
+>
+  Bayar Sekarang
+</IonButton>
+
+AFTER:
+<IonButton
+  size="small"
+  className="history-action-btn btn-bayar-list"
+  style={{
+    '--background': '#FF8C00',
+    '--color': 'white',
+    '--box-shadow': 'none',
+    fontWeight: 600
+  }}
+  onClick={(e) => {
+    e.stopPropagation();
+    onNavigateToPayment(order.id);
+  }}
+>
+  Bayar Sekarang
+</IonButton>
+
+PERUBAHAN 3: Remove Shadow dari Semua Button
+---------------------------------------------
+Tambahkan di Pesanan.css:
+
+.history-action-btn {
+  --box-shadow: none !important;
+  box-shadow: none !important;
+}
+
+.btn-bayar-list {
+  --background: #FF8C00;
+  --background-hover: #E67E00;
+  --background-activated: #CC7000;
+  --color: white;
+  font-weight: 600;
+}
+
+/* Custom yellow badge untuk "Menunggu Pembayaran" */
+ion-badge.custom-yellow {
+  --background: #FFC107;
+  --color: #000;
+  font-weight: 600;
+}
+
+=======================================================
+SUMMARY SEMUA PERUBAHAN:
+=======================================================
+
+FILE 1: DetailPesanan.tsx
+✅ Hanya 1 button berdasarkan status
+✅ Orange (#FF8C00) untuk "Bayar Sekarang"
+✅ Green (#006837) untuk "Konfirmasi Diterima"
+✅ No shadow
+
+FILE 2: Pesanan.tsx
+✅ Status badge "Menunggu Pembayaran" jadi kuning (#FFC107)
+✅ Button "Bayar Sekarang" warna orange solid
+✅ Remove shadow dari semua button
+
+FILE 3: DetailPesanan.css & Pesanan.css
+✅ Custom styles untuk no shadow
+✅ Custom yellow badge
+
+=======================================================
+TOTAL FILES TO MODIFY: 4 files
+- DetailPesanan.tsx
+- DetailPesanan.css
+- Pesanan.tsx
+- Pesanan.css
+=======================================================
+
+Apakah Anda APPROVE semua perubahan ini?
+Ketik "YES" atau "APPROVE" untuk saya apply.
+Atau beri feedback jika ada yang perlu disesuaikan.
+
+SAYA MENUNGGU KONFIRMASI ANDA...
+=======================================================

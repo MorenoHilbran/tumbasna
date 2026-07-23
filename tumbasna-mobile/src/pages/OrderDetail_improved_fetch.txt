@@ -1,0 +1,50 @@
+﻿  const fetchSnapPayment = async () => {
+    if (!order) return;
+    setIsLoading(true);
+    setSnapError(null);
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    
+    try {
+      const res = await fetch(`${API_URL}/api/payments/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: order.id,
+          amount: order.totalAmount,
+          customerName: user?.ownerName || 'Pembeli Tumbasna',
+          customerPhone: user?.phone || '',
+        }),
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({ error: 'Gagal membuat pembayaran' }));
+        throw new Error(data.error || 'Gagal membuat pembayaran');
+      }
+      
+      const data = await res.json();
+      setSnapToken(data.snapToken);
+      if (data.snapUrl) {
+        const isSandbox = data.snapUrl.includes('sandbox.midtrans.com');
+        loadSnapScript(isSandbox);
+      }
+    } catch (err: any) {
+      clearTimeout(timeoutId);
+      console.error('Snap payment error:', err);
+      setSnapToken(null);
+      
+      if (err.name === 'AbortError') {
+        setSnapError('Koneksi ke server pembayaran timeout. Silakan coba lagi atau gunakan metode pembayaran lain.');
+      } else if (err.message.includes('Failed to fetch')) {
+        setSnapError('Tidak dapat terhubung ke server pembayaran. Periksa koneksi internet Anda.');
+      } else {
+        setSnapError(err.message || 'Gagal menyiapkan pembayaran');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };

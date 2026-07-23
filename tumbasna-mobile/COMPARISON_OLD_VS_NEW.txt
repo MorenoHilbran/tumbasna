@@ -1,0 +1,59 @@
+﻿=== PERBANDINGAN BEHAVIOR SAAT API DOWN ===
+
+VERSI LAMA (6cf8a2b):
+--------------------------------------------------
+1. Login:
+   - Fetch tanpa timeout
+   - Hang sampai browser timeout (~2 menit)
+   - Console: "Failed to fetch" (1x per request)
+   - Fallback ke mock user
+
+2. Products:
+   - Fetch tanpa timeout
+   - Hang lama
+   - Console: "Failed to fetch" (1x)
+   - Tetap pakai FALLBACK_PRODUCTS
+
+3. Orders:
+   - Fetch tanpa timeout
+   - Hang lama
+   - Console: "Gagal fetch orders dari API"
+   - Orders kosong
+
+VERSI BARU (177c52d):
+--------------------------------------------------
+1. Login:
+   - Fetch dengan timeout 10s
+   - Retry 2x (total 3 attempts)
+   - Console: "Failed to fetch" (3x per request karena retry)
+   - Fallback ke mock user (LEBIH CEPAT)
+
+2. Products:
+   - Fetch dengan timeout 6s
+   - Retry 1x (total 2 attempts)
+   - Console: "Failed to fetch" (2x)
+   - Tetap pakai FALLBACK_PRODUCTS (LEBIH CEPAT)
+
+3. Orders:
+   - Fetch dengan timeout 5s
+   - Retry 1x (total 2 attempts)
+   - Console: "Failed to fetch" (2x)
+   - Orders kosong (LEBIH CEPAT)
+
+=== KESIMPULAN ===
+
+KELEBIHAN VERSI BARU:
+✅ User tidak perlu tunggu 2 menit, hanya 5-10 detik
+✅ App terasa lebih responsive
+✅ Timeout yang jelas, tidak hang
+✅ isApiOnline indicator untuk debugging
+
+KEKURANGAN VERSI BARU:
+❌ Console lebih berisik (2-3x error karena retry)
+❌ Lebih banyak network request (retry mechanism)
+
+SOLUSI TERBAIK:
+Option B - Kurangi console noise dengan:
+1. Disable console.error di production
+2. Kurangi retry jadi 0 untuk non-critical calls
+3. Tambahkan silent mode untuk background fetches

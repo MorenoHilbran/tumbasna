@@ -1,0 +1,5 @@
+﻿import React, { createContext, useContext, useState, useEffect } from 'react';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { apiGet, apiPost, apiPatch, checkApiHealth } from '../utils/api';
+
+const API_BASE = import.meta.env.VITE_API_URL || 'https://api.tumbasna.my.id';

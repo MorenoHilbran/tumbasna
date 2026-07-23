@@ -1,0 +1,344 @@
+﻿=======================================================
+📋 PLANNING FITUR NOTIFIKASI TUMBASNA
+=======================================================
+Tanggal: 2026-07-22 01:11 WIB
+Status: MENUNGGU APPROVAL
+
+=======================================================
+🎯 TUJUAN FITUR NOTIFIKASI
+=======================================================
+
+1. Meningkatkan engagement user dengan reminder yang relevan
+2. Membantu user tidak melewatkan action penting (pembayaran, konfirmasi)
+3. Memberikan insights AI tentang harga komoditas
+4. Meningkatkan transparansi proses order
+5. Membuat user merasa diperhatikan dan terupdate
+
+=======================================================
+📱 STRUKTUR NOTIFIKASI
+=======================================================
+
+KATEGORI NOTIFIKASI:
+--------------------
+1. 🔴 URGENT (Perlu Action Segera)
+2. 🟡 PENTING (Perlu Perhatian)
+3. 🔵 INFORMASI (FYI/Update)
+4. 🟢 SUKSES (Konfirmasi/Achievement)
+
+=======================================================
+📋 DAFTAR NOTIFIKASI YANG DIUSULKAN
+=======================================================
+
+KATEGORI 1: TRANSAKSI & PEMBAYARAN (URGENT)
+--------------------------------------------
+Priority: HIGH | Color: Red/Orange
+
+1.1 ⏰ Pembayaran Tertunda
+    Trigger: Order status "Menunggu Pembayaran" > 10 menit
+    Pesan: "Selesaikan pembayaran Anda untuk order #TRX-123456. Sisa waktu: 14 menit 23 detik"
+    Action: Navigate ke halaman pembayaran
+    Icon: ⏰ clock-outline
+    Badge: Merah
+    
+1.2 ⚠️ Pembayaran Hampir Expired
+    Trigger: Timer pembayaran < 5 menit
+    Pesan: "Segera! Pembayaran Anda akan kadaluarsa dalam 3 menit. Order: Cabai Rawit Merah - Rp 50.000"
+    Action: Navigate ke halaman pembayaran
+    Icon: ⚠️ warning-outline
+    Badge: Merah berkedip
+
+1.3 💳 Pembayaran Berhasil
+    Trigger: Setelah payOrder() success
+    Pesan: "Pembayaran berhasil! Order #TRX-123456 sedang diproses oleh Tani Makmur Jaya"
+    Action: Navigate ke detail order
+    Icon: ✓ checkmark-circle
+    Badge: Hijau
+
+1.4 ❌ Pembayaran Gagal
+    Trigger: Payment error atau expired
+    Pesan: "Pembayaran gagal atau kadaluarsa. Silakan buat pesanan baru."
+    Action: Navigate ke halaman produk
+    Icon: ❌ close-circle
+    Badge: Merah
+
+KATEGORI 2: STATUS PENGIRIMAN (PENTING)
+----------------------------------------
+Priority: MEDIUM | Color: Blue
+
+2.1 📦 Pesanan Dikonfirmasi Supplier
+    Trigger: Status berubah ke "Diproses"
+    Pesan: "Pesanan Anda dikonfirmasi! Tani Makmur Jaya sedang menyiapkan 1kg Cabai Rawit Merah"
+    Action: Navigate ke detail order
+    Icon: 📦 cube-outline
+    Badge: Biru
+
+2.2 🚚 Pesanan Dalam Pengiriman
+    Trigger: Status berubah ke "Dikirim"
+    Pesan: "Pesanan Anda dalam perjalanan! Estimasi tiba: 1-2 hari (kurir: JNE REG)"
+    Action: Navigate ke tracking page
+    Icon: 🚚 car-outline
+    Badge: Biru
+
+2.3 📍 Pesanan Sudah Dekat
+    Trigger: Jarak kurir < 5km dari lokasi user (jika ada tracking)
+    Pesan: "Kurir sudah dekat! Pesanan Anda akan tiba dalam 30 menit"
+    Action: Navigate ke tracking page
+    Icon: 📍 location-outline
+    Badge: Biru
+
+2.4 ✅ Pesanan Tiba - Butuh Konfirmasi
+    Trigger: Status "Dikirim" > 2 hari (reminder)
+    Pesan: "Sudah menerima pesanan Anda? Konfirmasi penerimaan untuk mencairkan dana ke supplier"
+    Action: Navigate ke detail order (button konfirmasi)
+    Icon: ✅ checkmark-done-outline
+    Badge: Oranye
+
+2.5 🎉 Transaksi Selesai
+    Trigger: Setelah confirmOrderReceived()
+    Pesan: "Terima kasih! Transaksi selesai. Dana Rp 50.000 telah dicairkan ke Tani Makmur Jaya"
+    Action: Navigate ke detail order
+    Icon: 🎉 trophy-outline
+    Badge: Hijau
+
+KATEGORI 3: ANALISIS HARGA AI (INFORMASI)
+------------------------------------------
+Priority: MEDIUM | Color: Purple
+
+3.1 📊 Harga Naik - Rekomendasi Beli
+    Trigger: AI deteksi harga komoditas naik > 10%
+    Pesan: "📈 Harga Cabai Rawit naik 15%! Dari Rp 42.000 → Rp 48.000. Pertimbangkan beli sekarang"
+    Action: Navigate ke halaman produk
+    Icon: 📊 trending-up-outline
+    Badge: Ungu
+
+3.2 📉 Harga Turun - Peluang Hemat
+    Trigger: AI deteksi harga komoditas turun > 10%
+    Pesan: "💰 Hemat! Harga Bawang Merah turun 12%. Sekarang: Rp 28.000/kg (sebelumnya Rp 32.000)"
+    Action: Navigate ke halaman produk
+    Icon: 📉 trending-down-outline
+    Badge: Hijau
+
+3.3 🤖 Prediksi Harga Minggu Depan
+    Trigger: Setiap hari Senin pagi (AI weekly analysis)
+    Pesan: "AI Prediksi: Harga cabai diprediksi naik 8% minggu depan. Stok sekarang untuk untung lebih!"
+    Action: Navigate ke AI insights page
+    Icon: 🤖 bulb-outline
+    Badge: Ungu
+
+3.4 📈 Tren Pasar Komoditas
+    Trigger: Setiap hari (jika user pernah beli komoditas tertentu)
+    Pesan: "Tren Hari Ini: Harga beras stabil, cabai naik 5%, bawang turun 3%"
+    Action: Navigate ke market overview
+    Icon: 📈 stats-chart-outline
+    Badge: Biru
+
+KATEGORI 4: PROMO & REKOMENDASI (INFORMASI)
+--------------------------------------------
+Priority: LOW | Color: Green
+
+4.1 🎁 Supplier Baru Tersedia
+    Trigger: Supplier baru register dengan produk di area user
+    Pesan: "Supplier baru di area Anda! Pak Bambang jual Kentang Dieng - Rp 18.000/kg"
+    Action: Navigate ke halaman supplier
+    Icon: 🎁 gift-outline
+    Badge: Hijau
+
+4.2 ⭐ Produk Favorit Tersedia Lagi
+    Trigger: Produk yang pernah dibeli user available lagi
+    Pesan: "Produk favorit Anda tersedia! Cabai Rawit Merah dari Tani Makmur Jaya (stok: 150kg)"
+    Action: Navigate ke halaman produk
+    Icon: ⭐ star-outline
+    Badge: Hijau
+
+4.3 💬 Balasan Chat dari Supplier
+    Trigger: Supplier reply chat user
+    Pesan: "Tani Makmur Jaya membalas chat Anda: 'Stok cabai tersedia, kualitas bagus'"
+    Action: Navigate ke chat
+    Icon: 💬 chatbubble-outline
+    Badge: Biru
+
+KATEGORI 5: SISTEM & AKUN (INFORMASI)
+--------------------------------------
+Priority: LOW | Color: Gray
+
+5.1 👤 Profil Belum Lengkap
+    Trigger: User login pertama kali, profil masih kosong
+    Pesan: "Lengkapi profil Anda untuk pengalaman belanja lebih baik!"
+    Action: Navigate ke halaman profil
+    Icon: 👤 person-outline
+    Badge: Abu-abu
+
+5.2 🔔 Selamat Datang
+    Trigger: User login pertama kali
+    Pesan: "Selamat datang di Tumbasna! Temukan komoditas segar langsung dari petani"
+    Action: Navigate ke home/tutorial
+    Icon: 🔔 notifications-outline
+    Badge: Hijau
+
+=======================================================
+🎨 DESAIN UI NOTIFIKASI
+=======================================================
+
+TAMPILAN DROPDOWN NOTIFIKASI:
+-----------------------------
+┌─────────────────────────────────────┐
+│ 🔔 Notifikasi              [Tandai Semua Dibaca]
+├─────────────────────────────────────┤
+│ ● ⏰ Pembayaran Tertunda             │ ← Unread (dot)
+│   Selesaikan pembayaran order        │
+│   #TRX-123456                         │
+│   5 menit yang lalu                   │
+├─────────────────────────────────────┤
+│   📦 Pesanan Dikonfirmasi            │ ← Read (no dot)
+│   Tani Makmur Jaya sedang menyiapkan │
+│   1 jam yang lalu                     │
+├─────────────────────────────────────┤
+│   📊 Harga Cabai Naik 15%            │
+│   Pertimbangkan beli sekarang        │
+│   2 jam yang lalu                     │
+└─────────────────────────────────────┘
+
+BADGE COUNTER:
+--------------
+🔔 (3) ← Jumlah unread notifications
+
+WARNA KATEGORI:
+---------------
+🔴 Urgent: Red (#E53935)
+🟡 Penting: Orange (#FF8C00)
+🔵 Info: Blue (#2196F3)
+🟢 Sukses: Green (#006837)
+⚪ Sistem: Gray (#757575)
+
+=======================================================
+💾 DATA STRUCTURE
+=======================================================
+
+interface Notification {
+  id: string;
+  type: 'payment' | 'order' | 'price' | 'promo' | 'system' | 'chat';
+  category: 'urgent' | 'important' | 'info' | 'success' | 'system';
+  title: string;
+  message: string;
+  icon: string; // ionicons name
+  color: string; // hex color
+  timestamp: Date;
+  isRead: boolean;
+  actionType: 'navigate' | 'dismiss';
+  actionTarget?: string; // route or orderId
+  metadata?: {
+    orderId?: string;
+    productId?: string;
+    supplierId?: string;
+    priceChange?: number;
+    expiresIn?: number; // seconds
+  };
+}
+
+=======================================================
+🔧 IMPLEMENTASI TEKNIS
+=======================================================
+
+FILES YANG AKAN DIBUAT/DIUBAH:
+------------------------------
+1. src/context/NotificationContext.tsx (NEW)
+   - Manage notification state
+   - Add, remove, mark as read
+   - Filter by category
+   - Persist to localStorage
+
+2. src/components/NotificationDropdown.tsx (NEW)
+   - Dropdown UI component
+   - List notifications
+   - Handle click actions
+
+3. src/pages/NotificationPage.tsx (NEW)
+   - Full page notification list
+   - Filter by category
+   - Search & sort
+
+4. src/utils/notificationService.ts (NEW)
+   - Create notification helper
+   - Auto-generate notifications based on triggers
+
+5. src/pages/Home.tsx (MODIFY)
+   - Replace onClick on bell icon
+   - Show badge counter
+   - Open notification dropdown
+
+6. src/context/AppContext.tsx (MODIFY)
+   - Add notification triggers
+   - When order status change → create notification
+   - When payment success → create notification
+
+=======================================================
+⚡ TRIGGERS & AUTOMATION
+=======================================================
+
+AUTO NOTIFICATIONS (Background):
+--------------------------------
+1. Check every 1 minute:
+   - Payment timeout warning
+   - Order delivery reminder
+   
+2. On app load:
+   - Welcome message (first time)
+   - Pending actions
+   
+3. On user actions:
+   - After checkout → payment reminder
+   - After payment → success notification
+   - After confirm received → thank you
+   
+4. AI Analysis (Optional):
+   - Fetch price trends from backend
+   - Generate insights
+   - Show predictions
+
+=======================================================
+📊 PRIORITAS IMPLEMENTASI
+=======================================================
+
+PHASE 1 (CORE - HIGH PRIORITY):
+-------------------------------
+✅ Notifikasi Pembayaran Tertunda (1.1)
+✅ Pembayaran Berhasil (1.3)
+✅ Pesanan Dikonfirmasi (2.1)
+✅ Pesanan Dalam Pengiriman (2.2)
+✅ Butuh Konfirmasi Penerimaan (2.4)
+✅ Transaksi Selesai (2.5)
+
+PHASE 2 (ANALYTICS - MEDIUM PRIORITY):
+--------------------------------------
+⏭️ Harga Naik/Turun (3.1, 3.2)
+⏭️ Prediksi Harga AI (3.3)
+⏭️ Tren Pasar (3.4)
+
+PHASE 3 (ENGAGEMENT - LOW PRIORITY):
+------------------------------------
+⏭️ Supplier Baru (4.1)
+⏭️ Produk Favorit (4.2)
+⏭️ Balasan Chat (4.3)
+
+=======================================================
+❓ PERTANYAAN UNTUK ANDA
+=======================================================
+
+1. Apakah semua kategori notifikasi di atas sesuai kebutuhan?
+2. Ada notifikasi tambahan yang Anda inginkan?
+3. Prioritas mana yang harus dikerjakan dulu?
+4. Apakah perlu notifikasi push (real-time) atau cukup in-app?
+5. Berapa lama notifikasi disimpan (7 hari? 30 hari?)?
+
+=======================================================
+💬 FEEDBACK YANG DIBUTUHKAN
+=======================================================
+
+Silakan review planning di atas dan beri tahu:
+
+□ APPROVE - Lanjutkan implementasi sesuai planning
+□ REVISI - Ada yang perlu diubah/ditambah (sebutkan)
+□ PRIORITAS - Mana yang harus dikerjakan dulu?
+
+Setelah Anda ACC, saya akan mulai implementasi!
+=======================================================

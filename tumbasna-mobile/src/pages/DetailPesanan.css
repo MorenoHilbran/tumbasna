@@ -995,3 +995,32 @@
   flex-shrink: 0;
 }
 
+/* Add to end of DetailPesanan.css */
+
+/* Remove shadows from all buttons */
+.floating-action-footer ion-button {
+  --box-shadow: none !important;
+  box-shadow: none !important;
+}
+
+.btn-bayar-sekarang {
+  --background: #FF8C00;
+  --background-hover: #E67E00;
+  --background-activated: #CC7000;
+  --box-shadow: none;
+  --border-radius: 12px;
+}
+
+.btn-konfirmasi-diterima {
+  --background: #006837;
+  --background-hover: #005830;
+  --background-activated: #004D28;
+  --box-shadow: none;
+  --border-radius: 12px;
+}
+
+/* Remove shadow from status badges */
+ion-badge {
+  --box-shadow: none !important;
+  box-shadow: none !important;
+}

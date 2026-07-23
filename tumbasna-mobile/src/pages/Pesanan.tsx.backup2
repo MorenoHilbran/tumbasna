@@ -44,7 +44,7 @@ const Pesanan: React.FC<PesananProps> = ({ onSelectOrder, onNavigateToPayment })
   const getStatusColor = (status: Order['status']) => {
     switch (status) {
       case 'Menunggu Pembayaran':
-      return 'warning'; // Will be styled with custom CSS
+        return 'warning';
       case 'Diproses':
         return 'info';
       case 'Dikirim':
@@ -159,14 +159,9 @@ const Pesanan: React.FC<PesananProps> = ({ onSelectOrder, onNavigateToPayment })
                     <div className="history-action-buttons">
                       {order.status === 'Menunggu Pembayaran' ? (
                         <IonButton
+                          color="tertiary"
                           size="small"
-                          className="history-action-btn btn-bayar-list"
-                          style={{
-                            '--background': '#FF8C00',
-                            '--color': 'white',
-                            '--box-shadow': 'none',
-                            fontWeight: 600
-                          }}
+                          className="history-action-btn"
                           onClick={(e) => {
                             e.stopPropagation();
                             onNavigateToPayment(order.id);

@@ -1,0 +1,16 @@
+﻿Analisa masalah:
+
+1. API Backend Status: DOWN (502 Bad Gateway + CORS error)
+2. Versi Lama: Fetch tanpa timeout → hang lama → error di console → fallback mock
+3. Versi Baru: Fetch dengan timeout → error lebih cepat → error di console → fallback mock
+
+Masalah bukan di perubahan saya, tapi di:
+- API backend yang down
+- Console error yang terlalu banyak
+
+Solusi yang harus saya tawarkan:
+1. Rollback ke versi sebelumnya (6cf8a2b) - API tetap error tapi lebih silent
+2. Perbaiki error handling agar lebih silent - tetap pakai timeout tapi kurangi noise
+3. Biarkan seperti ini dan tunggu API backend up - error akan hilang sendiri
+
+Rekomendasi: Opsi 2 - perbaiki error handling agar console lebih bersih

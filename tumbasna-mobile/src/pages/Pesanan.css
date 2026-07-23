@@ -217,3 +217,32 @@
 }
 
 .empty-orders-container p { font-size: 11px; color: #6B7A6F; margin: 0; line-height: 1.5; }
+/* Add to end of Pesanan.css */
+
+/* Remove shadows from all buttons in list */
+.history-action-btn {
+  --box-shadow: none !important;
+  box-shadow: none !important;
+}
+
+.btn-bayar-list {
+  --background: #FF8C00;
+  --background-hover: #E67E00;
+  --background-activated: #CC7000;
+  --color: white;
+  --box-shadow: none;
+  font-weight: 600;
+}
+
+/* Custom yellow badge for "Menunggu Pembayaran" */
+ion-badge[color="warning"] {
+  --background: #FFC107;
+  --color: #000;
+  font-weight: 600;
+}
+
+/* Remove shadow from all badges */
+.history-status-badge {
+  --box-shadow: none !important;
+  box-shadow: none !important;
+}

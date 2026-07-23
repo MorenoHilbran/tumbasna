@@ -2,16 +2,7 @@
 import { IonContent, IonPage, IonToast } from '@ionic/react';
 import { useApp, Product } from '../context/AppContext';
 import CartPillBar from '../components/CartPillBar';
-import { useNotifications } from '../context/NotificationContext';
 import './Home.css';
-
-const COMMODITY_CATEGORIES = [
-  { id: 'sayuran', label: 'Sayuran', icon: 'fa-solid fa-carrot', color: '#10b981' },
-  { id: 'bumbu', label: 'Bumbu', icon: 'fa-solid fa-pepper-hot', color: '#f59e0b' },
-  { id: 'beras', label: 'Beras', icon: 'fa-solid fa-bowl-rice', color: '#8b5cf6' },
-  { id: 'buah', label: 'Buah', icon: 'fa-solid fa-apple-whole', color: '#ec4899' },
-  { id: 'lainnya', label: 'Lainnya', icon: 'fa-solid fa-ellipsis', color: '#6b7280' }
-];
 
 const AI_SLIDES = [
   {
@@ -46,11 +37,11 @@ const AI_SLIDES = [
   }
 ];
 
+
 interface HomeProps {
   onNavigateToPasar: () => void;
   onNavigateToPesanan: () => void;
   onNavigateToAiChat: () => void;
-  onNavigateToNotifications: () => void;
   onSelectProduct?: (product: Product) => void;
   onNavigateToChat?: () => void;
 }
@@ -74,16 +65,8 @@ const getAiRecommendation = (productName: string) => {
   }
 };
 
-const Home: React.FC<HomeProps> = ({ 
-  onNavigateToPasar, 
-  onNavigateToPesanan, 
-  onNavigateToAiChat, 
-  onNavigateToNotifications,
-  onSelectProduct, 
-  onNavigateToChat 
-}) => {
+const Home: React.FC<HomeProps> = ({ onNavigateToPasar, onNavigateToPesanan, onNavigateToAiChat, onSelectProduct, onNavigateToChat }) => {
   const { user, products, cart, addToCart } = useApp();
-  const { unreadCount } = useNotifications();
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [activeSlide, setActiveSlide] = useState(0);
@@ -102,14 +85,14 @@ const Home: React.FC<HomeProps> = ({
       <IonContent className="home-root">
         <div className="home-wrap">
 
-          {/* ═══════════════════════════════════════
-              HERO – the entire dark-green zone.
+          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+              HERO â€” the entire dark-green zone.
               Dots are INSIDE hero (so they render on green).
               Sheet uses margin-top: -24px to hide
               its rounded top corners behind the hero.
-              ═══════════════════════════════════════ */}
+              â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
           <div className="hero">
-            {/* Warung/UMKM Storefront illustration – background */}
+            {/* Warung/UMKM Storefront illustration â€” background */}
             <div className="illus" aria-hidden="true"></div>
 
             {/* Header */}
@@ -119,11 +102,9 @@ const Home: React.FC<HomeProps> = ({
                 <button className="act-btn" onClick={onNavigateToAiChat} aria-label="Chat">
                   <i className="fa-regular fa-comment-dots"></i>
                 </button>
-                <button className="act-btn notif-btn" onClick={onNavigateToNotifications} aria-label="Notifikasi">
+                <button className="act-btn" aria-label="Notifikasi" onClick={onNavigateToPesanan}>
                   <i className="fa-solid fa-bell"></i>
-                  {unreadCount > 0 && (
-                    <span className="notif-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>
-                  )}
+                  <span className="n-dot"></span>
                 </button>
               </div>
             </div>
@@ -150,7 +131,7 @@ const Home: React.FC<HomeProps> = ({
               <span>Cari produk atau supplier...</span>
             </div>
 
-            {/* AI Banner – 100% exact split-card design match */}
+            {/* AI Banner â€” 100% exact split-card design match */}
             <div className="banner-wrap">
               <div className="banner-card">
                 {/* Abstract Background Curves */}
@@ -196,7 +177,7 @@ const Home: React.FC<HomeProps> = ({
               </div>
             </div>
 
-            {/* Dots – inside hero so they appear on dark-green background */}
+            {/* Dots â€” inside hero so they appear on dark-green background */}
             <div className="dots-row">
               {AI_SLIDES.map((_, index) => (
                 <span
@@ -209,26 +190,38 @@ const Home: React.FC<HomeProps> = ({
             </div>
 
           </div>
+          {/* â•â•â• end hero â•â•â• */}
 
-          {/* ═══════════════════════════════════════
-              SHEET – white card that "peeks" from behind the hero
-              via margin-top: -24px. This creates the
-              visual illusion of layering without requiring
-              negative margins on the banner.
-              ═══════════════════════════════════════ */}
+          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+              WHITE CONTENT SHEET
+              margin-top: -28px slides it behind the hero,
+              creating the rounded-top peek effect.
+              z-index: 1 ensures hero renders on top.
+              â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
           <div className="sheet">
-            {/* Kategori Komoditas */}
+
+            {/* Quick Menu */}
             <div className="qmenu">
-              {COMMODITY_CATEGORIES.map((category) => (
-                <button 
-                  key={category.id}
-                  className="qm" 
-                  onClick={onNavigateToPasar}
-                >
-                  <span className="qm-box"><i className={category.icon}></i></span>
-                  <span className="qm-lbl">{category.label}</span>
-                </button>
-              ))}
+              <button className="qm" onClick={onNavigateToPasar}>
+                <span className="qm-box"><i className="fa-solid fa-magnifying-glass"></i></span>
+                <span className="qm-lbl">Cari Produk</span>
+              </button>
+              <button className="qm" onClick={onNavigateToPesanan}>
+                <span className="qm-box"><i className="fa-solid fa-box"></i></span>
+                <span className="qm-lbl">Pesanan</span>
+              </button>
+              <button className="qm" onClick={onNavigateToPasar}>
+                <span className="qm-box"><i className="fa-solid fa-store"></i></span>
+                <span className="qm-lbl">Supplier</span>
+              </button>
+              <button className="qm" onClick={onNavigateToChat ?? onNavigateToAiChat}>
+                <span className="qm-box"><i className="fa-solid fa-comment-dots"></i></span>
+                <span className="qm-lbl">Pesan</span>
+              </button>
+<button className="qm" onClick={onNavigateToPesanan}>
+                <span className="qm-box"><i className="fa-solid fa-chart-column"></i></span>
+                <span className="qm-lbl">Laporan</span>
+              </button>
             </div>
 
             {/* Rekomendasi AI */}
@@ -284,6 +277,7 @@ const Home: React.FC<HomeProps> = ({
                           onClick={(e) => {
                             e.stopPropagation();
                             addToCart(product, 1);
+                            // Toast removed - pill bar provides feedback
                           }}
                         >
                           <i className="fa-solid fa-plus"></i>
@@ -298,7 +292,7 @@ const Home: React.FC<HomeProps> = ({
             {/* Update & Notifikasi */}
             <div className="s-head">
               <h3 className="s-title">Update &amp; Notifikasi</h3>
-              <button className="s-link" onClick={onNavigateToNotifications}>Lihat Semua</button>
+              <button className="s-link">Lihat Semua</button>
             </div>
 
             <div className="n-list">
@@ -327,7 +321,9 @@ const Home: React.FC<HomeProps> = ({
 
           </div>
 
+
           <CartPillBar onNavigateToCart={onNavigateToPasar} />
+
 
           <IonToast
             isOpen={showToast}
@@ -345,3 +341,15 @@ const Home: React.FC<HomeProps> = ({
 };
 
 export default Home;
+
+
+
+
+
+
+
+
+
+
+
+

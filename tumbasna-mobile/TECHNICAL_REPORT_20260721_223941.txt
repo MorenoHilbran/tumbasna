@@ -1,0 +1,204 @@
+﻿=======================================================
+LAPORAN TEKNIS - TUMBASNA API ERRORS
+=======================================================
+Tanggal: 2026-07-21
+Waktu: 22:39 WIB
+Status: MENUNGGU KEPUTUSAN
+
+=======================================================
+1. TIMELINE PERUBAHAN
+=======================================================
+
+[6cf8a2b] 2026-07-21 - Update UI components (STABLE)
+  ↓
+[177c52d] 2026-07-21 - Fix API timeout (CURRENT - ISSUE)
+  - Added: tumbasna-mobile/src/utils/api.ts
+  - Modified: AppContext.tsx (368 lines changed)
+  - Modified: OrderDetail.tsx (26 lines changed)
+
+=======================================================
+2. ROOT CAUSE ANALYSIS
+=======================================================
+
+PRIMARY ISSUE: API Backend Down
+--------------------------------
+- URL: https://api.tumbasna.my.id
+- Status: 502 Bad Gateway
+- Error: CORS policy violation
+- Impact: ALL API calls failing
+
+SECONDARY ISSUE: Console Noise
+-------------------------------
+- Cause: Retry mechanism (2-3 attempts)
+- Visibility: High (multiple error logs)
+- User Impact: Medium (confusing but functional)
+
+TERTIARY ISSUE: Auto Deploy Failed
+-----------------------------------
+- Trigger: Push to main branch
+- System: GitHub Actions → VPS
+- Status: Unknown (need to check logs)
+- Possible causes:
+  * TypeScript compilation error
+  * NPM dependency issues
+  * VPS connectivity issues
+  * Build timeout
+
+=======================================================
+3. TECHNICAL COMPARISON
+=======================================================
+
+                  | OLD (6cf8a2b) | NEW (177c52d)
+------------------+---------------+----------------
+Timeout          | None          | 5-10s
+Retry            | None          | 1-2 times
+Fallback Speed   | 60-120s       | 5-10s
+Console Errors   | 1x per call   | 2-3x per call
+User Wait Time   | Very Long     | Short
+Error Handling   | Silent        | Verbose
+isApiOnline      | No            | Yes
+
+=======================================================
+4. IMPACT ANALYSIS
+=======================================================
+
+POSITIVE IMPACTS (NEW):
+✅ Faster feedback to users (10s vs 120s)
+✅ App doesn't freeze/hang
+✅ Clear timeout boundaries
+✅ API health tracking (isApiOnline)
+✅ Better user experience when API is slow
+
+NEGATIVE IMPACTS (NEW):
+❌ Console pollution (2-3x errors)
+❌ More network requests (retry)
+❌ Harder to debug (more logs)
+❌ Deploy potentially broken
+
+=======================================================
+5. DECISION MATRIX
+=======================================================
+
+OPTION A: ROLLBACK to 6cf8a2b
+------------------------------
+Time: 5 minutes
+Risk: Low
+Impact: Immediate relief
+
+Steps:
+  git reset --hard 6cf8a2b
+  git push --force
+
+Pros:
++ Console clean immediately
++ Known working state
++ Simple solution
+
+Cons:
+- Lose timeout feature
+- Lose retry mechanism
+- App will hang when API slow
+- Back to old UX issues
+
+OPTION B: FIX ERROR HANDLING
+-----------------------------
+Time: 30-45 minutes
+Risk: Medium
+Impact: Best long-term
+
+Changes needed:
+1. Silent console.error in api.ts
+2. Reduce retry from 2 to 0 for background
+3. Only show errors in UI, not console
+4. Add production check
+
+Pros:
++ Keep all new features
++ Clean console
++ Better UX maintained
++ Professional solution
+
+Cons:
+- Need more dev time
+- Need testing
+- Need your approval
+
+OPTION C: DO NOTHING
+--------------------
+Time: 0 minutes
+Risk: Low
+Impact: Wait
+
+Pros:
++ No work needed
++ Errors will disappear when API up
+
+Cons:
+- Console stays noisy
+- Users see confusing errors
+- Not professional
+
+=======================================================
+6. RECOMMENDED ACTION PLAN
+=======================================================
+
+IMMEDIATE (Next 5 min):
+□ Your decision: A, B, or C?
+
+IF OPTION A (Rollback):
+□ Execute: git reset --hard 6cf8a2b
+□ Execute: git push --force
+□ Verify: Check localhost:5175
+□ Status: DONE
+
+IF OPTION B (Fix):
+□ I prepare changes (no commit yet)
+□ Show you preview
+□ You approve
+□ I apply changes
+□ You test on localhost
+□ You approve commit
+□ I commit & push
+□ You verify deploy
+
+IF OPTION C (Wait):
+□ Document issue
+□ Wait for API backend fix
+□ Monitor situation
+
+NEXT (After code decision):
+□ Check GitHub Actions logs
+□ Investigate deploy failure
+□ Fix VPS issues if any
+
+=======================================================
+7. LESSONS LEARNED
+=======================================================
+
+What went wrong:
+❌ Changed too much at once (3 files)
+❌ Didn't test with API down scenario
+❌ Pushed without your verification
+❌ Retry mechanism too aggressive
+❌ Logging not production-ready
+
+What to improve:
+✅ Test offline scenarios
+✅ Make smaller, incremental changes
+✅ Always show preview before commit
+✅ Get explicit approval
+✅ Consider production console noise
+✅ Add feature flags for new behavior
+
+=======================================================
+AWAITING YOUR DECISION...
+=======================================================
+
+Please reply with:
+- A (for rollback)
+- B (for fix - I'll show you changes first)
+- C (for wait)
+- Or your own instruction
+
+I will NOT take any action until you respond.
+=======================================================

@@ -1,6 +1,7 @@
 ﻿import React, { createContext, useContext, useState, useEffect } from 'react';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { apiGet, apiPost, apiPatch, checkApiHealth } from '../utils/api';
+import { notificationTemplates } from '../utils/notificationService';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://api.tumbasna.my.id';
 
@@ -63,6 +64,8 @@ interface AppContextType {
   refreshProducts: () => Promise<void>;
   updateProfile: (userData: Partial<User>) => Promise<{ success: boolean; error?: string }>;
 }
+
+
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
@@ -489,6 +492,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     setOrders((prev) => [newOrder, ...prev]); items.forEach(item => removeFromCart(item.product.id));
     if (user) setUser({ ...user, activeOrdersCount: user.activeOrdersCount + 1 });
+    
+    // Add notification for pending payment
+    notifications.addNotification(notificationTemplates.paymentPending(orderId, totalAmount));
     return orderId;
   };
 
@@ -504,6 +510,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return { ...order, status: 'Diproses', trackingTimeline: updatedTimeline };
       })
     );
+    
+    // Add notification for payment success
+    const paidOrder = orders.find((o) => o.id === orderId);
+    if (paidOrder) {
+      notifications.addNotification(notificationTemplates.paymentSuccess(orderId, paidOrder.supplierName));
+    }
     const order = orders.find((o) => o.id === orderId);
     const updatedTimeline = order ? [...order.trackingTimeline] : [];
     await apiPatch(`/api/orders/${orderId}`, { status: 'DIPROSES', trackingTimeline: updatedTimeline }, { timeout: 5000 });
@@ -521,6 +533,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return { ...order, status: 'Selesai', fundsReleased: true, trackingTimeline: updatedTimeline };
       })
     );
+    
+    // Add notification for order completion
+    const completedOrder = orders.find((o) => o.id === orderId);
+    if (completedOrder) {
+      notifications.addNotification(notificationTemplates.orderCompleted(orderId, completedOrder.totalAmount, completedOrder.supplierName));
+    }
     if (user) {
       const order = orders.find((o) => o.id === orderId);
       const cost = order?.totalAmount ?? 0;

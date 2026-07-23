@@ -1,0 +1,126 @@
+﻿=======================================================
+KODE YANG AKAN DIUBAH - DETAIL PREVIEW
+=======================================================
+
+FILE 1: DetailPesanan.tsx (Baris 551-595)
+=======================================================
+
+BEFORE (Current Code):
+----------------------
+<div className="floating-action-footer">
+  {order.status === 'Menunggu Pembayaran' ? (
+    <>
+      <div className="footer-notice-text" style={{ background: '#FFF3CD', border: '1px solid #FFEBAA', color: '#856404' }}>
+        <IonIcon icon={alertCircleOutline} style={{ color: '#856404' }} />
+        <span>Selesaikan pembayaran terlebih dahulu sebelum mengonfirmasi barang diterima.</span>
+      </div>
+      {onNavigateToPayment && (
+        <IonButton
+          expand="block"
+          color="warning"
+          style={{ fontWeight: 800, marginBottom: '8px' }}
+          onClick={() => onNavigateToPayment(order.id)}
+        >
+          Bayar Sekarang
+        </IonButton>
+      )}
+      <IonButton
+        expand="block"
+        color="tertiary"
+        className="confirm-received-btn button-disabled-custom"
+        disabled={true}
+      >
+        Konfirmasi Barang Diterima
+      </IonButton>
+    </>
+  ) : (
+    <>
+      <div className="footer-notice-text">
+        <IonIcon icon={alertCircleOutline} />
+        <span>Pastikan barang sudah diterima dan sesuai sebelum konfirmasi.</span>
+      </div>
+      <IonButton
+        expand="block"
+        color="tertiary"
+        className="confirm-received-btn"
+        onClick={handleConfirmReceived}
+      >
+        Konfirmasi Barang Diterima
+      </IonButton>
+    </>
+  )}
+</div>
+
+AFTER (New Code):
+-----------------
+<div className="floating-action-footer">
+  {order.status === 'Menunggu Pembayaran' && onNavigateToPayment && (
+    <>
+      <div className="footer-notice-text" style={{ background: '#FFF3CD', border: '1px solid #FFEBAA', color: '#856404' }}>
+        <IonIcon icon={alertCircleOutline} style={{ color: '#856404' }} />
+        <span>Selesaikan pembayaran terlebih dahulu.</span>
+      </div>
+      <IonButton
+        expand="block"
+        className="btn-bayar-sekarang"
+        style={{ 
+          '--background': '#FF8C00',
+          '--background-hover': '#E67E00',
+          '--background-activated': '#CC7000',
+          '--box-shadow': 'none',
+          fontWeight: 600,
+          fontSize: '16px',
+          borderRadius: '12px'
+        }}
+        onClick={() => onNavigateToPayment(order.id)}
+      >
+        Bayar Sekarang
+      </IonButton>
+    </>
+  )}
+  
+  {(order.status === 'Diproses' || order.status === 'Dikirim') && (
+    <>
+      <div className="footer-notice-text">
+        <IonIcon icon={alertCircleOutline} />
+        <span>Pastikan barang sudah diterima dan sesuai sebelum konfirmasi.</span>
+      </div>
+      <IonButton
+        expand="block"
+        className="btn-konfirmasi-diterima"
+        style={{ 
+          '--background': '#006837',
+          '--background-hover': '#005830',
+          '--background-activated': '#004D28',
+          '--box-shadow': 'none',
+          fontWeight: 600,
+          fontSize: '16px',
+          borderRadius: '12px',
+          color: 'white'
+        }}
+        onClick={handleConfirmReceived}
+      >
+        Konfirmasi Barang Diterima
+      </IonButton>
+    </>
+  )}
+</div>
+
+=======================================================
+PENJELASAN PERUBAHAN:
+=======================================================
+
+✅ Hanya 1 button muncul berdasarkan status order
+✅ "Bayar Sekarang" hanya untuk status "Menunggu Pembayaran"
+✅ "Konfirmasi Barang Diterima" hanya untuk status "Diproses" atau "Dikirim"
+✅ Warna orange (#FF8C00) untuk urgent action
+✅ Warna hijau (#006837) untuk success action
+✅ No shadow (--box-shadow: none)
+✅ Border radius 12px untuk modern look
+✅ Font weight 600 untuk readability optimal
+
+=======================================================
+
+Apakah Anda setuju dengan perubahan ini?
+Silakan review dan ketik "YES" atau "APPROVE" untuk lanjut.
+=======================================================

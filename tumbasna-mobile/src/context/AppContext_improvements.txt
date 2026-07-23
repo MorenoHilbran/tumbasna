@@ -1,0 +1,296 @@
+﻿// Improved API functions with timeout and better error handling
+
+  // Check API health on mount
+  const [isApiOnline, setIsApiOnline] = useState(true);
+
+  useEffect(() => {
+    const checkHealth = async () => {
+      const online = await checkApiHealth();
+      setIsApiOnline(online);
+      if (!online) {
+        console.warn('[AppContext] API is offline, using fallback mode');
+      }
+    };
+    checkHealth();
+  }, []);
+
+  // Fetch suppliers with timeout
+  useEffect(() => {
+    const fetchSuppliers = async () => {
+      const result = await apiGet('/api/chat/suppliers', { timeout: 5000 });
+      if (result.success && result.data?.length) {
+        setChats(prev => {
+          const existingNames = new Set(prev.map(c => c.supplierName));
+          const newThreads: ChatThread[] = result.data
+            .filter((s: any) => !existingNames.has(s.name))
+            .map((s: any) => ({
+              supplierName: s.name,
+              supplierPhone: s.phone,
+              lastMessage: s.activeProducts[0]
+                ? `Menjual: ${s.activeProducts[0].commodity} – Rp${s.activeProducts[0].price.toLocaleString('id-ID')}/kg`
+                : 'Supplier terdaftar via WhatsApp',
+              lastTime: '',
+              unreadCount: 0,
+              messages: [{
+                id: `intro-${s.id}`,
+                sender: 'supplier' as const,
+                text: `Halo! Saya ${s.name} dari ${s.location}. ${s.activeProducts.length > 0 ? `Saat ini saya menjual: ${s.activeProducts.map((p: any) => `${p.commodity} (${p.qty}kg @ Rp${p.price.toLocaleString('id-ID')})`).join(', ')}.` : ''} Ada yang bisa saya bantu?`,
+                timestamp: '',
+                status: 'read' as const,
+              }],
+            }));
+          return [...prev, ...newThreads];
+        });
+      }
+    };
+    fetchSuppliers();
+  }, []);
+
+  // Improved refreshProducts with timeout and fallback
+  const refreshProducts = async () => {
+    try {
+      let queryParams = '';
+      if (navigator.geolocation) {
+        try {
+          const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              enableHighAccuracy: false,
+              timeout: 3000,
+              maximumAge: 300000
+            });
+          });
+          queryParams = `?lat=${position.coords.latitude}&lng=${position.coords.longitude}&maxDistance=100`;
+        } catch (geoErr) {
+          console.warn('[refreshProducts] Geolocation error, fetching all products:', geoErr);
+        }
+      }
+      
+      const result = await apiGet(`/api/products${queryParams}`, { timeout: 6000 });
+      if (result.success && result.data?.length > 0) {
+        setProducts(result.data);
+        setIsApiOnline(true);
+      } else {
+        console.warn('[refreshProducts] No products from API, using fallback');
+        setIsApiOnline(false);
+      }
+    } catch (err) {
+      console.warn('[AppContext] Failed to refresh products:', err);
+      setIsApiOnline(false);
+    }
+  };
+
+  // Improved refreshOrders with timeout
+  const refreshOrders = async () => {
+    if (!user?.id) return;
+    const result = await apiGet(`/api/orders?userId=${user.id}`, { timeout: 5000 });
+    if (result.success && result.data) {
+      setOrders(result.data);
+    }
+  };
+
+  // Improved refreshProfile with timeout
+  const refreshProfile = async () => {
+    if (!user?.id) return;
+    const result = await apiGet(`/api/auth/profile?userId=${user.id}`, { timeout: 5000 });
+    if (result.success && result.data) {
+      const d = result.data;
+      setUser(prev => prev ? {
+        ...prev,
+        ownerName: d.name || prev.ownerName,
+        businessName: d.businessName || prev.businessName,
+        email: d.email || prev.email,
+        address: d.address || prev.address,
+        businessType: d.businessType || prev.businessType,
+        bankName: d.bankName || prev.bankName,
+        bankAccount: d.bankAccount || prev.bankAccount,
+        balance: d.balance ?? prev.balance,
+        activeOrdersCount: d.activeOrdersCount ?? prev.activeOrdersCount,
+        purchasesThisMonth: d.purchasesThisMonth ?? prev.purchasesThisMonth,
+      } : null);
+    }
+  };
+
+  // Improved login with timeout and better error handling
+  const login = async (phone: string): Promise<boolean> => {
+    if (!phone) return false;
+    
+    const result = await apiPost('/api/auth/login', { phone }, { timeout: 8000, retry: 1 });
+    
+    if (result.success && result.data) {
+      const d = result.data;
+      setUser({
+        id: d.id,
+        ownerName: d.name || d.phoneNumber,
+        businessName: d.businessName || '',
+        phone: d.phoneNumber,
+        email: d.email || '',
+        address: d.address || '',
+        businessType: d.businessType || '',
+        bankName: d.bankName || '',
+        bankAccount: d.bankAccount || '',
+        balance: d.balance ?? 0,
+        purchasesThisMonth: 0,
+        activeOrdersCount: d.activeOrdersCount ?? 0,
+      });
+      setIsApiOnline(true);
+      return true;
+    }
+    
+    // Fallback to mock login if API fails
+    console.warn('[AppContext] API login failed, using mock login');
+    setUser({
+      id: `mock-${Date.now()}`,
+      ownerName: 'Pembeli Demo',
+      businessName: 'Toko Sembako Demo',
+      phone: phone,
+      email: 'demo@tumbasna.com',
+      address: 'Jl. Pasar Tradisional No 1',
+      businessType: 'Warung Sembako',
+      bankName: 'BCA',
+      bankAccount: '1234567890',
+      balance: 5000000,
+      purchasesThisMonth: 0,
+      activeOrdersCount: 0,
+    });
+    setIsApiOnline(false);
+    return true;
+  };
+
+  // Improved register with timeout
+  const register = async (
+    userData: Omit<User, 'balance' | 'purchasesThisMonth' | 'activeOrdersCount'>
+  ): Promise<boolean> => {
+    const result = await apiPost('/api/auth/register', {
+      ownerName: userData.ownerName,
+      businessName: userData.businessName,
+      phone: userData.phone,
+      email: userData.email,
+      address: userData.address,
+      businessType: userData.businessType,
+      bankName: userData.bankName,
+      bankAccount: userData.bankAccount,
+    }, { timeout: 8000, retry: 1 });
+
+    if (result.success && result.data) {
+      const d = result.data;
+      setUser({
+        id: d.id,
+        ownerName: userData.ownerName,
+        businessName: userData.businessName,
+        phone: d.phoneNumber,
+        email: d.email || userData.email,
+        address: userData.address,
+        businessType: userData.businessType,
+        bankName: userData.bankName,
+        bankAccount: userData.bankAccount,
+        balance: 0,
+        purchasesThisMonth: 0,
+        activeOrdersCount: 0,
+      });
+      setOrders([]);
+      setCart([]);
+      setIsApiOnline(true);
+      return true;
+    }
+
+    // Fallback to mock register
+    console.warn('[AppContext] API register failed, using mock register');
+    setUser({
+      id: `mock-${Date.now()}`,
+      ownerName: userData.ownerName,
+      businessName: userData.businessName,
+      phone: userData.phone,
+      email: userData.email,
+      address: userData.address,
+      businessType: userData.businessType,
+      bankName: userData.bankName,
+      bankAccount: userData.bankAccount,
+      balance: 0,
+      purchasesThisMonth: 0,
+      activeOrdersCount: 0,
+    });
+    setOrders([]);
+    setCart([]);
+    setIsApiOnline(false);
+    return true;
+  };
+
+  // Improved checkout with timeout
+  const checkout = async (items: CartItem[], courier: string, 
+    shippingCost: number, 
+    buyerCoords?: [number, number], 
+    supplierCoords?: [number, number],
+    buyerAddress?: string,
+    supplierAddress?: string, paymentMethod?: string): Promise<string> => {
+    if (items.length === 0) return '';
+    const orderId = `TRX-${Math.floor(100000 + Math.random() * 900000)}`;
+    const itemsTotal = items.reduce((acc, i) => acc + i.product.price * i.quantity, 0);
+    const totalAmount = itemsTotal + shippingCost + 2000;
+    const supplierName = items[0].product.supplierName;
+    const supplierLocation = items[0].product.supplierLocation;
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+    const trackingTimeline: TrackingStep[] = [
+      { title: 'Menunggu Pembayaran', description: 'Silakan lakukan pembayaran menggunakan QRIS.', time: timeStr, done: true },
+      { title: 'Pembayaran Dikonfirmasi', description: 'Menunggu konfirmasi pembayaran dari sistem.', time: 'Belum', done: false },
+      { title: 'Konfirmasi Supplier', description: 'Menunggu konfirmasi ketersediaan barang oleh supplier.', time: 'Belum', done: false },
+      { title: 'Pengiriman & Tracking', description: 'Menunggu penjemputan logistik.', time: 'Belum', done: false },
+    ];
+
+    const notesObj = { buyerCoords, supplierCoords, buyerAddress, supplierAddress };
+    const notesStr = JSON.stringify(notesObj);
+
+    const newOrder: Order = {
+      id: orderId, items: [...items], supplierName, supplierLocation, courier,
+      shippingCost, totalAmount,
+      date: now.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }),
+      status: 'Menunggu Pembayaran',
+      paymentQrCode: `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=tumbasna-qris-${orderId}`,
+      fundsReleased: false, paymentCountdown: 300, trackingTimeline,
+      notes: notesStr,
+      paymentMethod,
+    };
+
+    // Try to save to API with timeout
+    await apiPost('/api/orders', {
+      id: orderId,
+      buyerUserId: user?.id || null,
+      supplierName, supplierLocation, courier,
+      shippingCost, totalAmount,
+      trackingTimeline,
+      paymentQrCode: newOrder.paymentQrCode,
+      notes: notesStr,
+      items: items.map((i) => ({
+        productEntryId: i.product.id.startsWith('prod-') ? null : i.product.id,
+        commodity: i.product.category || i.product.name,
+        price: i.product.price,
+        qty: i.quantity,
+        supplierName: i.product.supplierName,
+      })),
+    }, { timeout: 8000, retry: 1 });
+
+    setOrders((prev) => [newOrder, ...prev]);
+    items.forEach(item => removeFromCart(item.product.id));
+    if (user) setUser({ ...user, activeOrdersCount: user.activeOrdersCount + 1 });
+    return orderId;
+  };
+
+  // Improved payOrder with timeout
+  const payOrder = async (orderId: string) => {
+    const currentTime = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    setOrders((prev) =>
+      prev.map((order) => {
+        if (order.id !== orderId) return order;
+        const updatedTimeline = [...order.trackingTimeline];
+        updatedTimeline[1] = { title: 'Pembayaran Dikonfirmasi', description: `Pembayaran berhasil. Dana Rp${order.totalAmount.toLocaleString('id-ID')} ditahan Tumbasna.`, time: currentTime, done: true };
+        updatedTimeline[2] = { title: 'Pesanan Diproses Supplier', description: `${order.supplierName} sedang memilah komoditas terbaik.`, time: 'Segera', done: false };
+        return { ...order, status: 'Diproses', trackingTimeline: updatedTimeline };
+      })
+    );
+    
+    const order = orders.find((o) => o.id === orderId);
+    const updatedTimeline = order ? [...order.trackingTimeline] : [];
+    await apiPatch(`/api/orders/${orderId}`, { status: 'DIPROSES', trackingTimeline: updatedTimeline }, { timeout: 5000 });
+    await refreshProducts();
+  };

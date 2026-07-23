@@ -549,32 +549,32 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
       {/* ── Floating confirm button ──────────────────────── */}
       {order.status !== 'Selesai' && order.status !== 'Dibatalkan' && (
         <div className="floating-action-footer">
-          {order.status === 'Menunggu Pembayaran' && onNavigateToPayment && (
+          {order.status === 'Menunggu Pembayaran' ? (
             <>
               <div className="footer-notice-text" style={{ background: '#FFF3CD', border: '1px solid #FFEBAA', color: '#856404' }}>
                 <IonIcon icon={alertCircleOutline} style={{ color: '#856404' }} />
-                <span>Selesaikan pembayaran terlebih dahulu.</span>
+                <span>Selesaikan pembayaran terlebih dahulu sebelum mengonfirmasi barang diterima.</span>
               </div>
+              {onNavigateToPayment && (
+                <IonButton
+                  expand="block"
+                  color="warning"
+                  style={{ fontWeight: 800, marginBottom: '8px' }}
+                  onClick={() => onNavigateToPayment(order.id)}
+                >
+                  Bayar Sekarang
+                </IonButton>
+              )}
               <IonButton
                 expand="block"
-                className="btn-bayar-sekarang"
-                style={{ 
-                  '--background': '#FF8C00',
-                  '--background-hover': '#E67E00',
-                  '--background-activated': '#CC7000',
-                  '--box-shadow': 'none',
-                  fontWeight: 600,
-                  fontSize: '16px',
-                  borderRadius: '12px'
-                }}
-                onClick={() => onNavigateToPayment(order.id)}
+                color="tertiary"
+                className="confirm-received-btn button-disabled-custom"
+                disabled={true}
               >
-                Bayar Sekarang
+                Konfirmasi Barang Diterima
               </IonButton>
             </>
-          )}
-          
-          {(order.status === 'Diproses' || order.status === 'Dikirim') && (
+          ) : (
             <>
               <div className="footer-notice-text">
                 <IonIcon icon={alertCircleOutline} />
@@ -582,17 +582,8 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
               </div>
               <IonButton
                 expand="block"
-                className="btn-konfirmasi-diterima"
-                style={{ 
-                  '--background': '#006837',
-                  '--background-hover': '#005830',
-                  '--background-activated': '#004D28',
-                  '--box-shadow': 'none',
-                  fontWeight: 600,
-                  fontSize: '16px',
-                  borderRadius: '12px',
-                  color: 'white'
-                }}
+                color="tertiary"
+                className="confirm-received-btn"
                 onClick={handleConfirmReceived}
               >
                 Konfirmasi Barang Diterima

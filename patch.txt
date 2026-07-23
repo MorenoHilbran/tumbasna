@@ -1,0 +1,7 @@
+﻿*** Begin Patch
+*** Update File: C:\LIST PROJECT\tumbasna\tumbasna-mobile\src\MainAppShell.tsx
+@@ const MainAppShell: React.FC = () => {
+-  const { user, refreshProducts } = useApp();
++  const { user, refreshProducts, orders } = useApp();
+   const notifications = useNotifications();
+*** End Patch

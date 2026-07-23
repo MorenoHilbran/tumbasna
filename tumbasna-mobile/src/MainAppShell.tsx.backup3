@@ -10,8 +10,6 @@ import {
 } from 'ionicons/icons';
 
 import { useApp, Product, CartItem } from './context/AppContext';
-import { useNotifications } from './context/NotificationContext';
-import { notificationTemplates } from './utils/notificationService';
 
 import Home from './pages/Home';
 import Pasar from './pages/Pasar';
@@ -23,7 +21,6 @@ import Checkout from './pages/Checkout';
 import DetailProduk from './pages/DetailProduk';
 import DetailPesanan from './pages/DetailPesanan';
 import OrderDetail from './pages/OrderDetail';
-import Notifications from './pages/Notifications';
 import LoginRegister from './pages/LoginRegister';
 import Welcome from './pages/Welcome';
 import Splash from './pages/Splash';
@@ -31,7 +28,7 @@ import Splash from './pages/Splash';
 import './MainAppShell.css';
 
 type TabState = 'beranda' | 'pasar' | 'pesanan' | 'chat' | 'profil';
-type ViewState = 'tabs' | 'detail_produk' | 'keranjang' | 'checkout' | 'order_detail_payment' | 'detail_pesanan' | 'notifications';
+type ViewState = 'tabs' | 'detail_produk' | 'keranjang' | 'checkout' | 'order_detail_payment' | 'detail_pesanan';
 
 const TABS: { id: TabState; label: string; iconActive: string; iconInactive: string }[] = [
   { id: 'beranda', label: 'Beranda', iconActive: home, iconInactive: homeOutline },
@@ -42,8 +39,7 @@ const TABS: { id: TabState; label: string; iconActive: string; iconInactive: str
 ];
 
 const MainAppShell: React.FC = () => {
-  const { user, refreshProducts, orders } = useApp();
-  const notifications = useNotifications();
+  const { user, refreshProducts } = useApp();
 
   const [activeTab, setActiveTab] = useState<TabState>('beranda');
   const [viewState, setViewState] = useState<ViewState>('tabs');
@@ -61,30 +57,6 @@ const MainAppShell: React.FC = () => {
   
   const [checkoutSupplierId, setCheckoutSupplierId] = useState<string | null>(null);
   const [checkoutSupplierItems, setCheckoutSupplierItems] = useState<CartItem[]>([]);
-
-  // Auto-generate notifications based on order changes
-  useEffect(() => {
-    orders.forEach(order => {
-      if (order.status === 'Menunggu Pembayaran') {
-        const exists = notifications.notifications.some(n => 
-          n.metadata?.orderId === order.id && n.title === 'Pembayaran Tertunda'
-        );
-        if (!exists) {
-          notifications.addNotification(notificationTemplates.paymentPending(order.id, order.totalAmount));
-        }
-      }
-      
-      if (order.status === 'Diproses') {
-        const exists = notifications.notifications.some(n => 
-          n.metadata?.orderId === order.id && n.title === 'Pesanan Dikonfirmasi'
-        );
-        if (!exists && order.items[0]) {
-          const firstItem = order.items[0].product.name;
-          notifications.addNotification(notificationTemplates.orderConfirmed(order.id, order.supplierName, firstItem));
-        }
-      }
-    });
-  }, [orders]);
 
   const [showSplash, setShowSplash] = useState(true);
   const [showWelcome, setShowWelcome] = useState(true);
@@ -195,7 +167,6 @@ const MainAppShell: React.FC = () => {
         }
         setViewState('tabs');
         return null;
-
       case 'detail_pesanan':
         if (selectedOrderId) {
           return (
@@ -218,16 +189,6 @@ const MainAppShell: React.FC = () => {
         }
         setViewState('tabs');
         return null;
-
-      case 'notifications':
-        return (
-          <Notifications 
-            onBack={() => {
-              setViewState('tabs');
-              setActiveTab('beranda');
-            }}
-          />
-        );
 
       case 'tabs':
       default:
@@ -279,7 +240,6 @@ const MainAppShell: React.FC = () => {
                   setActiveTab('chat');
                   setViewState('tabs');
                 }}
-                onNavigateToNotifications={() => setViewState('notifications')}
                 onSelectProduct={(product) => {
                   setSelectedProduct(product);
                   setViewState('detail_produk');
@@ -296,6 +256,7 @@ const MainAppShell: React.FC = () => {
   };
 
   const pageKey = viewState + '-' + activeTab;
+  const navClass = 'bottom-nav-item' + (activeTab === 'active' ? ' active' : '');
 
   return (
     <IonApp style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -334,3 +295,10 @@ const MainAppShell: React.FC = () => {
 };
 
 export default MainAppShell;
+
+
+
+
+
+
+

@@ -1,0 +1,54 @@
+﻿=======================================================
+PREVIEW PERUBAHAN UI/UX - DetailPesanan.tsx
+=======================================================
+
+PERUBAHAN YANG AKAN DILAKUKAN:
+
+1. VALIDASI BUTTON - Hanya 1 button berdasarkan status
+   ------------------------------------------------
+   BEFORE:
+   - Status "Menunggu Pembayaran": 2 buttons
+     * "Bayar Sekarang" (orange)
+     * "Konfirmasi Barang Diterima" (disabled)
+   - Status lainnya: 1 button
+     * "Konfirmasi Barang Diterima" (tertiary)
+
+   AFTER:
+   - Status "Menunggu Pembayaran": 1 button
+     * "Bayar Sekarang" (orange solid #FF8C00)
+   - Status "Diproses" / "Dikirim": 1 button
+     * "Konfirmasi Barang Diterima" (green solid #006837)
+   - Status "Selesai": No button (sudah selesai)
+
+2. WARNA BUTTON OPTIMAL
+   ----------------------
+   - Bayar Sekarang: #FF8C00 (Orange) - Urgent action
+   - Konfirmasi Diterima: #006837 (Green) - Success action
+   - Remove all shadows from buttons
+   - Font weight: 600 (medium bold)
+   - Border radius: 12px
+
+3. STATUS BADGE "Menunggu Pembayaran"
+   ------------------------------------
+   BEFORE: background hijau "Menunggu Pembayaran"
+   AFTER: background kuning #FFC107 dengan text #000
+
+4. BUTTON STATUS (Diproses, Selesai, dll)
+   ----------------------------------------
+   - Remove semua box-shadow
+   - Flat design, no elevation
+   - Clean professional look
+
+=======================================================
+FILE YANG AKAN DIUBAH:
+=======================================================
+1. tumbasna-mobile/src/pages/DetailPesanan.tsx
+2. tumbasna-mobile/src/pages/DetailPesanan.css
+3. tumbasna-mobile/src/pages/Pesanan.tsx (untuk list transaksi)
+
+=======================================================
+APAKAH ANDA APPROVE PERUBAHAN INI?
+=======================================================
+Ketik "YES" untuk lanjut, atau beri instruksi tambahan.
+Saya TIDAK akan apply tanpa approval Anda.
+=======================================================

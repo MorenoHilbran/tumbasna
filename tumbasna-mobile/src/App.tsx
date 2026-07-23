@@ -1,6 +1,7 @@
 import React from 'react';
 import { setupIonicReact } from '@ionic/react';
 import { AppProvider } from './context/AppContext';
+import { NotificationProvider } from './context/NotificationContext';
 import MainAppShell from './MainAppShell';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -54,9 +55,11 @@ const App: React.FC = () => {
   return (
     <ErrorBoundary>
       <GoogleOAuthProvider key={oauthKey} clientId={GOOGLE_CLIENT_ID}>
-        <AppProvider>
+        <NotificationProvider>
+      <AppProvider>
           <MainAppShell />
         </AppProvider>
+    </NotificationProvider>
       </GoogleOAuthProvider>
     </ErrorBoundary>
   );
