@@ -304,6 +304,7 @@ const MainAppShell: React.FC = () => {
                   setActiveTab('chat');
                   setViewState('tabs');
                 }
+                }
                 onNavigateToNotifications={() => setViewState('notifications')}
                 onSelectProduct={(product) => {
                   setSelectedProduct(product);
@@ -359,6 +360,7 @@ const MainAppShell: React.FC = () => {
 };
 
 export default MainAppShell;
+
 
 
 
