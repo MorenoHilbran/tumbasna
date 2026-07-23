@@ -100,6 +100,7 @@ export async function POST(req: Request) {
     const midtransOrderId = `${orderId}-${Date.now()}`;
 
     // Panggil Snap API Midtrans
+    const MOBILE_URL = process.env.MIDTRANS_FINISH_URL || "https://app.tumbasna.my.id";
     const snapPayload = {
       transaction_details: {
         order_id: midtransOrderId,
@@ -113,6 +114,9 @@ export async function POST(req: Request) {
       item_details: itemDetails,
       credit_card: {
         secure: true,
+      },
+      callbacks: {
+        finish: `${MOBILE_URL}/?app_order_id=${orderId}`,
       },
     };
 

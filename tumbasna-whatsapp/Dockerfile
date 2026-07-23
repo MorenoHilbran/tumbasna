@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm install --no-audit --no-fund --prefer-offline
 
 COPY . .
 
@@ -17,7 +17,7 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install --omit=dev
+RUN npm install --omit=dev --no-audit --no-fund --prefer-offline
 
 COPY --from=builder /app/dist ./dist
 

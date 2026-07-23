@@ -37,18 +37,20 @@ export async function GET(req: Request) {
 
     // Jika userId ada dan merupakan UUID valid, filter by buyerUserId. 
     // Jika phone ada, cari user berdasarkan nomor telepon lalu ambil pesanan milik supplier tersebut.
+
+    // KEAMANAN: Jika tidak ada userId maupun phone, jangan kembalikan semua pesanan
+    if (!userId && !phone) {
+      return NextResponse.json({ success: true, data: [] });
+    }
+
     let whereClause: any = {};
     if (userId) {
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       if (!uuidRegex.test(userId)) {
-        whereClause = { buyerUserId: null };
+        // userId tidak valid (mis. mock-xxx), kembalikan array kosong
+        return NextResponse.json({ success: true, data: [] });
       } else {
-        whereClause = {
-          OR: [
-            { buyerUserId: userId },
-            { buyerUserId: null }
-          ]
-        };
+        whereClause = { buyerUserId: userId };
       }
     } else if (phone) {
       const normalizedPhone = phone.replace(/^\+/, '').replace(/^0/, '62');

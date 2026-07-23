@@ -17,6 +17,7 @@ import {
     LogOut,
     User,
     Wallet,
+    MessageSquare,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -63,6 +64,12 @@ const navItems = [
         href: '/dashboard/saldo',
         icon: Wallet,
         description: 'Pencairan dana supplier',
+    },
+    {
+        label: 'Ulasan & Rating',
+        href: '/dashboard/ulasan',
+        icon: MessageSquare,
+        description: 'Ulasan pembeli & bintang',
     },
     {
         label: 'Notifikasi',
@@ -149,16 +156,17 @@ function SidebarContent({
                         >
                             <div
                                 className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-150 ${
-                                    isActive
-                                        ? 'bg-emerald-600 text-white shadow-sm'
-                                        : 'bg-slate-100 text-slate-500 group-hover:bg-emerald-50 group-hover:text-emerald-600'
+                                    isActive 
+                                        ? 'bg-emerald-600 text-white' 
+                                        : 'bg-slate-50 text-slate-500 group-hover:text-slate-700'
                                 }`}
                             >
                                 <Icon className="w-4 h-4" />
                             </div>
-                            <div className="flex-1 min-w-0">
+
+                            <div className="min-w-0 flex-1">
                                 <p
-                                    className={`text-[13px] font-semibold leading-tight ${
+                                    className={`text-xs font-semibold leading-tight ${
                                         isActive ? 'text-slate-900' : 'text-slate-600 group-hover:text-slate-900'
                                     }`}
                                     style={{ fontFamily: 'Poppins, sans-serif' }}
@@ -166,35 +174,61 @@ function SidebarContent({
                                     {label}
                                 </p>
                                 <p
-                                    className={`text-[10px] leading-tight mt-0.5 ${
-                                        isActive ? 'text-slate-500' : 'text-slate-400'
+                                    className={`text-[10px] mt-0.5 ${
+                                        isActive ? 'text-slate-400' : 'text-slate-400 group-hover:text-slate-500'
                                     }`}
                                     style={{ fontFamily: 'Poppins, sans-serif' }}
                                 >
                                     {description}
                                 </p>
                             </div>
+
                             {isActive && (
-                                <ChevronRight className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                                <ChevronRight className="w-3.5 h-3.5 flex-shrink-0 text-emerald-600" />
                             )}
                         </Link>
                     );
                 })}
             </nav>
 
-            {/* Footer */}
-            <div className="px-4 pb-4 pt-2 border-t border-slate-100">
-                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50/50">
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-emerald-600 flex-shrink-0">
-                        <span className="text-white font-bold text-xs" style={{ fontFamily: 'Poppins, sans-serif' }}>A</span>
+            {/* Divider */}
+            <div className="mx-4 h-px bg-slate-100" />
+
+            {/* Settings */}
+            <div className="px-4 py-3 space-y-1">
+                <Link
+                    href="/dashboard/pengaturan"
+                    className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-150 border-l-2 border-transparent ${
+                        pathname === '/dashboard/pengaturan'
+                            ? 'bg-slate-50 border-emerald-600 text-slate-900'
+                            : 'hover:bg-slate-50/70 text-slate-500 hover:text-slate-800'
+                    }`}
+                    onClick={onClose}
+                >
+                    <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 text-slate-500">
+                        <Settings className="w-4 h-4" />
+                    </div>
+                    <span className="text-xs font-semibold" style={{ fontFamily: 'Poppins, sans-serif' }}>Pengaturan</span>
+                </Link>
+            </div>
+
+            {/* Footer user badge */}
+            <div className="px-6 py-4 border-t border-slate-100">
+                <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-emerald-50 text-emerald-600">
+                        <User className="w-4 h-4" />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-slate-900 leading-tight" style={{ fontFamily: 'Poppins, sans-serif' }}>Admin</p>
-                        <p className="text-[10px] text-slate-400 leading-tight" style={{ fontFamily: 'Poppins, sans-serif' }}>Super Admin</p>
+                        <p className="text-xs font-bold text-slate-800 truncate" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                            Admin TPID
+                        </p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                            <p className="text-[10px] font-medium text-slate-400" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                                Online
+                            </p>
+                        </div>
                     </div>
-                    <button className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors">
-                        <Settings className="w-3.5 h-3.5" />
-                    </button>
                     <button onClick={handleLogout} className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-colors">
                         <LogOut className="w-3.5 h-3.5" />
                     </button>
@@ -215,12 +249,12 @@ export default function SidebarLayout({
 
     return (
         <div className="flex h-screen w-full overflow-hidden bg-[#F8FAFC]" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            {/* Desktop Sidebar (always visible ≥ lg) */}
+            {/* ── Desktop Sidebar (always visible ≥ lg) ── */}
             <aside className="hidden lg:flex flex-col w-60 flex-shrink-0 z-20">
                 <SidebarContent pathname={pathname} />
             </aside>
 
-            {/* Mobile Sidebar Overlay */}
+            {/* ── Mobile Sidebar Overlay ── */}
             {mobileOpen && (
                 <div className="fixed inset-0 z-40 lg:hidden" aria-modal="true" role="dialog">
                     <div
@@ -233,7 +267,7 @@ export default function SidebarLayout({
                 </div>
             )}
 
-            {/* Main content area */}
+            {/* ── Main content area ── */}
             <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
                 {/* Mobile top-bar */}
                 <header className="lg:hidden flex items-center gap-3 px-4 py-3 bg-white border-b border-slate-200/80 flex-shrink-0">
@@ -248,9 +282,9 @@ export default function SidebarLayout({
                         Tumbasna
                     </span>
                     <div className="ml-auto flex items-center gap-2">
-                        <Link href="/dashboard/notifikasi" className="w-8 h-8 rounded-lg flex items-center justify-center bg-white text-slate-600 hover:bg-slate-100 transition-colors border border-slate-200/50">
+                        <button className="w-8 h-8 rounded-lg flex items-center justify-center bg-slate-50 text-slate-600 hover:bg-slate-100 transition-colors">
                             <Bell className="w-4 h-4" />
-                        </Link>
+                        </button>
                     </div>
                 </header>
 
@@ -261,7 +295,7 @@ export default function SidebarLayout({
                             {navItems.find(n => n.href === pathname)?.label ?? 'Dashboard'}
                         </p>
                         <p className="text-xs text-slate-400 mt-0.5" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                            Platform Monitoring Komoditas Pangan – Tumbasna
+                            Platform Monitoring Komoditas Pangan — Tumbasna
                         </p>
                     </div>
                     <div className="flex items-center gap-4">
@@ -269,10 +303,10 @@ export default function SidebarLayout({
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                             Live Monitoring
                         </div>
-                        <Link href="/dashboard/notifikasi" className="relative w-9 h-9 rounded-xl flex items-center justify-center bg-white text-slate-500 hover:bg-slate-100 transition-all border border-slate-200/50">
+                        <button className="relative w-9 h-9 rounded-xl flex items-center justify-center bg-slate-50 text-slate-500 hover:bg-slate-100 transition-all border border-slate-200/30">
                             <Bell className="w-4 h-4" />
                             <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-rose-500 border-2 border-white" />
-                        </Link>
+                        </button>
                         <div className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm text-emerald-600 bg-emerald-50 border border-emerald-100 cursor-pointer" style={{ fontFamily: 'Poppins, sans-serif' }}>
                             A
                         </div>
@@ -287,3 +321,8 @@ export default function SidebarLayout({
         </div>
     );
 }
+
+
+
+
+

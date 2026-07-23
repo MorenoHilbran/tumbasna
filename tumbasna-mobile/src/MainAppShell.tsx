@@ -42,7 +42,7 @@ const TABS: { id: TabState; label: string; iconActive: string; iconInactive: str
 ];
 
 const MainAppShell: React.FC = () => {
-  const { user, refreshProducts, orders } = useApp();
+  const { user, refreshProducts, payOrder, refreshOrders, orders } = useApp();
   const notifications = useNotifications();
 
   const [activeTab, setActiveTab] = useState<TabState>('beranda');
@@ -61,7 +61,6 @@ const MainAppShell: React.FC = () => {
   
   const [checkoutSupplierId, setCheckoutSupplierId] = useState<string | null>(null);
   const [checkoutSupplierItems, setCheckoutSupplierItems] = useState<CartItem[]>([]);
-
   // Auto-generate notifications based on order changes
   useEffect(() => {
     orders.forEach(order => {
@@ -99,8 +98,34 @@ const MainAppShell: React.FC = () => {
 
   useEffect(() => {
     if (user) {
-      setActiveTab('beranda');
-      setViewState('tabs');
+      // Cek apakah ada parameter redirect dari Midtrans
+      const searchParams = new URLSearchParams(window.location.search);
+      const appOrderId = searchParams.get('app_order_id');
+      const midtransOrderId = searchParams.get('order_id');
+      const statusCode = searchParams.get('status_code');
+      const transactionStatus = searchParams.get('transaction_status');
+
+      let targetOrderId: string | null = null;
+      if (appOrderId) {
+        targetOrderId = appOrderId;
+      } else if (midtransOrderId) {
+        const parts = midtransOrderId.split('-');
+        if (parts.length >= 2) {
+          targetOrderId = `${parts[0]}-${parts[1]}`;
+        }
+      }
+
+      if (targetOrderId && (statusCode === '200' || transactionStatus === 'settlement' || transactionStatus === 'capture')) {
+        payOrder(targetOrderId);
+        refreshOrders();
+        setSelectedOrderId(targetOrderId);
+        setActiveTab('pesanan');
+        setViewState('detail_pesanan');
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } else {
+        setActiveTab('beranda');
+        setViewState('tabs');
+      }
     } else {
       setShowWelcome(true);
     }
@@ -195,7 +220,6 @@ const MainAppShell: React.FC = () => {
         }
         setViewState('tabs');
         return null;
-
       case 'detail_pesanan':
         if (selectedOrderId) {
           return (
@@ -219,6 +243,7 @@ const MainAppShell: React.FC = () => {
         setViewState('tabs');
         return null;
 
+      
       case 'notifications':
         return (
           <Notifications 
@@ -278,8 +303,8 @@ const MainAppShell: React.FC = () => {
                   setSelectedChatPartner('Tumbasna AI Pintar');
                   setActiveTab('chat');
                   setViewState('tabs');
-                }}
-                onNavigateToNotifications={() => setViewState('notifications')}
+                }onNavigateToNotifications={() => setViewState('notifications')}
+                }
                 onSelectProduct={(product) => {
                   setSelectedProduct(product);
                   setViewState('detail_produk');
@@ -334,3 +359,14 @@ const MainAppShell: React.FC = () => {
 };
 
 export default MainAppShell;
+
+
+
+
+
+
+
+
+
+
+

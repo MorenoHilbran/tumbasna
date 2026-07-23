@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   IonContent,
   IonHeader,
@@ -114,7 +114,8 @@ const locationCoords: Record<string, [number, number]> = {
 };
 
 const CITY_ID_MAP: Record<string, string> = {
-  'banyumas': '39',
+  // Jawa Tengah
+  'banyumas': '39', 'purwokerto': '39',
   'cilacap': '88',
   'purbalingga': '344',
   'banjarnegara': '33',
@@ -123,16 +124,119 @@ const CITY_ID_MAP: Record<string, string> = {
   'brebes': '73',
   'magelang': '225',
   'boyolali': '71',
+  'klaten': '172',
+  'sukoharjo': '412',
+  'wonogiri': '491',
+  'karanganyar': '155',
+  'sragen': '399',
+  'grobogan': '131',
+  'blora': '64',
+  'rembang': '369',
+  'pati': '317',
+  'kudus': '195',
+  'jepara': '144',
+  'demak': '109',
+  'semarang': '399',
+  'salatiga': '381',
+  'kendal': '168',
+  'batang': '43',
+  'pekalongan': '321',
+  'pemalang': '326',
+  'temanggung': '430',
+  'wonosobo': '493',
+  'purworejo': '348',
+  // Jawa Barat
+  'bandung': '23',
+  'bogor': '66',
   'cianjur': '85',
+  'bekasi': '55',
+  'depok': '111',
+  'sukabumi': '409',
+  'cirebon': '93',
+  'indramayu': '138',
+  'subang': '407',
+  'purwakarta': '347',
+  'karawang': '157',
+  'garut': '122',
+  'tasikmalaya': '422',
+  'ciamis': '82',
+  'kuningan': '196',
+  'majalengka': '229',
+  'sumedang': '413',
+  // Jawa Timur
+  'surabaya': '444',
+  'malang': '231',
+  'sidoarjo': '395',
+  'gresik': '131',
+  'mojokerto': '254',
+  'jombang': '148',
+  'pasuruan': '315',
+  'probolinggo': '337',
+  'lumajang': '214',
+  'jember': '140',
+  'banyuwangi': '38',
+  'situbondo': '398',
+  'bondowoso': '67',
+  'kediri': '162',
+  'blitar': '63',
+  'tulungagung': '455',
+  'trenggalek': '447',
+  'nganjuk': '275',
+  'madiun': '222',
+  'ngawi': '277',
+  'bojonegoro': '68',
+  'tuban': '453',
+  'lamongan': '200',
+  'bangkalan': '30',
+  'sampang': '385',
+  'pamekasan': '310',
+  'sumenep': '415',
+  // DKI Jakarta
+  'jakarta': '152',
+  // Yogyakarta
+  'yogyakarta': '501', 'jogja': '501', 'bantul': '35', 'sleman': '400', 'gunungkidul': '133', 'kulonprogo': '193',
+  // Sumatera
+  'medan': '242',
+  'binjai': '60',
+  'deli serdang': '110',
   'karo': '158',
+  'pematangsiantar': '329',
+  'tebing tinggi': '427',
+  'langkat': '202',
+  'palembang': '308',
+  'padang': '304',
+  'pekanbaru': '320',
+  'batam': '42',
+  'banda aceh': '27',
+  'bandar lampung': '28',
+  // Kalimantan
+  'balikpapan': '22',
+  'samarinda': '382',
+  'pontianak': '334',
+  'banjarmasin': '36',
+  'palangkaraya': '307',
+  // Sulawesi
+  'makassar': '228',
+  'manado': '234',
+  'palu': '309',
+  'kendari': '167',
+  'gorontalo': '128',
+  // Bali & NTB
+  'denpasar': '114',
+  'badung': '21',
+  'gianyar': '127',
+  'mataram': '240',
+  'lombok': '240',
 };
 
 function getCityId(address: string): string {
   const lower = address.toLowerCase();
-  for (const [key, id] of Object.entries(CITY_ID_MAP)) {
+  // Coba cocokkan nama kota dari yang paling spesifik (panjang) dulu
+  const entries = Object.entries(CITY_ID_MAP).sort((a, b) => b[0].length - a[0].length);
+  for (const [key, id] of entries) {
     if (lower.includes(key)) return id;
   }
-  return '39';
+  return '39'; // default: Banyumas
 }
 
 const MapController = ({ center, onMoveEnd }: { center: [number, number], onMoveEnd: (pos: [number, number]) => void }) => {
@@ -475,7 +579,8 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
   };
 
   const getCheapestEkspedisi = () => {
-    if (rajaOngkirCosts.length === 0) return { name: 'Memuat...', cost: 0 };
+    if (isCalculatingOngkir) return { name: 'Menghitung...', cost: -1 };
+    if (rajaOngkirCosts.length === 0) return { name: 'Klik untuk muat tarif', cost: -1 };
     const cheapest = rajaOngkirCosts[0];
     return {
       name: `${cheapest.courier} - ${cheapest.service}`,
@@ -677,8 +782,11 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
                       <p className="shipping-method-desc">Pilih ekspedisi yang tersedia</p>
                     </div>
                     <div className="shipping-info-right">
-                      <span className="shipping-method-price">
-                        {isCalculatingOngkir ? 'Memuat...' : `Rp ${getCheapestEkspedisi().cost.toLocaleString('id-ID')}`}
+                      <span className="shipping-method-price" style={{ color: getCheapestEkspedisi().cost === -1 ? '#94a3b8' : undefined, fontSize: getCheapestEkspedisi().cost === -1 ? '11px' : undefined }}>
+                        {getCheapestEkspedisi().cost === -1
+                          ? getCheapestEkspedisi().name
+                          : `Rp ${getCheapestEkspedisi().cost.toLocaleString('id-ID')}`
+                        }
                       </span>
                       <IonRadio value="ekspedisi" className="custom-radio" />
                     </div>
@@ -764,8 +872,15 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
                   <span>Rp {itemsTotal.toLocaleString('id-ID')}</span>
                 </div>
                 <div className="breakdown-row">
-                  <span>Ongkos Pengiriman {isCalculatingOngkir && '(Menghitung...)'}</span>
-                  <span>Rp {dynamicShippingCost.toLocaleString('id-ID')}</span>
+                  <span>Ongkos Pengiriman</span>
+                  <span style={{ color: selectedCourier === 'ekspedisi' && dynamicShippingCost === 0 && !isCalculatingOngkir ? '#94a3b8' : undefined }}>
+                    {isCalculatingOngkir
+                      ? 'Menghitung...'
+                      : selectedCourier === 'ekspedisi' && dynamicShippingCost === 0
+                        ? 'Pilih ekspedisi'
+                        : `Rp ${dynamicShippingCost.toLocaleString('id-ID')}`
+                    }
+                  </span>
                 </div>
                 <div className="breakdown-row">
                   <span>Biaya Layanan Aplikasi</span>

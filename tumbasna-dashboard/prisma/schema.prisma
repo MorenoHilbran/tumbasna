@@ -95,6 +95,7 @@ model Order {
   buyer            User?        @relation(fields: [buyerUserId], references: [id], onDelete: SetNull)
   items            OrderItem[]
   payment          Payment?
+  review           Review?
   deliveryDate     DateTime?    @map("delivery_date") @db.Date
   deliveryTimeSlot String?      @map("delivery_time_slot") @db.VarChar(50)
   buyerAddress     String?      @map("buyer_address")
@@ -259,4 +260,17 @@ model NotificationQueue {
   updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   @@map("notification_queue")
+}
+
+model Review {
+  id           String   @id @default(uuid()) @db.Uuid
+  orderId      String   @unique @map("order_id")
+  buyerUserId  String?  @map("buyer_user_id") @db.Uuid
+  supplierName String   @map("supplier_name")
+  rating       Int      // 1-5
+  comment      String?
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("reviews")
 }

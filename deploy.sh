@@ -4,6 +4,9 @@
 # Cara penggunaan: ./deploy.sh
 # Pastikan script ini dijalankan dari dalam root folder project di VPS Anda (misal: /opt/tumbasna)
 
+export DOCKER_BUILDKIT=1
+export COMPOSE_DOCKER_CLI_BUILD=1
+
 echo "========================================"
 echo "🚀 Memulai Deployment Tumbasna (Docker)"
 echo "========================================"
@@ -42,10 +45,10 @@ if [ -d "tumbasna-mobile" ]; then
     
     # Copy ke folder Nginx static /var/www/tumbasna-mobile
     echo "Copying build to /var/www/tumbasna-mobile..."
-    sudo mkdir -p /var/www/tumbasna-mobile
-    sudo cp -r dist/* /var/www/tumbasna-mobile/
-    sudo chmod -R 755 /var/www/tumbasna-mobile
-    sudo chmod -R 755 /opt/tumbasna/tumbasna-mobile/dist 2>/dev/null || true
+    mkdir -p /var/www/tumbasna-mobile
+    cp -r dist/* /var/www/tumbasna-mobile/
+    chmod -R 755 /var/www/tumbasna-mobile
+    chmod -R 755 /opt/tumbasna/tumbasna-mobile/dist 2>/dev/null || true
     cd ..
 else
     echo "tumbasna-mobile directory not found!"
@@ -57,8 +60,8 @@ echo "🔧 3.1 Memperbarui Konfigurasi Nginx VPS..."
 echo "========================================"
 if [ -f "nginx-sites-tumbasna.conf" ]; then
     echo "Applying nginx-sites-tumbasna.conf..."
-    sudo cp nginx-sites-tumbasna.conf /etc/nginx/sites-enabled/tumbasna
-    sudo nginx -t && sudo systemctl reload nginx
+    cp nginx-sites-tumbasna.conf /etc/nginx/sites-enabled/tumbasna
+    nginx -t && systemctl reload nginx
     echo "✓ Nginx reloaded successfully!"
 else
     echo "nginx-sites-tumbasna.conf not found!"
@@ -109,12 +112,12 @@ ls -la /opt/tumbasna/tumbasna-mobile/dist >> "$DIAG_FILE" 2>&1
 
 # Copy diagnostics ke Nginx web directories jika ada
 if [ -d "/var/www/tumbasna-mobile" ]; then
-    sudo cp "$DIAG_FILE" /var/www/tumbasna-mobile/diagnostics.txt
-    sudo chmod 644 /var/www/tumbasna-mobile/diagnostics.txt
+    cp "$DIAG_FILE" /var/www/tumbasna-mobile/diagnostics.txt
+    chmod 644 /var/www/tumbasna-mobile/diagnostics.txt
 fi
 if [ -d "/var/www/html" ]; then
-    sudo cp "$DIAG_FILE" /var/www/html/diagnostics.txt
-    sudo chmod 644 /var/www/html/diagnostics.txt
+    cp "$DIAG_FILE" /var/www/html/diagnostics.txt
+    chmod 644 /var/www/html/diagnostics.txt
 fi
 
 echo "========================================"
