@@ -303,8 +303,8 @@ const MainAppShell: React.FC = () => {
                   setSelectedChatPartner('Tumbasna AI Pintar');
                   setActiveTab('chat');
                   setViewState('tabs');
-                }onNavigateToNotifications={() => setViewState('notifications')}
                 }
+                onNavigateToNotifications={() => setViewState('notifications')}
                 onSelectProduct={(product) => {
                   setSelectedProduct(product);
                   setViewState('detail_produk');
@@ -359,6 +359,9 @@ const MainAppShell: React.FC = () => {
 };
 
 export default MainAppShell;
+
+
+
 
 
 
