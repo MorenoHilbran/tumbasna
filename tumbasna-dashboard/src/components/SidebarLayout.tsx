@@ -295,7 +295,7 @@ export default function SidebarLayout({
                             {navItems.find(n => n.href === pathname)?.label ?? 'Dashboard'}
                         </p>
                         <p className="text-xs text-slate-400 mt-0.5" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                            Platform Monitoring Komoditas Pangan — Tumbasna
+                            Platform Monitoring Komoditas Pangan - Tumbasna
                         </p>
                     </div>
                     <div className="flex items-center gap-4">
@@ -321,6 +321,7 @@ export default function SidebarLayout({
         </div>
     );
 }
+
 
 
 
