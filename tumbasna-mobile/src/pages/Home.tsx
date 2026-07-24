@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { IonContent, IonPage, IonToast } from '@ionic/react';
 import { useApp, Product } from '../context/AppContext';
 import CartPillBar from '../components/CartPillBar';
@@ -53,6 +53,7 @@ interface HomeProps {
   onNavigateToNotifications: () => void;
   onSelectProduct?: (product: Product) => void;
   onNavigateToChat?: () => void;
+  onNavigateToCocokkan?: () => void;
 }
 
 const getAiRecommendation = (productName: string) => {
@@ -80,7 +81,8 @@ const Home: React.FC<HomeProps> = ({
   onNavigateToAiChat, 
   onNavigateToNotifications,
   onSelectProduct, 
-  onNavigateToChat 
+  onNavigateToChat,
+  onNavigateToCocokkan 
 }) => {
   const { user, products, cart, addToCart } = useApp();
   const { unreadCount } = useNotifications();
@@ -229,6 +231,36 @@ const Home: React.FC<HomeProps> = ({
                   <span className="qm-lbl">{category.label}</span>
                 </button>
               ))}
+            </div>
+
+            {/* Smart Matching Engine Banner */}
+            <div className="matching-banner" onClick={onNavigateToCocokkan}>
+              <div className="matching-banner-bg">
+                <svg viewBox="0 0 400 120" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+                  <path d="M0 80 C80 120, 160 40, 240 70 C320 100, 360 50, 400 80 L400 120 L0 120 Z" fill="rgba(255,255,255,0.06)"/>
+                  <path d="M0 95 C100 60, 200 110, 300 80 C350 65, 380 90, 400 85 L400 120 L0 120 Z" fill="rgba(255,255,255,0.04)"/>
+                </svg>
+              </div>
+              <div className="matching-banner-content">
+                <div className="matching-banner-icon">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/>
+                    <path d="M23 7v10a2 2 0 0 1-2 2h-2"/>
+                    <rect x="7" y="1" width="10" height="14" rx="2"/>
+                    <line x1="12" y1="5" x2="12" y2="11"/>
+                    <line x1="9" y1="8" x2="15" y2="8"/>
+                  </svg>
+                </div>
+                <div className="matching-banner-text">
+                  <h3>Pencocokan Komoditas</h3>
+                  <p>Temukan pasokan atau pembeli yang cocok dengan kebutuhan Anda secara otomatis</p>
+                </div>
+                <div className="matching-banner-arrow">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
+                </div>
+              </div>
             </div>
 
             {/* Rekomendasi AI */}

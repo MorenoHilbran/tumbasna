@@ -62,6 +62,39 @@ export async function POST(req: Request) {
       });
     }
 
+    // --- New: Handle Chat Balasan dari Supplier ke Buyer ---
+    // Cek apakah nomor pengirim pernah menerima chat dari buyer (tabel ChatMessage dengan supplierName = sender)
+    const lastChatFromBuyer = await prisma.chatMessage.findFirst({
+      where: {
+        supplierName: sender,
+        sender: 'buyer'
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    // Jika pesan tidak mengandung kata kunci komoditas (JUAL/BELI/PANEN) dan ada histori chat dari buyer
+    const isCommodityMsg = message.toLowerCase().includes('jual') || message.toLowerCase().includes('beli') || message.toLowerCase().includes('panen');
+    if (!isCommodityMsg && lastChatFromBuyer && lastChatFromBuyer.buyerUserId) {
+      // Simpan balasan supplier ke tabel chat_messages
+      const supplierReply = await prisma.chatMessage.create({
+        data: {
+          buyerUserId: lastChatFromBuyer.buyerUserId,
+          supplierName: sender,
+          sender: 'supplier',
+          text: message,
+          status: 'read'
+        }
+      });
+
+      console.log(`[WA WEBHOOK] Balasan chat dari supplier ${sender} berhasil disimpan untuk buyer ID ${lastChatFromBuyer.buyerUserId}`);
+
+      return NextResponse.json({
+        success: true,
+        type: 'CHAT_REPLY',
+        data: supplierReply
+      });
+    }
+
     // 3. Extract Data using AI (Gemini)
     const extractedData = await extractMessageData(message);
     console.log("AI Extracted:", extractedData);

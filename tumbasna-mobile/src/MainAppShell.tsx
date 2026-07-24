@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { IonApp, IonIcon } from '@ionic/react';
 import { 
   homeOutline, home, 
@@ -27,11 +27,12 @@ import Notifications from './pages/Notifications';
 import LoginRegister from './pages/LoginRegister';
 import Welcome from './pages/Welcome';
 import Splash from './pages/Splash';
+import Cocokkan from './pages/Cocokkan';
 
 import './MainAppShell.css';
 
 type TabState = 'beranda' | 'pasar' | 'pesanan' | 'chat' | 'profil';
-type ViewState = 'tabs' | 'detail_produk' | 'keranjang' | 'checkout' | 'order_detail_payment' | 'detail_pesanan' | 'notifications';
+type ViewState = 'tabs' | 'detail_produk' | 'keranjang' | 'checkout' | 'order_detail_payment' | 'detail_pesanan' | 'notifications' | 'cocokkan';
 
 const TABS: { id: TabState; label: string; iconActive: string; iconInactive: string }[] = [
   { id: 'beranda', label: 'Beranda', iconActive: home, iconInactive: homeOutline },
@@ -80,6 +81,15 @@ const MainAppShell: React.FC = () => {
         if (!exists && order.items[0]) {
           const firstItem = order.items[0].product.name;
           notifications.addNotification(notificationTemplates.orderConfirmed(order.id, order.supplierName, firstItem));
+        }
+      }
+
+      if (order.status === 'Selesai') {
+        const exists = notifications.notifications.some(n => 
+          n.metadata?.orderId === order.id && n.title === 'Pesanan Selesai'
+        );
+        if (!exists) {
+          notifications.addNotification(notificationTemplates.orderCompleted(order.id, order.totalAmount, order.supplierName));
         }
       }
     });
@@ -164,8 +174,12 @@ const MainAppShell: React.FC = () => {
               onBack={() => setViewState('tabs')}
               onNavigateToCart={() => setViewState('keranjang')}
               onNavigateToChat={(supplierName, supplierPhone) => {
-                const message = encodeURIComponent(`Halo, saya tertarik dengan produk dari ${supplierName}`);
-                window.open(`https://wa.me/6285190943468?text=${message}`, '_blank');
+                setSelectedChatPartner(supplierName);
+                if (supplierPhone) {
+                  setSelectedChatPartnerPhone(supplierPhone);
+                }
+                setViewState('tabs');
+                setActiveTab('chat');
               }}
               onSelectProduct={(p) => setSelectedProduct(p)}
             />
@@ -254,6 +268,21 @@ const MainAppShell: React.FC = () => {
           />
         );
 
+      case 'cocokkan':
+        return (
+          <Cocokkan
+            onBack={() => {
+              setViewState('tabs');
+              setActiveTab('beranda');
+            }}
+            onNavigateToChat={(supplierName) => {
+              setSelectedChatPartner(supplierName);
+              setViewState('tabs');
+              setActiveTab('chat');
+            }}
+          />
+        );
+
       case 'tabs':
       default:
         switch (activeTab) {
@@ -315,6 +344,7 @@ const MainAppShell: React.FC = () => {
                   setActiveTab('chat');
                   setViewState('tabs');
                 }}
+                onNavigateToCocokkan={() => setViewState('cocokkan')}
               />
             );
         }
