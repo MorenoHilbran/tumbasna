@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import crypto from 'crypto';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -188,6 +189,74 @@ export async function PATCH(req: Request, { params }: Params) {
         }
       } catch (notiErr: any) {
         console.error('⚠️ Gagal mengirim notifikasi status ke WA:', notiErr.message);
+      }
+    }
+
+    // 5. Auto-manage DeliveryGroup berdasarkan perubahan status
+    if (status !== existingOrder.status) {
+      try {
+        const buyerForGroup = existingOrder.buyerUserId
+          ? await prisma.user.findUnique({ where: { id: existingOrder.buyerUserId } })
+          : null;
+        const buyerDisplayName =
+          buyerForGroup?.businessName || buyerForGroup?.name || 'Pembeli';
+
+        if (status === 'DIKIRIM') {
+          // Buat delivery group otomatis — idempotent
+          const existingGroup = await prisma.deliveryGroup.findUnique({
+            where: { orderId: id },
+          });
+          if (!existingGroup) {
+            const driverAccessToken = crypto.randomUUID();
+            await prisma.deliveryGroup.create({
+              data: {
+                orderId: id,
+                status: 'ACTIVE',
+                driverAccessToken,
+                messages: {
+                  create: {
+                    senderRole: 'system',
+                    senderName: 'Tumbasna',
+                    text:
+                      `🚴 Pesanan *${id}* sedang dalam perjalanan!\n\n` +
+                      `• Supplier: ${existingOrder.supplierName}\n` +
+                      `• Pembeli: ${buyerDisplayName}\n` +
+                      `• Kurir: ${existingOrder.courier}\n\n` +
+                      `Gunakan chat ini untuk koordinasi pengiriman. Supplier dan Pembeli bisa saling berkomunikasi di sini.`,
+                    isSystemMessage: true,
+                  },
+                },
+              },
+            });
+            console.log(`💬 [DELIVERY GROUP] Grup chat dibuat untuk order ${id}`);
+          }
+        } else if (status === 'SELESAI' || status === 'DIBATALKAN') {
+          // Tutup delivery group jika ada
+          const groupToClose = await prisma.deliveryGroup.findUnique({
+            where: { orderId: id },
+          });
+          if (groupToClose && groupToClose.status === 'ACTIVE') {
+            await prisma.deliveryGroup.update({
+              where: { orderId: id },
+              data: { status: 'CLOSED' },
+            });
+            await prisma.deliveryGroupMessage.create({
+              data: {
+                groupId: groupToClose.id,
+                senderRole: 'system',
+                senderName: 'Tumbasna',
+                text:
+                  status === 'SELESAI'
+                    ? '✅ Pesanan telah dikonfirmasi selesai. Chat pengiriman ini ditutup. Terima kasih!'
+                    : '❌ Pesanan dibatalkan. Chat pengiriman ini ditutup.',
+                isSystemMessage: true,
+              },
+            });
+            console.log(`💬 [DELIVERY GROUP] Grup chat ditutup untuk order ${id} (status: ${status})`);
+          }
+        }
+      } catch (groupErr: any) {
+        console.warn('⚠️ [DELIVERY GROUP] Gagal auto-manage grup:', groupErr.message);
       }
     }
 

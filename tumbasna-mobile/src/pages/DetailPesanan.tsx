@@ -30,6 +30,7 @@ interface DetailPesananProps {
   onBack: () => void;
   onNavigateToChat: (supplierName: string) => void;
   onNavigateToPayment?: (orderId?: string) => void;
+  onNavigateToDeliveryGroup?: (orderId: string) => void;
 }
 
 const locationCoords: Record<string, [number, number]> = {
@@ -68,7 +69,7 @@ const MapBoundsController: React.FC<{ supplierLoc: [number, number], buyerLoc: [
   return null;
 };
 
-const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNavigateToChat, onNavigateToPayment }) => {
+const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNavigateToChat, onNavigateToPayment, onNavigateToDeliveryGroup }) => {
   const { user, orders, confirmOrderReceived } = useApp();
   const [showToast, setShowToast] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
@@ -480,6 +481,47 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
             </div>
           )}
         </div>
+
+        {/* ── GROUP CHAT PENGIRIMAN ─────────────────────────── */}
+        {order.status === 'Dikirim' && (
+          <div style={{ margin: '0 14px 4px' }}>
+            <button
+              onClick={() => onNavigateToDeliveryGroup?.(order.id)}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 10,
+                background: 'linear-gradient(135deg, #006837, #008f4a)',
+                color: 'white',
+                border: 'none',
+                borderRadius: 14,
+                padding: '14px 20px',
+                fontWeight: 700,
+                fontSize: 14,
+                cursor: 'pointer',
+                boxShadow: '0 4px 16px rgba(0, 104, 55, 0.35)',
+                letterSpacing: 0.3,
+              }}
+            >
+              <span style={{ fontSize: 22 }}>💬</span>
+              <span>Buka Grup Chat Pengiriman</span>
+              <span style={{
+                background: 'rgba(255,255,255,0.2)',
+                borderRadius: 999,
+                fontSize: 10,
+                fontWeight: 800,
+                padding: '2px 8px',
+                marginLeft: 2,
+                animation: 'pulse-badge 2s infinite',
+              }}>LIVE</span>
+            </button>
+            <p style={{ margin: '6px 0 0', fontSize: 11, color: '#64748b', textAlign: 'center' }}>
+              Chat langsung dengan Supplier dan Kurir dalam satu grup
+            </p>
+          </div>
+        )}
 
         {/* ── COD: Hubungi Supplier via in-app Chat ─────────── */}
         {isCOD && (

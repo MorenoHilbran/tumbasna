@@ -28,11 +28,12 @@ import LoginRegister from './pages/LoginRegister';
 import Welcome from './pages/Welcome';
 import Splash from './pages/Splash';
 import Cocokkan from './pages/Cocokkan';
+import DeliveryGroupChat from './pages/DeliveryGroupChat';
 
 import './MainAppShell.css';
 
 type TabState = 'beranda' | 'pasar' | 'pesanan' | 'chat' | 'profil';
-type ViewState = 'tabs' | 'detail_produk' | 'keranjang' | 'checkout' | 'order_detail_payment' | 'detail_pesanan' | 'notifications' | 'cocokkan';
+type ViewState = 'tabs' | 'detail_produk' | 'keranjang' | 'checkout' | 'order_detail_payment' | 'detail_pesanan' | 'notifications' | 'cocokkan' | 'delivery_group_chat';
 
 const TABS: { id: TabState; label: string; iconActive: string; iconInactive: string }[] = [
   { id: 'beranda', label: 'Beranda', iconActive: home, iconInactive: homeOutline },
@@ -62,6 +63,7 @@ const MainAppShell: React.FC = () => {
   
   const [checkoutSupplierId, setCheckoutSupplierId] = useState<string | null>(null);
   const [checkoutSupplierItems, setCheckoutSupplierItems] = useState<CartItem[]>([]);
+  const [selectedDeliveryGroupOrderId, setSelectedDeliveryGroupOrderId] = useState<string | null>(null);
   // Auto-generate notifications based on order changes
   useEffect(() => {
     orders.forEach(order => {
@@ -251,6 +253,22 @@ const MainAppShell: React.FC = () => {
               onNavigateToPayment={() => {
                 setViewState('order_detail_payment');
               }}
+              onNavigateToDeliveryGroup={(orderId) => {
+                setSelectedDeliveryGroupOrderId(orderId);
+                setViewState('delivery_group_chat');
+              }}
+            />
+          );
+        }
+        setViewState('tabs');
+        return null;
+
+      case 'delivery_group_chat':
+        if (selectedDeliveryGroupOrderId) {
+          return (
+            <DeliveryGroupChat
+              orderId={selectedDeliveryGroupOrderId}
+              onBack={() => setViewState('detail_pesanan')}
             />
           );
         }

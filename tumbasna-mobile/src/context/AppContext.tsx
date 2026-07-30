@@ -33,6 +33,27 @@ export interface ChatThread {
   unreadCount: number; messages: ChatMessage[];
   supplierPhone?: string;
 }
+// ── Delivery Group Chat (Supplier × Kurir × Penerima) ──────────────────
+export interface DeliveryGroupMessage {
+  id: string;
+  senderRole: 'buyer' | 'supplier' | 'driver' | 'system';
+  senderName: string;
+  text: string;
+  isSystemMessage: boolean;
+  timestamp: string;
+}
+export interface DeliveryGroup {
+  id: string;
+  orderId: string;
+  status: 'ACTIVE' | 'CLOSED';
+  driverName?: string | null;
+  driverPhone?: string | null;
+  driverLink?: string | null;
+  supplierName?: string;
+  courier?: string;
+  buyerName?: string;
+  messages: DeliveryGroupMessage[];
+}
 export interface User {
   id?: string; ownerName: string; businessName: string; phone: string;
   email: string; address: string; businessType: string;
@@ -63,6 +84,10 @@ interface AppContextType {
   refreshOrders: () => Promise<void>;
   refreshProducts: () => Promise<void>;
   updateProfile: (userData: Partial<User>) => Promise<{ success: boolean; error?: string }>;
+  // Delivery Group Chat
+  deliveryGroups: Record<string, DeliveryGroup>; // keyed by orderId
+  fetchDeliveryGroup: (orderId: string) => Promise<DeliveryGroup | null>;
+  sendDeliveryGroupMessage: (orderId: string, text: string) => Promise<boolean>;
 }
 
 
@@ -183,6 +208,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
     return INITIAL_CHATS;
   });
+  // Delivery Group Chat state — keyed by orderId
+  const [deliveryGroups, setDeliveryGroups] = useState<Record<string, DeliveryGroup>>({});
+  // Track last poll timestamp per group
+  const deliveryGroupLastTs = React.useRef<Record<string, string>>({});
 
   // â”€â”€ Persist user & cart â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
@@ -761,9 +790,101 @@ Tugas Anda:
     return { success: false, error: result.error || 'Failed to update profile' };
   };
 
+  // ── Delivery Group Chat ─────────────────────────────────────────────
+  const fetchDeliveryGroup = async (orderId: string): Promise<DeliveryGroup | null> => {
+    try {
+      const res = await fetch(`${API_BASE}/api/delivery-group/${orderId}`);
+      const json = await res.json();
+      if (json.success && json.data) {
+        const group: DeliveryGroup = json.data;
+        setDeliveryGroups(prev => ({ ...prev, [orderId]: group }));
+        if (group.messages.length > 0) {
+          deliveryGroupLastTs.current[orderId] = group.messages[group.messages.length - 1].timestamp;
+        }
+        return group;
+      }
+    } catch (e) {
+      console.warn('[fetchDeliveryGroup] error:', e);
+    }
+    return null;
+  };
+
+  const sendDeliveryGroupMessage = async (orderId: string, text: string): Promise<boolean> => {
+    if (!user) return false;
+    try {
+      const senderName = user.businessName || user.ownerName || 'Pembeli';
+      const res = await fetch(`${API_BASE}/api/delivery-group/${orderId}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          senderRole: 'buyer',
+          senderName,
+          text,
+        }),
+      });
+      const json = await res.json();
+      if (json.success && json.data) {
+        const newMsg: DeliveryGroupMessage = json.data;
+        setDeliveryGroups(prev => {
+          const group = prev[orderId];
+          if (!group) return prev;
+          return {
+            ...prev,
+            [orderId]: { ...group, messages: [...group.messages, newMsg] },
+          };
+        });
+        deliveryGroupLastTs.current[orderId] = json.data.timestamp;
+        return true;
+      }
+    } catch (e) {
+      console.warn('[sendDeliveryGroupMessage] error:', e);
+    }
+    return false;
+  };
+
+  // Auto-poll pesan baru untuk semua grup aktif (setiap 5 detik saat user login)
+  useEffect(() => {
+    if (!user) return;
+    const pollDeliveryGroups = async () => {
+      const activeOrders = orders.filter(o => o.status === 'Dikirim');
+      for (const order of activeOrders) {
+        try {
+          const since = deliveryGroupLastTs.current[order.id];
+          const url = since
+            ? `${API_BASE}/api/delivery-group/${order.id}/messages?since=${encodeURIComponent(since)}`
+            : `${API_BASE}/api/delivery-group/${order.id}/messages`;
+          const res = await fetch(url);
+          const json = await res.json();
+          if (json.success && json.data?.length > 0) {
+            const newMsgs: DeliveryGroupMessage[] = json.data;
+            setDeliveryGroups(prev => {
+              const group = prev[order.id];
+              if (!group) return prev;
+              return {
+                ...prev,
+                [order.id]: { ...group, messages: [...group.messages, ...newMsgs] },
+              };
+            });
+            deliveryGroupLastTs.current[order.id] = newMsgs[newMsgs.length - 1].timestamp;
+          }
+        } catch {}
+      }
+    };
+
+    const interval = setInterval(pollDeliveryGroups, 5000);
+    return () => clearInterval(interval);
+  }, [user, orders]);
+
 
   return (
-    <AppContext.Provider value={{ user, products, cart, orders, chats, isApiOnline, login, register, logout, addToCart, removeFromCart, updateCartQuantity, clearCart, checkout, payOrder, confirmOrderReceived, sendMessage, refreshOrders, refreshProducts, updateProfile }}>
+    <AppContext.Provider value={{
+      user, products, cart, orders, chats, isApiOnline,
+      login, register, logout, addToCart, removeFromCart, updateCartQuantity,
+      clearCart, checkout, payOrder, confirmOrderReceived, sendMessage,
+      refreshOrders, refreshProducts, updateProfile,
+      // Delivery Group Chat
+      deliveryGroups, fetchDeliveryGroup, sendDeliveryGroupMessage,
+    }}>
       {children}
     </AppContext.Provider>
   );
