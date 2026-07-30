@@ -218,7 +218,7 @@ export async function PATCH(req: Request, { params }: Params) {
                     senderRole: 'system',
                     senderName: 'Tumbasna',
                     text:
-                      `🚴 Pesanan *${id}* sedang dalam perjalanan!\n\n` +
+                      `Pesanan *${id}* sedang dalam perjalanan.\n\n` +
                       `• Supplier: ${existingOrder.supplierName}\n` +
                       `• Pembeli: ${buyerDisplayName}\n` +
                       `• Kurir: ${existingOrder.courier}\n\n` +
@@ -228,7 +228,7 @@ export async function PATCH(req: Request, { params }: Params) {
                 },
               },
             });
-            console.log(`💬 [DELIVERY GROUP] Grup chat dibuat untuk order ${id}`);
+            console.log(`[DELIVERY GROUP] Grup chat dibuat untuk order ${id}`);
           }
         } else if (status === 'SELESAI' || status === 'DIBATALKAN') {
           // Tutup delivery group jika ada
@@ -247,12 +247,12 @@ export async function PATCH(req: Request, { params }: Params) {
                 senderName: 'Tumbasna',
                 text:
                   status === 'SELESAI'
-                    ? '✅ Pesanan telah dikonfirmasi selesai. Chat pengiriman ini ditutup. Terima kasih!'
-                    : '❌ Pesanan dibatalkan. Chat pengiriman ini ditutup.',
+                    ? 'Pesanan telah dikonfirmasi selesai. Chat pengiriman ini ditutup. Terima kasih!'
+                    : 'Pesanan dibatalkan. Chat pengiriman ini ditutup.',
                 isSystemMessage: true,
               },
             });
-            console.log(`💬 [DELIVERY GROUP] Grup chat ditutup untuk order ${id} (status: ${status})`);
+            console.log(`[DELIVERY GROUP] Grup chat ditutup untuk order ${id} (status: ${status})`);
           }
         }
       } catch (groupErr: any) {

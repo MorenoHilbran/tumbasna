@@ -124,7 +124,7 @@ export async function POST(req: Request, { params }: Params) {
 
     const defaultSysMsg =
       systemMessage ||
-      `🚴 Pesanan *${orderId}* sedang dalam perjalanan.\n\n` +
+      `Pesanan *${orderId}* sedang dalam perjalanan.\n\n` +
       `• Supplier: ${order.supplierName}\n` +
       `• Pembeli: ${buyerName}\n` +
       `• Kurir: ${driverName ? `${driverName} (${order.courier})` : order.courier}\n\n` +
@@ -215,7 +215,7 @@ export async function PATCH(req: Request, { params }: Params) {
           groupId: existing.id,
           senderRole: 'system',
           senderName: 'Tumbasna',
-          text: '✅ Pesanan telah selesai. Chat pengiriman ini telah ditutup. Terima kasih telah menggunakan Tumbasna!',
+          text: 'Pesanan telah selesai. Chat pengiriman ini telah ditutup. Terima kasih telah menggunakan Tumbasna!',
           isSystemMessage: true,
         },
       });

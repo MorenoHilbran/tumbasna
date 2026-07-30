@@ -505,7 +505,7 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
                 letterSpacing: 0.3,
               }}
             >
-              <span style={{ fontSize: 22 }}>💬</span>
+              <IonIcon icon={chatbubblesOutline} style={{ fontSize: 20 }} />
               <span>Buka Grup Chat Pengiriman</span>
               <span style={{
                 background: 'rgba(255,255,255,0.2)',
