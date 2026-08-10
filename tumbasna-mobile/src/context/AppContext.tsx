@@ -763,25 +763,51 @@ Tugas Anda:
           }
 
           if (!finalSupplierPhone) {
-            // 3. Fallback: check if supplierName itself is a phone number
+            // 3. Fallback to API /api/chat/suppliers to resolve real supplier phone by name
+            try {
+              const resSuppliers = await fetch(`${API_BASE}/api/chat/suppliers`);
+              if (resSuppliers.ok) {
+                const jsonSuppliers = await resSuppliers.json();
+                if (jsonSuppliers.success && Array.isArray(jsonSuppliers.data)) {
+                  const matchedRemote = jsonSuppliers.data.find((s: any) =>
+                    s.name.trim().toLowerCase() === supplierName.trim().toLowerCase() ||
+                    s.businessName?.trim().toLowerCase() === supplierName.trim().toLowerCase() ||
+                    s.name.toLowerCase().includes(supplierName.toLowerCase()) ||
+                    supplierName.toLowerCase().includes(s.name.toLowerCase())
+                  );
+                  if (matchedRemote?.phone) {
+                    finalSupplierPhone = matchedRemote.phone;
+                  }
+                }
+              }
+            } catch (errApi) {
+              console.warn('[sendMessage] Failed fetching remote suppliers list:', errApi);
+            }
+          }
+
+          if (!finalSupplierPhone) {
+            // 4. Fallback: check if supplierName itself is a phone number
             const digitsOnly = supplierName.replace(/\D/g, '');
             if (digitsOnly.length >= 10) {
               finalSupplierPhone = digitsOnly;
             }
           }
 
-          const buyerPhone = user?.phone || '';
+          const buyerPhone = user?.phone || '6280000000000';
           console.log('[sendMessage] Relay WA debug:', {
             supplierName,
             supplierPhone,
             threadSupplierPhone: thread?.supplierPhone,
             finalSupplierPhone,
             buyerPhone,
+            userPhone: user?.phone,
             text
           });
 
           if (!finalSupplierPhone) {
-            console.warn(`[sendMessage] Gagal menemukan nomor HP supplier untuk "${supplierName}". Pesan disimpan secara lokal.`);
+            console.warn(`[sendMessage] Skip relay WA because supplier phone is missing for "${supplierName}". Pesan disimpan secara lokal.`);
+          } else if (!buyerPhone) {
+            console.warn(`[sendMessage] Skip relay WA because buyer phone is missing. Pesan disimpan secara lokal.`);
           }
 
           if (finalSupplierPhone && buyerPhone) {

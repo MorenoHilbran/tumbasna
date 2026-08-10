@@ -46,8 +46,8 @@ export async function GET(req: Request) {
             return NextResponse.json({ 
                 success: true, 
                 isWhitelisted: true, 
-                isRegistered: !!user.name,
-                name: user.name,
+                isRegistered: !!(user.name || user.businessName),
+                name: user.name || user.businessName || '',
                 balance: Number(user.balance),
                 role: user.role,
                 bankName: user.bankName,
