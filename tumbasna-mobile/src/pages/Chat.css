@@ -307,7 +307,7 @@
   display: flex;
   gap: 8px;
   align-items: center;
-  z-index: 10;
+  z-index: 1000;
 }
 
 .chat-text-input {

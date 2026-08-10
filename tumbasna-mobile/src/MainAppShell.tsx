@@ -60,6 +60,7 @@ const MainAppShell: React.FC = () => {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [selectedChatPartner, setSelectedChatPartner] = useState<string | null>(null);
   const [selectedChatPartnerPhone, setSelectedChatPartnerPhone] = useState<string | null>(null);
+  const [isChatThreadActive, setIsChatThreadActive] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('semua');
   
   const [checkoutSupplierId, setCheckoutSupplierId] = useState<string | null>(null);
@@ -343,6 +344,7 @@ const MainAppShell: React.FC = () => {
                   setSelectedChatPartner(null);
                   setSelectedChatPartnerPhone(null);
                 }}
+                onThreadChange={(active) => setIsChatThreadActive(active)}
               />
             );
           case 'profil':
@@ -395,7 +397,7 @@ const MainAppShell: React.FC = () => {
         {renderContent()}
       </div>
 
-      {viewState === 'tabs' && (
+      {viewState === 'tabs' && !(activeTab === 'chat' && isChatThreadActive) && (
         <div className="bottom-nav">
           <ul className="bottom-nav-list">
             {TABS.map((tab) => {

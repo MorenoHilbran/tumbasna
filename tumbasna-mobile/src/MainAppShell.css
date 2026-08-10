@@ -1,8 +1,9 @@
 /* MainAppShell.css */
 
 html, body, #root, ion-app {
-  height: 100dvh !important;
-  max-height: 100dvh !important;
+  height: 100% !important;
+  height: -webkit-fill-available !important;
+  max-height: 100% !important;
   overflow: hidden;
   background: #F9FAFB;
 }
@@ -23,8 +24,10 @@ html, body, #root, ion-app {
 
 /* Bottom Navigation Bar */
 .bottom-nav {
-  position: absolute;
+  position: fixed;
   bottom: 0;
+  left: 0;
+  right: 0;
   width: 100%;
   background: transparent;
   z-index: 100;

@@ -69,13 +69,21 @@ interface ChatProps {
   initialPartner?: string | null;
   initialPartnerPhone?: string | null;
   onClearInitialPartner?: () => void;
+  onThreadChange?: (active: boolean) => void;
 }
 
-const Chat: React.FC<ChatProps> = ({ initialPartner, initialPartnerPhone, onClearInitialPartner }) => {
+const Chat: React.FC<ChatProps> = ({ initialPartner, initialPartnerPhone, onClearInitialPartner, onThreadChange }) => {
   const { chats, sendMessage } = useApp();
   const [selectedThread, setSelectedThread] = useState<ChatThread | null>(null);
   const [typedMessage, setTypedMessage] = useState('');
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // Notify parent of active thread state (so main bottom nav can be hidden during active conversation)
+  useEffect(() => {
+    if (onThreadChange) {
+      onThreadChange(!!selectedThread);
+    }
+  }, [selectedThread, onThreadChange]);
 
   // Auto scroll to bottom of chat
   useEffect(() => {
@@ -121,6 +129,13 @@ const Chat: React.FC<ChatProps> = ({ initialPartner, initialPartnerPhone, onClea
     setTypedMessage('');
   };
 
+  const handleBackFromThread = () => {
+    setSelectedThread(null);
+    if (onClearInitialPartner) {
+      onClearInitialPartner();
+    }
+  };
+
   const isAiPartner = activeThread?.supplierName === 'Tumbasna AI Pintar';
 
   return (
@@ -132,7 +147,7 @@ const Chat: React.FC<ChatProps> = ({ initialPartner, initialPartnerPhone, onClea
             /* CONVERSATION HEADER */
             <div className="active-chat-header">
               <IonButtons slot="start">
-                <button className="chat-back-btn" onClick={() => setSelectedThread(null)}>
+                <button className="chat-back-btn" onClick={handleBackFromThread}>
                   <IonIcon icon={arrowBackOutline} />
                 </button>
               </IonButtons>
