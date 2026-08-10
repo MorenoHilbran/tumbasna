@@ -812,11 +812,9 @@ Tugas Anda:
 
           if (!finalSupplierPhone) {
             console.warn(`[sendMessage] Skip relay WA because supplier phone is missing for "${supplierName}". Pesan disimpan secara lokal.`);
-          } else if (!buyerPhone) {
-            console.warn(`[sendMessage] Skip relay WA because buyer phone is missing. Pesan disimpan secara lokal.`);
           }
 
-          if (finalSupplierPhone && buyerPhone) {
+          if (finalSupplierPhone) {
             const res = await fetch(`${API_BASE}/api/chat/suppliers`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
