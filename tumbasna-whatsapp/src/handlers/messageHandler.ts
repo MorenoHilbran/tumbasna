@@ -16,8 +16,14 @@ interface DeleteProductState {
     expiresAt: number;
 }
 
+interface ChatViewState {
+    buyers: Array<{ buyerPhone: string; buyerName: string | null; lastMessage: string; lastTime: string }>;
+    expiresAt: number;
+}
+
 const deleteAccountStateMap = new Map<string, DeleteAccountState>();
 const deleteProductStateMap = new Map<string, DeleteProductState>();
+const chatViewStateMap = new Map<string, ChatViewState>();
 
 export async function processIncomingMessage(
     sender: string,
@@ -71,7 +77,13 @@ export async function processIncomingMessage(
     // 1.3. Cek jika pesan adalah balasan supplier untuk buyer
     // Pattern: Supplier membalas pesan yang mengandung info buyer dari Tumbasna
     // Kita deteksi jika supplier baru saja menerima pesan dari buyer (dalam konteks chat terakhir)
-    if (isRegistered && text && !text.startsWith('[') && !text.toLowerCase().startsWith('kirim ')) {
+    // Definisikan keyword bot di sini untuk dipakai pada pengecekan awal
+    const botMenuKeywords = ['menu', 'help', 'bantuan', 'hallo', 'halo', 'p'];
+    const botNumberKeywords = ['1', '2', '3', '4', '5', '6', '7', '8', 'profil', 'rekening', 'saldo', 'listing', 'produk', 'pesanan', 'order', 'jual', 'tambah', 'cs', 'edit', 'ubah', 'hapus akun', 'hapus data'];
+    // Pesan sistem relay dari Tumbasna — jangan diproses sebagai supplier reply
+    const isTumbasnaSystemMessage = text.includes('Pesan dari Pembeli Tumbasna') || text.includes('tumbasna-rahasia') || text.startsWith('✅ Pesan Anda telah terkirim');
+
+    if (isRegistered && text && !text.startsWith('[') && !text.toLowerCase().startsWith('kirim ') && !isTumbasnaSystemMessage) {
         // Cek apakah supplier ini baru saja menerima pesan dari buyer (cek recent chat history)
         try {
             const recentChats = await apiService.getRecentChatsForSupplier(phoneNumber);
@@ -80,15 +92,19 @@ export async function processIncomingMessage(
                 const lastChat = recentChats[0];
                 const buyerPhone = lastChat.buyerPhone;
                 
-                // Jika ada buyer phone dan pesan ini bukan command bot, anggap ini adalah reply ke buyer
-                if (buyerPhone && !menuKeywords.includes(cleanText) && !numberKeywords.includes(cleanText)) {
+                // Guard: skip jika buyerPhone sama dengan supplierPhone
+                // (kasus testing dengan nomor yang sama — mencegah infinite loop)
+                const isSameNumber = buyerPhone && buyerPhone.replace(/\D/g, '') === phoneNumber.replace(/\D/g, '');
+
+                // Jika ada buyer phone yang berbeda dan pesan ini bukan command bot
+                if (buyerPhone && !isSameNumber && text.trim().length > 0 && !botMenuKeywords.includes(cleanText) && !botNumberKeywords.includes(cleanText)) {
                     console.log(`💬 [CHAT REPLY] Supplier ${phoneNumber} membalas buyer ${buyerPhone}`);
                     
                     // Save reply supplier ke database
                     await apiService.saveChatMessage({
                         buyerPhone,
                         supplierPhone: phoneNumber,
-                        message: text,
+                        message: text.trim(),
                         sender: 'supplier'
                     });
                     
@@ -99,11 +115,75 @@ export async function processIncomingMessage(
                     
                     console.log(`✅ [CHAT REPLY SAVED] Reply dari supplier ${phoneNumber} untuk buyer ${buyerPhone}`);
                     return; // Stop processing, karena ini adalah chat reply
+                } else if (isSameNumber) {
+                    console.log(`⚠️ [CHAT REPLY SKIP] buyerPhone === supplierPhone (${phoneNumber}), skip untuk hindari loop.`);
                 }
             }
         } catch (chatErr: any) {
             console.warn(`⚠️ [CHAT REPLY CHECK] Error checking recent chats: ${chatErr.message}`);
             // Lanjutkan ke flow normal jika error
+        }
+    }
+
+    // 1.3.5. Cek jika supplier sedang dalam mode Chat View (pilih nomor buyer untuk lihat history)
+    if (chatViewStateMap.has(phoneNumber)) {
+        const chatState = chatViewStateMap.get(phoneNumber)!;
+
+        // Cek expired (10 menit)
+        if (Date.now() > chatState.expiresAt) {
+            chatViewStateMap.delete(phoneNumber);
+        } else {
+            const selectedIndex = parseInt(cleanText, 10) - 1;
+
+            if (cleanText === 'batal' || cleanText === 'menu' || cleanText === 'keluar') {
+                chatViewStateMap.delete(phoneNumber);
+                await sendMessage(sender, { text: `💡 Ketik *MENU* untuk melihat menu utama.` });
+                return;
+            }
+
+            if (!isNaN(selectedIndex) && selectedIndex >= 0 && selectedIndex < chatState.buyers.length) {
+                const selectedBuyer = chatState.buyers[selectedIndex];
+                chatViewStateMap.delete(phoneNumber);
+
+                // Ambil history chat
+                try {
+                    const history = await apiService.getChatHistory(selectedBuyer.buyerPhone, phoneNumber);
+
+                    const displayName = selectedBuyer.buyerName || `+${selectedBuyer.buyerPhone}`;
+                    let historyText = `💬 *PERCAKAPAN DENGAN ${displayName}*\n`;
+                    historyText += `📱 ${selectedBuyer.buyerPhone}\n`;
+                    historyText += `─────────────────────────\n\n`;
+
+                    if (history.length === 0) {
+                        historyText += `_Belum ada percakapan yang tersimpan._\n`;
+                    } else {
+                        // Tampilkan maks 15 pesan terakhir agar tidak terlalu panjang
+                        const messages = history.slice(-15);
+                        for (const msg of messages) {
+                            const time = new Date(msg.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                            const date = new Date(msg.createdAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
+                            const senderLabel = msg.sender === 'buyer' ? `🛒 Pembeli` : `🌾 Anda`;
+                            historyText += `[${date} ${time}] ${senderLabel}:\n${msg.text}\n\n`;
+                        }
+                    }
+
+                    historyText += `─────────────────────────\n`;
+                    historyText += `💡 Untuk membalas, cukup ketik pesan biasa — bot akan meneruskan ke pembeli.\n`;
+                    historyText += `💡 Ketik *CHAT* untuk kembali ke inbox atau *MENU* untuk menu utama.`;
+
+                    await sendMessage(sender, { text: historyText });
+                } catch (err: any) {
+                    await sendMessage(sender, { text: `❌ Gagal memuat percakapan. Silakan coba lagi.` });
+                }
+                return;
+            } else if (!isNaN(selectedIndex)) {
+                await sendMessage(sender, {
+                    text: `⚠️ Nomor tidak valid. Pilih antara *1* hingga *${chatState.buyers.length}*.\n\nKetik *CHAT* untuk melihat inbox lagi atau *MENU* untuk menu utama.`
+                });
+                return;
+            }
+            // Jika input bukan angka dan bukan command — lanjut ke flow normal (AI)
+            chatViewStateMap.delete(phoneNumber);
         }
     }
 
@@ -358,7 +438,7 @@ export async function processIncomingMessage(
 
     // 2. Tampilkan Menu Cepat (Numeric / Keyword Shortcuts)
     const menuKeywords = ['menu', 'help', 'bantuan', 'hallo', 'halo', 'p'];
-    const numberKeywords = ['1', '2', '3', '4', '5', '6', '7', '8', 'profil', 'rekening', 'saldo', 'listing', 'produk', 'pesanan', 'order', 'jual', 'tambah', 'cs', 'bantuan', 'edit', 'ubah', 'hapus akun', 'hapus data'];
+    const numberKeywords = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'profil', 'rekening', 'saldo', 'listing', 'produk', 'pesanan', 'order', 'jual', 'tambah', 'cs', 'bantuan', 'edit', 'ubah', 'hapus akun', 'hapus data', 'chat', 'inbox'];
 
     if (menuKeywords.includes(cleanText) || numberKeywords.includes(cleanText)) {
         if (isRegistered && userInfo) {
@@ -372,7 +452,8 @@ export async function processIncomingMessage(
                     `*5* ✍️ Cara Jual / Daftarkan Komoditas\n` +
                     `*6* 📞 Hubungi Bantuan / CS\n` +
                     `*7* ✏️ Edit Profil / Rekening Bank\n` +
-                    `*8* 🗑️ Hapus Akun & Data Saya\n\n` +
+                    `*8* 🗑️ Hapus Akun & Data Saya\n` +
+                    `*9* 💬 Inbox Chat Pembeli\n\n` +
                     `💡 _Atau Juragan bisa langsung mengetik pesan teks bebas untuk menawarkan hasil tani Juragan secara otomatis._`;
                 await sendMessage(sender, { text: menuText });
                 return;
@@ -533,6 +614,65 @@ export async function processIncomingMessage(
                     `👉 Balas *YAKIN HAPUS* untuk melanjutkan ke konfirmasi final.\n` +
                     `👉 Balas *BATAL* untuk membatalkan proses ini.`;
                 await sendMessage(sender, { text: warningText });
+                return;
+            }
+
+            if (cleanText === '9' || cleanText === 'chat' || cleanText === 'inbox') {
+                try {
+                    const recentChats = await apiService.getRecentChatsForSupplier(phoneNumber);
+
+                    if (!recentChats || recentChats.length === 0) {
+                        await sendMessage(sender, {
+                            text: `💬 *INBOX CHAT PEMBELI*\n\nBelum ada pembeli yang menghubungi Juragan dalam 7 hari terakhir.\n\n💡 Ketik *MENU* untuk kembali ke menu utama.`
+                        });
+                        return;
+                    }
+
+                    // Simpan state ke map (berlaku 10 menit)
+                    chatViewStateMap.set(phoneNumber, {
+                        buyers: recentChats.map((c: any) => ({
+                            buyerPhone: c.buyerPhone,
+                            buyerName: c.buyerName || null,
+                            lastMessage: c.lastMessage || c.text || '',
+                            lastTime: c.lastTime || c.createdAt || '',
+                        })),
+                        expiresAt: Date.now() + 10 * 60 * 1000
+                    });
+
+                    let inboxText = `💬 *INBOX CHAT PEMBELI* 📥\n\n`;
+                    inboxText += `Pembeli yang menghubungi Juragan (7 hari terakhir):\n`;
+                    inboxText += `─────────────────────────\n\n`;
+
+                    recentChats.forEach((chat: any, idx: number) => {
+                        const name = chat.buyerName ? `*${chat.buyerName}*` : `📱 ${chat.buyerPhone}`;
+                        const lastMsg = (chat.lastMessage || chat.text || '').substring(0, 60);
+                        const truncated = (chat.lastMessage || chat.text || '').length > 60 ? '...' : '';
+                        const timeAgo = chat.lastTime
+                            ? (() => {
+                                const diff = Date.now() - new Date(chat.lastTime).getTime();
+                                const hours = Math.floor(diff / 3600000);
+                                const days = Math.floor(diff / 86400000);
+                                if (days > 0) return `${days} hari lalu`;
+                                if (hours > 0) return `${hours} jam lalu`;
+                                return 'Baru saja';
+                            })()
+                            : '';
+
+                        inboxText += `*${idx + 1}.* ${name}\n`;
+                        inboxText += `   📝 _"${lastMsg}${truncated}"_\n`;
+                        if (timeAgo) inboxText += `   ⏰ ${timeAgo}\n`;
+                        inboxText += `\n`;
+                    });
+
+                    inboxText += `─────────────────────────\n`;
+                    inboxText += `👉 Balas dengan *nomor urut* untuk lihat percakapan lengkap.\n`;
+                    inboxText += `👉 Ketik *BATAL* untuk kembali ke menu.`;
+
+                    await sendMessage(sender, { text: inboxText });
+                } catch (err: any) {
+                    console.error(`❌ [CHAT INBOX ERROR] ${err.message}`);
+                    await sendMessage(sender, { text: `❌ Gagal memuat inbox chat. Silakan coba lagi nanti.` });
+                }
                 return;
             }
         } else {
