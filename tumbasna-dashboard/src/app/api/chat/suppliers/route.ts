@@ -71,13 +71,21 @@ export async function POST(req: Request) {
   try {
     const { buyerPhone, supplierPhone, message, sender } = await req.json();
     
-    // Validasi
-    if (!supplierPhone || !message) {
-      return NextResponse.json({ error: 'Missing supplierPhone or message' }, { status: 400 });
+    const supplierPhoneTrimmed = (supplierPhone || '').trim();
+    const messageTrimmed = (message || '').trim();
+
+    // Validasi — sertakan detail field yang menyebabkan error
+    if (!supplierPhoneTrimmed || !messageTrimmed) {
+      const missing = [];
+      if (!supplierPhoneTrimmed) missing.push(`supplierPhone (got: ${JSON.stringify(supplierPhone)})`);
+      if (!messageTrimmed) missing.push(`message (got: ${JSON.stringify(message)})`);
+      console.error('[CHAT POST 400] Missing fields:', missing.join(', '), '| sender:', sender, '| buyerPhone:', buyerPhone);
+      return NextResponse.json({ error: 'Missing required fields', missing }, { status: 400 });
     }
 
     if (!sender || !['buyer', 'supplier'].includes(sender)) {
-      return NextResponse.json({ error: 'Invalid sender (must be buyer or supplier)' }, { status: 400 });
+      console.error('[CHAT POST 400] Invalid sender:', JSON.stringify(sender));
+      return NextResponse.json({ error: 'Invalid sender (must be buyer or supplier)', got: sender }, { status: 400 });
     }
 
     // Temukan buyer di DB (jika ada)
@@ -90,19 +98,19 @@ export async function POST(req: Request) {
 
     // Temukan supplier di DB untuk mendapatkan nama
     const supplier = await prisma.user.findUnique({
-      where: { phoneNumber: supplierPhone }
+      where: { phoneNumber: supplierPhoneTrimmed }
     });
-    const supplierName = supplier?.name || supplier?.businessName || supplierPhone;
+    const supplierName = supplier?.name || supplier?.businessName || supplierPhoneTrimmed;
 
     // Simpan pesan ke tabel chat_messages
     await (prisma as any).chatMessage.create({
       data: {
         buyerUserId: buyer?.id || null,
         buyerPhone: buyerPhone || null,
-        supplierPhone,
+        supplierPhone: supplierPhoneTrimmed,
         supplierName,
         sender,
-        text: message,
+        text: messageTrimmed,
         status: 'sent'
       }
     });

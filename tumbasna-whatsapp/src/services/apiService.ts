@@ -162,6 +162,17 @@ export const apiService = {
             return [];
         }
     },
+    async getChatHistory(buyerPhone: string, supplierPhone: string) {
+        try {
+            const response = await apiClient.get(`${API_URL}/api/chat/suppliers`, {
+                params: { action: 'history', buyerPhone, supplierPhone }
+            });
+            return response.data.data || [];
+        } catch (error: any) {
+            console.error(`[API ERROR] Gagal get chat history:`, error.message);
+            return [];
+        }
+    },
     async saveChatMessage(data: { buyerPhone: string; supplierPhone: string; message: string; sender: 'buyer' | 'supplier' }) {
         try {
             const response = await apiClient.post(`${API_URL}/api/chat/suppliers`, data);
