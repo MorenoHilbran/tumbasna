@@ -222,8 +222,8 @@ export async function connectWhatsApp() {
                             await saveMetadata(sender, { lastImageUrl: imageUrl });
                         }
                         const combinedText = imageCaption
-                            ? `[Supplier mengirim foto produk] Keterangan: ${imageCaption}${imageUrl ? ` | URL Foto: ${imageUrl}` : ''}`
-                            : `[Supplier mengirim foto produk tanpa keterangan. Tolong tanyakan nama komoditas, berat, dan harga.]`;
+                            ? `[FOTO_PRODUK_DITERIMA] Supplier mengirim foto produk. Keterangan: ${imageCaption}${imageUrl ? ` | URL Foto: ${imageUrl}` : ''}`
+                            : `[FOTO_PRODUK_DITERIMA] Supplier mengirim foto produk tanpa keterangan.${imageUrl ? ` | URL Foto: ${imageUrl}` : ''}`;
                         await processIncomingMessage(sender, pushName, combinedText, sendFn);
                     }
                 } catch (err: any) {

@@ -47,6 +47,7 @@ export async function extractMessageData(sender: string, message: string): Promi
         // 2. Cek status registrasi riil di DB
         let isRegistered = false;
         let registeredName = '';
+        let userProfileInfo = '';
         try {
             const { apiService } = await import('../services/apiService');
             const whitelistRes = await apiService.checkWhitelist(phoneNumber);
@@ -55,6 +56,22 @@ export async function extractMessageData(sender: string, message: string): Promi
             }
             isRegistered = !!whitelistRes?.isRegistered;
             registeredName = whitelistRes?.name || '';
+            
+            // Build user profile info untuk inject ke system prompt
+            if (isRegistered) {
+                userProfileInfo = `
+=== USER PROFILE (FROM DATABASE) ===
+- Registered: YES
+- Name: "${registeredName}"
+- Phone: "+${phoneNumber}"
+- Bank: "${whitelistRes?.bankName || '-'} - ${whitelistRes?.bankAccount || '-'}"
+- Location: "${whitelistRes?.address || '-'}"
+- Business Name: "${whitelistRes?.businessName || '-'}"
+
+IMPORTANT: USER SUDAH TERDAFTAR. JANGAN TANYAKAN DATA REGISTRASI (nama/lokasi/bank) LAGI!
+Jika user input SUPPLY, langsung proses tanpa tanya nama/lokasi/bank karena data sudah ada di database.
+`;
+            }
         } catch (dbErr: any) {
             console.warn(`⚠️ [AGENT] Gagal cek status registrasi DB:`, dbErr.message);
             throw dbErr;
@@ -69,7 +86,7 @@ export async function extractMessageData(sender: string, message: string): Promi
 
         // 3. Tambahkan pesan user ke history SEKARANG (agar tercatat meskipun AI error nanti)
         historyJson.push({ role: "user", content: `Pesan Input:\n"${message}"` });
-        if (historyJson.length > 10) historyJson = historyJson.slice(historyJson.length - 10);
+        if (historyJson.length > 20) historyJson = historyJson.slice(historyJson.length - 20);
         
         // Simpan sementara pesan user ke DB/Memory
         await saveSessionHistory(sender, historyJson, false);
@@ -90,10 +107,12 @@ export async function extractMessageData(sender: string, message: string): Promi
 ${isRegistered ? `- Registered Name: "${registeredName}"` : ""}
 - INSTRUCTION: ${isRegistered ? "USER IS ALREADY REGISTERED. DO NOT ask for name, location, or start REGISTER flow. Go straight to SUPPLY, STATUS, or other post-registration flows." : "USER IS NOT REGISTERED. You MUST start or continue the conversational REGISTER flow to collect their name and location."}
 
+${userProfileInfo}
+
 === ALLOWED COMMODITIES (WHITELIST) ===
 Anda HANYA diperbolehkan menerima tawaran (intent SUPPLY) untuk komoditas pangan/pertanian berikut:
 ${whitelistComms.length > 0 ? whitelistComms.join(', ') : "Beras, Jagung, Tomat, Cabai, Bawang, Kentang"}
-Jika user menawarkan di luar komoditas pangan/pertanian tersebut, tolak penawarannya dengan sopan dan jelaskan komoditas pangan/pertanian apa saja yang didukung.
+Jika user menawarkan komoditas yang TIDAK ADA dalam whitelist di atas, ikuti prosedur COMMODITY_REQUEST seperti dijelaskan di system prompt.
 `;
 
         let text = "";
@@ -184,7 +203,7 @@ Jika user menawarkan di luar komoditas pangan/pertanian tersebut, tolak penawara
 
         // 6. Update History dengan jawaban AI
         historyJson.push({ role: "assistant", content: cleanJson });
-        if (historyJson.length > 10) historyJson = historyJson.slice(historyJson.length - 10);
+        if (historyJson.length > 20) historyJson = historyJson.slice(historyJson.length - 20);
 
         // 7. Simpan state session final
         const isFinished = parsedResult.intent === "CANCEL";

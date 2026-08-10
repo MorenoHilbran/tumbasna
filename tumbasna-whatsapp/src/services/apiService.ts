@@ -142,4 +142,33 @@ export const apiService = {
             return null;
         }
     },
+    async submitCommodityRequest(data: { commodityName: string; supplierPhone: string; supplierName?: string; weightKg?: number; pricePerKg?: number; location?: string; category?: string }) {
+        try {
+            const response = await apiClient.post(`${API_URL}/api/commodity-request`, data);
+            return response.data;
+        } catch (error: any) {
+            console.error(`[API ERROR] Gagal submit commodity request:`, error.message);
+            throw error;
+        }
+    },
+    async getRecentChatsForSupplier(supplierPhone: string) {
+        try {
+            const response = await apiClient.get(`${API_URL}/api/chat/suppliers/recent`, {
+                params: { supplierPhone }
+            });
+            return response.data.data || [];
+        } catch (error: any) {
+            console.error(`[API ERROR] Gagal get recent chats for supplier:`, error.message);
+            return [];
+        }
+    },
+    async saveChatMessage(data: { buyerPhone: string; supplierPhone: string; message: string; sender: 'buyer' | 'supplier' }) {
+        try {
+            const response = await apiClient.post(`${API_URL}/api/chat/suppliers`, data);
+            return response.data;
+        } catch (error: any) {
+            console.error(`[API ERROR] Gagal save chat message:`, error.message);
+            throw error;
+        }
+    },
 };

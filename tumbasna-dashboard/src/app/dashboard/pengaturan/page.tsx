@@ -62,7 +62,7 @@ interface Product {
 }
 
 export default function PengaturanPage() {
-  const [activeTab, setActiveTab] = useState<'sistem' | 'moderasi' | 'chat'>('sistem');
+  const [activeTab, setActiveTab] = useState<'sistem' | 'moderasi' | 'chat' | 'komoditas'>('sistem');
   
   // Settings Config State
   const [config, setConfig] = useState<Config | null>(null);
@@ -85,6 +85,12 @@ export default function PengaturanPage() {
   const [chatError, setChatError] = useState<string | null>(null);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null);
+
+  // Commodity Request State
+  const [commodityRequests, setCommodityRequests] = useState<any[]>([]);
+  const [commodityLoading, setCommodityLoading] = useState(true);
+  const [commodityError, setCommodityError] = useState<string | null>(null);
+  const [processingRequestId, setProcessingRequestId] = useState<string | null>(null);
 
   const fetchSessions = async () => {
     try {
@@ -163,10 +169,58 @@ export default function PengaturanPage() {
     }
   };
 
+  // Fetch commodity requests
+  const fetchCommodityRequests = async () => {
+    try {
+      setCommodityLoading(true);
+      const res = await fetch('/api/commodity-request?status=PENDING');
+      if (!res.ok) throw new Error('Gagal memuat request komoditas');
+      const json = await res.json();
+      if (json.success) {
+        setCommodityRequests(json.data);
+      }
+    } catch (err: any) {
+      setCommodityError(err.message || 'Terjadi kesalahan');
+    } finally {
+      setCommodityLoading(false);
+    }
+  };
+
+  // Handle approve/reject commodity request
+  const handleCommodityAction = async (id: string, status: 'APPROVED' | 'REJECTED', reviewNotes?: string) => {
+    try {
+      setProcessingRequestId(id);
+      const res = await fetch('/api/commodity-request', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          id, 
+          status, 
+          reviewedBy: 'Admin',
+          reviewNotes 
+        })
+      });
+      
+      if (!res.ok) throw new Error('Gagal memproses request');
+      
+      const json = await res.json();
+      if (json.success) {
+        await fetchCommodityRequests();
+        await fetchConfig(); // Refresh config untuk update whitelist
+        alert(`Request komoditas berhasil ${status === 'APPROVED' ? 'disetujui' : 'ditolak'}`);
+      }
+    } catch (err: any) {
+      alert('Error: ' + err.message);
+    } finally {
+      setProcessingRequestId(null);
+    }
+  };
+
   useEffect(() => {
     fetchConfig();
     fetchProducts();
     fetchSessions();
+    fetchCommodityRequests();
   }, []);
 
   useEffect(() => {
@@ -307,6 +361,22 @@ export default function PengaturanPage() {
             <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-rose-500"></span>
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab('komoditas')}
+          className={`px-5 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 relative ${
+            activeTab === 'komoditas'
+              ? 'bg-white text-emerald-700 shadow-sm'
+              : 'text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <Sprout className="w-4 h-4" />
+          Request Komoditas Baru
+          {commodityRequests.length > 0 && (
+            <span className="ml-1 bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+              {commodityRequests.length}
             </span>
           )}
         </button>
@@ -1029,6 +1099,123 @@ export default function PengaturanPage() {
                 <MessageSquare className="w-16 h-16 text-slate-300 mb-3" />
                 <h4 className="text-sm font-bold text-slate-800">Pilih Sesi Percakapan</h4>
                 <p className="text-xs text-slate-400 mt-1">Pilih salah satu sesi di sidebar untuk memantau detail chat</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Tab Komoditas Request */}
+      {activeTab === 'komoditas' && (
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm">
+          <div className="p-6 border-b border-slate-100">
+            <div className="flex items-center gap-2">
+              <Sprout className="w-5 h-5 text-amber-600" />
+              <h2 className="text-sm font-bold text-slate-850">Request Komoditas Baru dari Supplier</h2>
+            </div>
+            <p className="text-xs text-slate-500 mt-2">
+              Supplier mengajukan komoditas yang belum ada di whitelist. Review dan setujui untuk menambahkan ke sistem.
+            </p>
+          </div>
+
+          <div className="p-6">
+            {commodityLoading ? (
+              <div className="py-16 flex flex-col items-center justify-center gap-3">
+                <Loader2 className="w-8 h-8 text-amber-600 animate-spin" />
+                <p className="text-xs text-slate-400 font-medium">Memuat request komoditas...</p>
+              </div>
+            ) : commodityError ? (
+              <div className="bg-rose-50 border border-rose-200 text-rose-800 px-4 py-3 rounded-xl text-xs font-semibold flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-rose-600 flex-shrink-0" />
+                {commodityError}
+              </div>
+            ) : commodityRequests.length === 0 ? (
+              <div className="py-16 flex flex-col items-center justify-center text-center">
+                <CheckCircle2 className="w-16 h-16 text-slate-300 mb-3" />
+                <h4 className="text-sm font-bold text-slate-800">Tidak Ada Request Pending</h4>
+                <p className="text-xs text-slate-400 mt-1 max-w-md">
+                  Semua request komoditas sudah diproses. Request baru dari supplier akan muncul di sini.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {commodityRequests.map((req) => (
+                  <div key={req.id} className="border border-slate-200 rounded-xl p-4 hover:shadow-md transition-shadow">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                          <Sprout className="w-5 h-5 text-emerald-600" />
+                          {req.commodityName}
+                        </h3>
+                        <div className="mt-2 space-y-1">
+                          <p className="text-xs text-slate-600">
+                            <span className="font-semibold">Supplier:</span> {req.supplierName || 'Tidak ada nama'}
+                          </p>
+                          <p className="text-xs text-slate-600">
+                            <span className="font-semibold">Telepon:</span> +{req.supplierPhone}
+                          </p>
+                          {req.weightKg && (
+                            <p className="text-xs text-slate-600">
+                              <span className="font-semibold">Jumlah:</span> {req.weightKg} kg
+                            </p>
+                          )}
+                          {req.pricePerKg && (
+                            <p className="text-xs text-slate-600">
+                              <span className="font-semibold">Harga:</span> Rp {req.pricePerKg.toLocaleString('id-ID')}/kg
+                            </p>
+                          )}
+                          {req.location && (
+                            <p className="text-xs text-slate-600">
+                              <span className="font-semibold">Lokasi:</span> {req.location}
+                            </p>
+                          )}
+                          <p className="text-xs text-slate-400 mt-2">
+                            Diajukan: {new Date(req.createdAt).toLocaleString('id-ID')}
+                          </p>
+                        </div>
+                      </div>
+                      <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-1 rounded-full">
+                        PENDING
+                      </span>
+                    </div>
+
+                    <div className="flex gap-2 mt-4 pt-4 border-t border-slate-100">
+                      <button
+                        onClick={() => {
+                          const notes = prompt('Catatan persetujuan (opsional):');
+                          handleCommodityAction(req.id, 'APPROVED', notes || undefined);
+                        }}
+                        disabled={processingRequestId === req.id}
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {processingRequestId === req.id ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Memproses...
+                          </>
+                        ) : (
+                          <>
+                            <Check className="w-4 h-4" />
+                            Setujui & Tambahkan
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => {
+                          const notes = prompt('Alasan penolakan:');
+                          if (notes) {
+                            handleCommodityAction(req.id, 'REJECTED', notes);
+                          }
+                        }}
+                        disabled={processingRequestId === req.id}
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Tolak
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>

@@ -32,6 +32,45 @@ export async function processIncomingMessage(
     }
     console.log(`✅ [WHITELIST DONE] isRegistered=${isRegistered}`);
 
+    // 1.3. Cek jika pesan adalah balasan supplier untuk buyer
+    // Pattern: Supplier membalas pesan yang mengandung info buyer dari Tumbasna
+    // Kita deteksi jika supplier baru saja menerima pesan dari buyer (dalam konteks chat terakhir)
+    if (isRegistered && text && !text.startsWith('[') && !text.toLowerCase().startsWith('kirim ')) {
+        // Cek apakah supplier ini baru saja menerima pesan dari buyer (cek recent chat history)
+        try {
+            const recentChats = await apiService.getRecentChatsForSupplier(phoneNumber);
+            if (recentChats && recentChats.length > 0) {
+                // Ambil buyer phone dari chat terakhir
+                const lastChat = recentChats[0];
+                const buyerPhone = lastChat.buyerPhone;
+                
+                // Jika ada buyer phone dan pesan ini bukan command bot, anggap ini adalah reply ke buyer
+                if (buyerPhone && !menuKeywords.includes(cleanText) && !numberKeywords.includes(cleanText)) {
+                    console.log(`💬 [CHAT REPLY] Supplier ${phoneNumber} membalas buyer ${buyerPhone}`);
+                    
+                    // Save reply supplier ke database
+                    await apiService.saveChatMessage({
+                        buyerPhone,
+                        supplierPhone: phoneNumber,
+                        message: text,
+                        sender: 'supplier'
+                    });
+                    
+                    // Kirim konfirmasi ke supplier
+                    await sendMessage(sender, { 
+                        text: `✅ Pesan Anda telah terkirim ke pembeli dan tersimpan di chat history Tumbasna.\n\n💡 Ketik *MENU* untuk kembali ke menu utama.` 
+                    });
+                    
+                    console.log(`✅ [CHAT REPLY SAVED] Reply dari supplier ${phoneNumber} untuk buyer ${buyerPhone}`);
+                    return; // Stop processing, karena ini adalah chat reply
+                }
+            }
+        } catch (chatErr: any) {
+            console.warn(`⚠️ [CHAT REPLY CHECK] Error checking recent chats: ${chatErr.message}`);
+            // Lanjutkan ke flow normal jika error
+        }
+    }
+
     // 1.5. Cek jika pesan adalah konfirmasi pengiriman barang "KIRIM TRX-xxxxxx"
     // Format didukung:
     //   a) Teks biasa: "KIRIM TRX-987654 JNE1234567890"
@@ -395,6 +434,12 @@ export async function processIncomingMessage(
             for (const item of parsedData.items) {
                 console.log(`[ITEM] ${item.commodity} | ${item.weight_kg}kg | Rp${item.price} | ${item.location}`);
 
+                // Skip jika item masih pending approval
+                if ((item as any).pending_approval) {
+                    console.log(`[SKIP] Item ${item.commodity} pending approval, tidak dikirim ke API`);
+                    continue;
+                }
+
                 let cleanContactPhone = parsedData.contact_phone
                     ? parsedData.contact_phone.replace(/\D/g, '')
                     : '';
@@ -468,6 +513,33 @@ export async function processIncomingMessage(
             } catch (err: any) {
                 console.error(`❌ [EDIT ERROR] Gagal update profil:`, err.message);
                 parsedData.reply_message = `Maaf, terjadi kesalahan saat memperbarui data Juragan. Silakan coba beberapa saat lagi.`;
+            }
+        }
+
+        // ─── COMMODITY_REQUEST: Submit Request Komoditas Baru ───
+        if (parsedData.intent === 'COMMODITY_REQUEST' && parsedData.status === 'COMPLETE' && parsedData.items.length > 0) {
+            try {
+                for (const item of parsedData.items) {
+                    const requestPayload = {
+                        commodityName: item.commodity,
+                        supplierPhone: phoneNumber,
+                        supplierName: userInfo?.name || pushName,
+                        weightKg: item.weight_kg,
+                        pricePerKg: item.price,
+                        location: item.location,
+                        category: 'pertanian' // default category
+                    };
+
+                    const result = await apiService.submitCommodityRequest(requestPayload);
+                    console.log(`✅ [COMMODITY_REQUEST] Request submitted for ${item.commodity}:`, result);
+                }
+
+                // Clear session setelah request sukses
+                const { saveSessionHistory } = await import('../ai/memory');
+                await saveSessionHistory(sender, [], true);
+            } catch (err: any) {
+                console.error(`❌ [COMMODITY_REQUEST ERROR] Gagal submit request:`, err.message);
+                parsedData.reply_message = `Maaf, terjadi kesalahan saat mengirim pengajuan komoditas. Silakan coba lagi nanti.`;
             }
         }
 

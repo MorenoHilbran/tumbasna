@@ -48,8 +48,8 @@ export async function saveSessionHistory(sender: string, historyJson: any[], isC
     let nextHistory = [...historyJson];
     
     if (isCompletedOrCancelled) {
-        // Keep last 10 messages for context, plus metadata
-        const recentMessages = nextHistory.slice(-10);
+        // Keep last 20 messages for context, plus metadata
+        const recentMessages = nextHistory.slice(-20);
         const mappedPhoneMeta = metadataList.find((msg: any) => msg.mappedPhone);
         nextHistory = mappedPhoneMeta ? [mappedPhoneMeta, ...recentMessages] : recentMessages;
         memoryFallback.set(phoneNumber, nextHistory);

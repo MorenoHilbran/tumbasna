@@ -148,15 +148,19 @@ model Payment {
 }
 
 model ChatMessage {
-  id          String   @id @default(uuid()) @db.Uuid
-  buyerUserId String?  @map("buyer_user_id") @db.Uuid
-  supplierName String  @map("supplier_name")
-  sender      String   // 'buyer' | 'supplier'
-  text        String
-  status      String   @default("sent")
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  buyer       User?    @relation(fields: [buyerUserId], references: [id], onDelete: Cascade)
+  id             String   @id @default(uuid()) @db.Uuid
+  buyerUserId    String?  @map("buyer_user_id") @db.Uuid
+  buyerPhone     String?  @map("buyer_phone") @db.VarChar(20)
+  supplierPhone  String   @map("supplier_phone") @db.VarChar(20)
+  supplierName   String   @map("supplier_name")
+  sender         String   // 'buyer' | 'supplier'
+  text           String
+  status         String   @default("sent")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  buyer          User?    @relation(fields: [buyerUserId], references: [id], onDelete: Cascade)
 
+  @@index([buyerPhone, supplierPhone])
+  @@index([supplierPhone])
   @@map("chat_messages")
 }
 
@@ -273,4 +277,30 @@ model Review {
   order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@map("reviews")
+}
+
+model CommodityRequest {
+  id            String   @id @default(uuid()) @db.Uuid
+  commodityName String   @map("commodity_name") @db.VarChar(100)
+  supplierPhone String   @map("supplier_phone") @db.VarChar(20)
+  supplierName  String?  @map("supplier_name") @db.VarChar(255)
+  category      String?  @db.VarChar(50)
+  reason        String?
+  weightKg      Decimal? @map("weight_kg") @db.Decimal(12, 2)
+  pricePerKg    Decimal? @map("price_per_kg") @db.Decimal(12, 2)
+  location      String?  @db.VarChar(255)
+  status        commodity_request_status @default(PENDING)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  reviewedBy    String?  @map("reviewed_by") @db.VarChar(255)
+  reviewedAt    DateTime? @map("reviewed_at") @db.Timestamptz(6)
+  reviewNotes   String?  @map("review_notes")
+
+  @@map("commodity_requests")
+}
+
+enum commodity_request_status {
+  PENDING
+  APPROVED
+  REJECTED
 }
