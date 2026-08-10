@@ -158,10 +158,20 @@ router.post('/api/send', authMiddleware, async (req: Request, res: Response) => 
             } else if (onlyDigits.length > 0 && !onlyDigits.startsWith('62')) {
                 formattedDigits = '62' + onlyDigits;
             }
-            jid = `${formattedDigits}@s.whatsapp.net`;
+            
+            try {
+                const [onWa] = await sock.onWhatsApp(formattedDigits);
+                if (onWa && onWa.jid) {
+                    jid = onWa.jid;
+                } else {
+                    jid = `${formattedDigits}@s.whatsapp.net`;
+                }
+            } catch {
+                jid = `${formattedDigits}@s.whatsapp.net`;
+            }
         }
         await sock.sendMessage(jid, { text: message });
-        res.json({ success: true, message: 'Pesan terkirim' });
+        res.json({ success: true, message: 'Pesan terkirim', targetJid: jid });
     } catch (error: any) {
         console.error('Gagal mengirim pesan push:', error.message);
         res.status(500).json({ success: false, error: error.message });

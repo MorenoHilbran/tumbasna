@@ -11,7 +11,7 @@ export async function GET(req: Request) {
 
     // Jika action=history, ambil chat history antara buyer dan supplier
     if (action === 'history' && buyerPhone && supplierPhone) {
-      const messages = await prisma.chatMessage.findMany({
+      const messages = await (prisma as any).chatMessage.findMany({
         where: {
           OR: [
             { buyerPhone, supplierPhone },
@@ -95,7 +95,7 @@ export async function POST(req: Request) {
     const supplierName = supplier?.name || supplier?.businessName || supplierPhone;
 
     // Simpan pesan ke tabel chat_messages
-    await prisma.chatMessage.create({
+    await (prisma as any).chatMessage.create({
       data: {
         buyerUserId: buyer?.id || null,
         buyerPhone: buyerPhone || null,
@@ -108,8 +108,11 @@ export async function POST(req: Request) {
     });
 
     // Jika sender = buyer, kirim ke WA supplier
+    let waRelaySuccess = false;
+    let waRelayError: string | null = null;
+
     if (sender === 'buyer') {
-      const waUrl = process.env.WHATSAPP_BOT_URL || 'http://localhost:3002';
+      const waUrl = process.env.WHATSAPP_BOT_URL || 'http://127.0.0.1:3002';
       const waApiKey = process.env.WHATSAPP_API_KEY || process.env.TUMBASNA_SECRET_KEY || 'tumbasna-rahasia-banget';
       
       try {
@@ -139,19 +142,20 @@ export async function POST(req: Request) {
         });
         
         if (!waRes.ok) {
-          console.warn(`[WA RELAY ERROR] status=${waRes.status}`);
+          const errText = await waRes.text();
+          console.warn(`[WA RELAY ERROR] status=${waRes.status}, error=${errText}`);
+          waRelayError = `HTTP ${waRes.status}: ${errText}`;
         } else {
           console.log(`[WA RELAY SUCCESS] Pesan terkirim ke ${supplierPhone}`);
+          waRelaySuccess = true;
         }
       } catch (waErr: any) {
         console.warn('[WA RELAY] Gagal kirim pesan ke WA supplier, mungkin bot offline:', waErr.message);
+        waRelayError = waErr.message || 'Bot WhatsApp Offline';
       }
     }
 
-    // Jika sender = supplier, (opsional) bisa kirim push notification ke buyer
-    // TODO: Implement push notification atau polling mechanism
-
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, waRelaySuccess, waRelayError });
   } catch (error: any) {
     console.error('[CHAT POST ERROR]', error.message);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
