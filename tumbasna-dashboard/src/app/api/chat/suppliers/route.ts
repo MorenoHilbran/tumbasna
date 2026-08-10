@@ -165,7 +165,12 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, waRelaySuccess, waRelayError });
   } catch (error: any) {
-    console.error('[CHAT POST ERROR]', error.message);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    console.error('[CHAT POST ERROR]', error);
+    return NextResponse.json({ 
+      error: 'Internal Server Error', 
+      details: error?.message || String(error),
+      stack: process.env.NODE_ENV === 'development' ? error?.stack : undefined 
+    }, { status: 500 });
   }
 }
+
