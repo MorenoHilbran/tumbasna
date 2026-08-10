@@ -793,7 +793,13 @@ Tugas Anda:
             }
           }
 
-          const buyerPhone = user?.phone || '6280000000000';
+          let buyerPhone = user?.phone || '';
+          if (buyerPhone.startsWith('0')) {
+            buyerPhone = '62' + buyerPhone.slice(1);
+          } else if (buyerPhone.startsWith('+62')) {
+            buyerPhone = buyerPhone.slice(1);
+          }
+
           console.log('[sendMessage] Relay WA debug:', {
             supplierName,
             supplierPhone,
