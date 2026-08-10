@@ -47,6 +47,7 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ orderId, onBack, onPaymentSuc
   const [snapScriptReady, setSnapScriptReady] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [hasAutoOpened, setHasAutoOpened] = useState(false);
 
   const order = orders.find((o) => o.id === orderId);
   const API_URL = import.meta.env.VITE_API_URL || 'https://api.tumbasna.my.id';
@@ -95,6 +96,7 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ orderId, onBack, onPaymentSuc
 
   useEffect(() => {
     if (order && paymentMode === 'api') {
+      setHasAutoOpened(false);
       fetchSnapPayment();
     }
   }, [order?.id]);
@@ -205,6 +207,14 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ orderId, onBack, onPaymentSuc
       },
     });
   };
+
+  // Automatically open Midtrans Snap when token and script are ready
+  useEffect(() => {
+    if (paymentMode === 'api' && snapToken && snapScriptReady && !hasAutoOpened && order) {
+      setHasAutoOpened(true);
+      handleOpenSnap();
+    }
+  }, [snapToken, snapScriptReady, hasAutoOpened, order, paymentMode]);
 
   const handleSimulatePay = () => {
     if (!order) return;
@@ -327,7 +337,6 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ orderId, onBack, onPaymentSuc
           {/* Payment via Midtrans Snap Popup */}
           {paymentMode === 'api' && (
             <div className="payment-instruction-card">
-              <h3 className="section-title">Cara Pembayaran</h3>
               {isLoading ? (
                 <div style={{ textAlign: 'center', padding: 40 }}>
                   <IonSpinner name="crescent" />
@@ -335,20 +344,8 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ orderId, onBack, onPaymentSuc
                 </div>
               ) : snapToken ? (
                 <div style={{ textAlign: 'center', padding: '16px 0' }}>
-                  <div style={{
-                    width: 64, height: 64, borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #006837, #00A651)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    margin: '0 auto 16px', color: '#ffffff',
-                    boxShadow: '0 8px 20px rgba(0, 104, 55, 0.25)'
-                  }}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                    </svg>
-                  </div>
-                  <p style={{ fontSize: 13, color: '#374151', marginBottom: 20, lineHeight: 1.6 }}>
-                    Pembayaran disiapkan. Pilih metode yang Anda inginkan — QRIS, Transfer Bank, GoPay, OVO, dan lainnya.
+                  <p style={{ fontSize: 14, color: '#374151', marginBottom: 20, fontWeight: 500, lineHeight: 1.6 }}>
+                    Menghubungkan ke gerbang pembayaran aman Midtrans...
                   </p>
                   <IonButton
                     expand="block"
@@ -362,13 +359,15 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ orderId, onBack, onPaymentSuc
                           <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
                           <line x1="1" y1="10" x2="23" y2="10"></line>
                         </svg>
-                        <span>BAYAR RP {totalAmount.toLocaleString('id-ID')}</span>
+                        <span>BAYAR SEKARANG</span>
                       </div>
                     ) : (
                       'Memuat...'
                     )}
                   </IonButton>
-                  <p style={{ fontSize: 11, color: '#9ca3af', marginTop: 12 }}>Popup pembayaran Midtrans akan terbuka</p>
+                  <p style={{ fontSize: 11, color: '#9ca3af', marginTop: 12, lineHeight: 1.4 }}>
+                    Jendela pembayaran Midtrans akan terbuka secara otomatis. Jika tidak terbuka, silakan klik tombol di atas.
+                  </p>
                 </div>
               ) : snapError ? (
                 <div style={{ textAlign: 'center', padding: 20 }}>
@@ -557,16 +556,18 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ orderId, onBack, onPaymentSuc
           )}
 
           {/* Ubah Metode Pembayaran Button */}
-          <div className="change-payment-method-section">
-            <IonButton
-              expand="block"
-              fill="outline"
-              className="change-payment-btn"
-              onClick={() => setShowPaymentMethodModal(true)}
-            >
-              Ubah Metode Pembayaran
-            </IonButton>
-          </div>
+          {paymentMode !== 'api' && (
+            <div className="change-payment-method-section">
+              <IonButton
+                expand="block"
+                fill="outline"
+                className="change-payment-btn"
+                onClick={() => setShowPaymentMethodModal(true)}
+              >
+                Ubah Metode Pembayaran
+              </IonButton>
+            </div>
+          )}
 
           <div style={{ height: 40 }}></div>
         </div>

@@ -11,6 +11,11 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'User ID wajib disertakan' }, { status: 400 });
     }
 
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(userId)) {
+      return NextResponse.json({ error: 'User tidak ditemukan' }, { status: 404 });
+    }
+
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
