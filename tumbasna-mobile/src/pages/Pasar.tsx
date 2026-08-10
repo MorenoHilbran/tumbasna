@@ -31,12 +31,14 @@ import './Pasar.css';
 interface PasarProps {
   onSelectProduct: (product: Product) => void;
   onNavigateToCart: () => void;
+  initialCategory?: string;
 }
 
-const Pasar: React.FC<PasarProps> = ({ onSelectProduct, onNavigateToCart }) => {
+const Pasar: React.FC<PasarProps> = ({ onSelectProduct, onNavigateToCart, initialCategory }) => {
   const { products, addToCart } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'semua' | 'termurah' | 'terdekat' | 'terbaru'>('semua');
+  const [activeCategory, setActiveCategory] = useState<string>('semua');
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
@@ -45,6 +47,13 @@ const Pasar: React.FC<PasarProps> = ({ onSelectProduct, onNavigateToCart }) => {
   // State untuk Modal Profil Penjual
   const [showSupplierModal, setShowSupplierModal] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState('');
+
+  // Set initial category dari props
+  React.useEffect(() => {
+    if (initialCategory && initialCategory !== 'semua') {
+      setActiveCategory(initialCategory);
+    }
+  }, [initialCategory]);
 
   // Fetch user location when "Terdekat" is active
   React.useEffect(() => {
@@ -78,7 +87,28 @@ const Pasar: React.FC<PasarProps> = ({ onSelectProduct, onNavigateToCart }) => {
       );
     }
 
-    // Apply active filters
+    // Category filter
+    if (activeCategory !== 'semua') {
+      result = result.filter((p) => {
+        const productCategory = p.category.toLowerCase();
+        const filterCategory = activeCategory.toLowerCase();
+        
+        // Mapping kategori untuk handle variations
+        if (filterCategory === 'sayuran') {
+          return productCategory.includes('sayur') || productCategory.includes('tomat') || productCategory.includes('kentang');
+        } else if (filterCategory === 'bumbu') {
+          return productCategory.includes('cabai') || productCategory.includes('bawang') || productCategory.includes('rempah') || productCategory.includes('bumbu');
+        } else if (filterCategory === 'beras') {
+          return productCategory.includes('beras') || productCategory.includes('padi');
+        } else if (filterCategory === 'buah') {
+          return productCategory.includes('buah') || productCategory.includes('pisang') || productCategory.includes('jeruk') || productCategory.includes('mangga');
+        } else {
+          return productCategory === filterCategory;
+        }
+      });
+    }
+
+    // Apply sorting filters
     if (activeFilter === 'termurah') {
       result.sort((a, b) => a.price - b.price);
     } else if (activeFilter === 'terdekat') {
@@ -181,8 +211,26 @@ const Pasar: React.FC<PasarProps> = ({ onSelectProduct, onNavigateToCart }) => {
 
       {/* Content */}
       <IonContent className="pasar-content">
-        {/* Filter chips */}
+        {/* Category filter chips */}
         <div className="filter-chips-row">
+          {(['semua', 'sayuran', 'bumbu', 'beras', 'buah', 'lainnya'] as const).map((cat) => (
+            <button
+              key={cat}
+              className={`filter-chip ${activeCategory === cat ? 'active' : ''}`}
+              onClick={() => setActiveCategory(cat)}
+            >
+              {cat === 'semua' ? '🌾 Semua' : 
+               cat === 'sayuran' ? '🥕 Sayuran' : 
+               cat === 'bumbu' ? '🌶️ Bumbu' : 
+               cat === 'beras' ? '🍚 Beras' : 
+               cat === 'buah' ? '🍎 Buah' : 
+               '📦 Lainnya'}
+            </button>
+          ))}
+        </div>
+
+        {/* Sorting filter chips */}
+        <div className="filter-chips-row" style={{ marginTop: '8px' }}>
           {(['semua', 'termurah', 'terdekat', 'terbaru'] as const).map((f) => (
             <button
               key={f}

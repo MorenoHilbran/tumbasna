@@ -47,7 +47,7 @@ const AI_SLIDES = [
 ];
 
 interface HomeProps {
-  onNavigateToPasar: () => void;
+  onNavigateToPasar: (category?: string) => void;
   onNavigateToPesanan: () => void;
   onNavigateToAiChat: () => void;
   onNavigateToNotifications: () => void;
@@ -223,7 +223,7 @@ const Home: React.FC<HomeProps> = ({
                 <button 
                   key={category.id}
                   className="qm" 
-                  onClick={onNavigateToPasar}
+                  onClick={() => onNavigateToPasar(category.id)}
                 >
                   <span className="qm-box"><i className={category.icon}></i></span>
                   <span className="qm-lbl">{category.label}</span>
@@ -265,9 +265,10 @@ const Home: React.FC<HomeProps> = ({
                         className="p-fav"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setToastMessage(`${product.name} ditambahkan ke Favorit`);
-                          setShowToast(true);
+                          // Favorite feature coming soon
                         }}
+                        style={{ opacity: 0.6, cursor: 'default' }}
+                        title="Fitur favorit segera hadir"
                       >
                         <i className="fa-regular fa-heart"></i>
                       </button>

@@ -58,6 +58,7 @@ const MainAppShell: React.FC = () => {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [selectedChatPartner, setSelectedChatPartner] = useState<string | null>(null);
   const [selectedChatPartnerPhone, setSelectedChatPartnerPhone] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>('semua');
   
   const [checkoutSupplierId, setCheckoutSupplierId] = useState<string | null>(null);
   const [checkoutSupplierItems, setCheckoutSupplierItems] = useState<CartItem[]>([]);
@@ -265,6 +266,7 @@ const MainAppShell: React.FC = () => {
                   setSelectedProduct(product);
                   setViewState('detail_produk');
                 }}
+                initialCategory={selectedCategory}
               />
             );
           case 'pesanan':
@@ -297,7 +299,14 @@ const MainAppShell: React.FC = () => {
           default:
             return (
               <Home
-                onNavigateToPasar={() => setActiveTab('pasar')}
+                onNavigateToPasar={(category?: string) => {
+                  if (category) {
+                    setSelectedCategory(category);
+                  } else {
+                    setSelectedCategory('semua');
+                  }
+                  setActiveTab('pasar');
+                }}
                 onNavigateToPesanan={() => setActiveTab('pesanan')}
                 onNavigateToAiChat={() => {
                   setSelectedChatPartner('Tumbasna AI Pintar');
