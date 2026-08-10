@@ -159,6 +159,7 @@ Output HARUS murni JSON valid dengan format:
 {
     "intent": "REGISTER|SUPPLY|DEMAND|STATUS|LIST|EDIT|COMMODITY_REQUEST|CANCEL|UNKNOWN",
     "supplier_name": "string atau null",
+    "business_name": "string atau null",
     "supplier_location": "string atau null",
     "contact_phone": "string atau null",
     "bank_name": "string atau null",

@@ -250,8 +250,9 @@ const MainAppShell: React.FC = () => {
                 setViewState('tabs');
                 setActiveTab('pesanan');
               }}
-              onNavigateToChat={(supplierName) => {
+              onNavigateToChat={(supplierName, supplierPhone) => {
                 setSelectedChatPartner(supplierName);
+                if (supplierPhone) setSelectedChatPartnerPhone(supplierPhone);
                 setViewState('tabs');
                 setActiveTab('chat');
               }}

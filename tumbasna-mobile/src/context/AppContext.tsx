@@ -737,17 +737,39 @@ Tugas Anda:
         }
       })();
     } else {
-      // â”€â”€ Relay pesan ke supplier nyata via WA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      // ── Relay pesan ke supplier nyata via WA ─────────────────────────────
       (async () => {
         try {
-          const thread = chats.find(c => c.supplierName === supplierName);
+          const thread = chats.find(c => c.supplierName.trim().toLowerCase() === supplierName.trim().toLowerCase());
           let finalSupplierPhone = supplierPhone || thread?.supplierPhone || '';
+          
           if (!finalSupplierPhone) {
-            const matchedProduct = products.find(p => p.supplierName === supplierName);
+            // 1. Exact case-insensitive match on products
+            const matchedProduct = products.find(p => p.supplierName.trim().toLowerCase() === supplierName.trim().toLowerCase());
             if (matchedProduct?.supplierPhone) {
               finalSupplierPhone = matchedProduct.supplierPhone;
             }
           }
+
+          if (!finalSupplierPhone) {
+            // 2. Partial match on products
+            const matchedProduct = products.find(p => 
+              p.supplierName.toLowerCase().includes(supplierName.toLowerCase()) ||
+              supplierName.toLowerCase().includes(p.supplierName.toLowerCase())
+            );
+            if (matchedProduct?.supplierPhone) {
+              finalSupplierPhone = matchedProduct.supplierPhone;
+            }
+          }
+
+          if (!finalSupplierPhone) {
+            // 3. Fallback: check if supplierName itself is a phone number
+            const digitsOnly = supplierName.replace(/\D/g, '');
+            if (digitsOnly.length >= 10) {
+              finalSupplierPhone = digitsOnly;
+            }
+          }
+
           const buyerPhone = user?.phone || '';
           console.log('[sendMessage] Relay WA debug:', {
             supplierName,
@@ -757,6 +779,11 @@ Tugas Anda:
             buyerPhone,
             text
           });
+
+          if (!finalSupplierPhone) {
+            console.warn(`[sendMessage] Gagal menemukan nomor HP supplier untuk "${supplierName}". Pesan disimpan secara lokal.`);
+          }
+
           if (finalSupplierPhone && buyerPhone) {
             const res = await fetch(`${API_BASE}/api/chat/suppliers`, {
               method: 'POST',
@@ -778,7 +805,7 @@ Tugas Anda:
               const msgs = [...t.messages];
               const lastIdx = msgs.length - 1;
               if (msgs[lastIdx]?.sender === 'buyer') msgs[lastIdx] = { ...msgs[lastIdx], status: 'delivered' };
-              return { ...t, messages: msgs };
+              return { ...t, supplierPhone: t.supplierPhone || finalSupplierPhone, messages: msgs };
             }));
 
             // Fetch chat history untuk update dengan reply supplier (polling)

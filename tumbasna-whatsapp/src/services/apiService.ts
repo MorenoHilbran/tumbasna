@@ -73,12 +73,12 @@ export const apiService = {
             return { success: false, data: [] };
         }
     },
-    async registerSupplier(data: { phone: string; name: string; location: string; bankName?: string; bankAccount?: string; lat?: number | null; lng?: number | null }) {
+    async registerSupplier(data: { phone: string; name: string; businessName?: string; location: string; bankName?: string; bankAccount?: string; lat?: number | null; lng?: number | null }) {
         try {
             const response = await apiClient.post(`${API_URL}/api/auth/register`, {
                 phone: data.phone,
                 ownerName: data.name,
-                businessName: data.name,
+                businessName: data.businessName || data.name,
                 address: data.location,
                 businessType: 'Supplier Pertanian',
                 role: 'PETANI',

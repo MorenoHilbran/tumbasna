@@ -269,21 +269,26 @@ export default function PenggunaPage() {
                     <td className="px-6 py-4">
                       <div>
                         <p className="font-bold text-slate-900 text-sm">
-                          {user.name || 'Tidak ada nama'}
+                          {user.businessName || user.name || 'Tidak ada nama'}
                         </p>
-                        {user.businessName && (
+                        {user.name && user.businessName && user.name !== user.businessName && (
                           <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5 font-semibold">
                             {activeTab === 'supplier' ? (
                               <Sprout className="w-3.5 h-3.5 text-emerald-600" />
                             ) : (
                               <Store className="w-3.5 h-3.5 text-blue-600" />
                             )}
-                            {user.businessName}
+                            Pemilik: {user.name}
                             {user.businessType && (
                               <span className="text-[10px] text-slate-400 font-normal">
                                 ({user.businessType})
                               </span>
                             )}
+                          </p>
+                        )}
+                        {(!user.name || !user.businessName || user.name === user.businessName) && user.businessType && (
+                          <p className="text-[10px] text-slate-400 font-normal mt-0.5">
+                            {user.businessType}
                           </p>
                         )}
                       </div>

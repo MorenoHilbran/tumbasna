@@ -578,12 +578,13 @@ export async function processIncomingMessage(
                 ? parsedData.contact_phone.replace(/\D/g, '').replace(/^0/, '62')
                 : phoneNumber;
             const name = parsedData.supplier_name || pushName;
+            const businessName = parsedData.business_name || parsedData.farm_name || name;
             const location = parsedData.supplier_location || '';
             const bankName = parsedData.bank_name || '';
             const bankAccount = parsedData.bank_account || '';
 
             console.log(`📋 [REGISTER DEBUG] Attempting registration:`, {
-                phone, name, location, bankName, bankAccount,
+                phone, name, businessName, location, bankName, bankAccount,
                 hasName: !!name, hasLocation: !!location, hasPhone: !!phone
             });
             if (name && location && phone) {
@@ -592,6 +593,7 @@ export async function processIncomingMessage(
                     const result = await apiService.registerSupplier({ 
                         phone, 
                         name, 
+                        businessName,
                         location, 
                         bankName, 
                         bankAccount,

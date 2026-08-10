@@ -147,7 +147,7 @@ const Home: React.FC<HomeProps> = ({
             </div>
 
             {/* Search */}
-            <div className="search-bar" onClick={onNavigateToPasar} role="button">
+            <div className="search-bar" onClick={() => onNavigateToPasar()} role="button">
               <i className="fa-solid fa-magnifying-glass"></i>
               <span>Cari produk atau supplier...</span>
             </div>
@@ -266,7 +266,7 @@ const Home: React.FC<HomeProps> = ({
             {/* Rekomendasi AI */}
             <div className="s-head">
               <h3 className="s-title">Rekomendasi AI</h3>
-              <button className="s-link" onClick={onNavigateToPasar}>Lihat Semua</button>
+              <button className="s-link" onClick={() => onNavigateToPasar()}>Lihat Semua</button>
             </div>
 
             <div className="p-row">

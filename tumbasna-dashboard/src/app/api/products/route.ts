@@ -63,7 +63,7 @@ export async function GET(request: Request) {
         name: entry.commodity.split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
         price: priceNum,
         stock: remainingStock,
-        supplierName: entry.user.name || 'Petani ' + entry.user.phoneNumber,
+        supplierName: entry.user.businessName || entry.user.name || 'Petani ' + entry.user.phoneNumber,
         supplierLocation: entry.location,
         supplierPhone: entry.user.phoneNumber,
         lat: entry.lat,
