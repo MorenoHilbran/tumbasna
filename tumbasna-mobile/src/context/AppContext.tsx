@@ -657,7 +657,12 @@ Tugas Anda:
             const res = await fetch(`${API_BASE}/api/chat/suppliers`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ buyerPhone, supplierPhone: finalSupplierPhone, message: text }),
+              body: JSON.stringify({ 
+                buyerPhone, 
+                supplierPhone: finalSupplierPhone, 
+                message: text,
+                sender: 'buyer'
+              }),
             });
             console.log('[sendMessage] Relay WA response status:', res.status);
             const resJson = await res.json();
@@ -671,6 +676,44 @@ Tugas Anda:
               if (msgs[lastIdx]?.sender === 'buyer') msgs[lastIdx] = { ...msgs[lastIdx], status: 'delivered' };
               return { ...t, messages: msgs };
             }));
+
+            // Fetch chat history untuk update dengan reply supplier (polling)
+            setTimeout(async () => {
+              try {
+                const historyRes = await fetch(
+                  `${API_BASE}/api/chat/suppliers?action=history&buyerPhone=${buyerPhone}&supplierPhone=${finalSupplierPhone}`
+                );
+                if (historyRes.ok) {
+                  const historyData = await historyRes.json();
+                  if (historyData.success && historyData.data.length > 0) {
+                    const messages: ChatMessage[] = historyData.data.map((msg: any) => ({
+                      id: msg.id,
+                      sender: msg.sender,
+                      text: msg.text,
+                      timestamp: new Date(msg.createdAt).toLocaleTimeString('id-ID', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      }),
+                      status: 'read'
+                    }));
+
+                    setChats((prev) => prev.map((t) => {
+                      if (t.supplierName !== supplierName) return t;
+                      const lastMsg = messages[messages.length - 1];
+                      return {
+                        ...t,
+                        messages,
+                        lastMessage: lastMsg.text,
+                        lastTime: lastMsg.timestamp,
+                        unreadCount: messages.filter(m => m.sender === 'supplier').length
+                      };
+                    }));
+                  }
+                }
+              } catch (pollErr) {
+                console.warn('[sendMessage] Polling chat history error:', pollErr);
+              }
+            }, 3000); // Poll setelah 3 detik
           } else {
             console.warn('[sendMessage] Skip relay WA because phone is missing:', { finalSupplierPhone, buyerPhone });
           }
