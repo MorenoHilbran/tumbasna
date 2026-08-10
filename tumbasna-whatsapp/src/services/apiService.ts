@@ -171,4 +171,24 @@ export const apiService = {
             throw error;
         }
     },
+    async deleteUserAccount(phone: string) {
+        try {
+            const response = await apiClient.post(`${API_URL}/api/users/delete`, { phone });
+            return response.data;
+        } catch (error: any) {
+            console.error(`[API ERROR] Gagal hapus akun ${phone}:`, error.response?.data || error.message);
+            return error.response?.data || { success: false, error: error.message };
+        }
+    },
+    async deleteCommodityEntry(entryId: string, phone: string) {
+        try {
+            const response = await apiClient.post(`${API_URL}/api/entries/delete`, { entryId, phone });
+            return response.data;
+        } catch (error: any) {
+            console.error(`[API ERROR] Gagal hapus produk ${entryId}:`, error.response?.data || error.message);
+            return error.response?.data || { success: false, error: error.message };
+        }
+    },
 };
+
+

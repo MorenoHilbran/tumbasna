@@ -33,6 +33,27 @@ export interface ChatThread {
   unreadCount: number; messages: ChatMessage[];
   supplierPhone?: string;
 }
+// ── Delivery Group Chat (Supplier × Kurir × Penerima) ──────────────────
+export interface DeliveryGroupMessage {
+  id: string;
+  senderRole: 'buyer' | 'supplier' | 'driver' | 'system';
+  senderName: string;
+  text: string;
+  isSystemMessage: boolean;
+  timestamp: string;
+}
+export interface DeliveryGroup {
+  id: string;
+  orderId: string;
+  status: 'ACTIVE' | 'CLOSED';
+  driverName?: string | null;
+  driverPhone?: string | null;
+  driverLink?: string | null;
+  supplierName?: string;
+  courier?: string;
+  buyerName?: string;
+  messages: DeliveryGroupMessage[];
+}
 export interface User {
   id?: string; ownerName: string; businessName: string; phone: string;
   email: string; address: string; businessType: string;
@@ -63,6 +84,10 @@ interface AppContextType {
   refreshOrders: () => Promise<void>;
   refreshProducts: () => Promise<void>;
   updateProfile: (userData: Partial<User>) => Promise<{ success: boolean; error?: string }>;
+  // Delivery Group Chat
+  deliveryGroups: Record<string, DeliveryGroup>; // keyed by orderId
+  fetchDeliveryGroup: (orderId: string) => Promise<DeliveryGroup | null>;
+  sendDeliveryGroupMessage: (orderId: string, text: string) => Promise<boolean>;
 }
 
 
@@ -170,8 +195,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [orders, setOrders] = useState<Order[]>([]);
   const [chats, setChats] = useState<ChatThread[]>(() => {
     const saved = localStorage.getItem('tumbasna_chats');
-    return saved ? JSON.parse(saved) : INITIAL_CHATS;
+    if (saved) {
+      try {
+        const parsed: ChatThread[] = JSON.parse(saved);
+        const valid = parsed.filter(t => 
+          t.supplierName === 'Tumbasna AI Pintar' || (t.messages && t.messages.some(m => m.id.startsWith('msg-')))
+        );
+        return valid.length > 0 ? valid : INITIAL_CHATS;
+      } catch {
+        return INITIAL_CHATS;
+      }
+    }
+    return INITIAL_CHATS;
   });
+  // Delivery Group Chat state — keyed by orderId
+  const [deliveryGroups, setDeliveryGroups] = useState<Record<string, DeliveryGroup>>({});
+  // Track last poll timestamp per group
+  const deliveryGroupLastTs = React.useRef<Record<string, string>>({});
 
   // â”€â”€ Persist user & cart â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
@@ -187,37 +227,74 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem('tumbasna_chats', JSON.stringify(chats));
   }, [chats]);
 
-  // â”€â”€ Fetch supplier nyata dari DB dan merge ke daftar chat â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Polling pesan chat masuk dari supplier (Tumbasna Bridge) ──────────────
   useEffect(() => {
-    const fetchSuppliers = async () => {
-      const result = await apiGet('/api/chat/suppliers', { timeout: 5000, retry: 1 });
-      if (result.success && result.data?.length) {
-        setChats(prev => {
-          const existingNames = new Set(prev.map(c => c.supplierName));
-          const newThreads: ChatThread[] = result.data
-            .filter((s: any) => !existingNames.has(s.name))
-            .map((s: any) => ({
-              supplierName: s.name,
-              supplierPhone: s.phone,
-              lastMessage: s.activeProducts[0]
-                ? `Menjual: ${s.activeProducts[0].commodity} ? Rp${s.activeProducts[0].price.toLocaleString('id-ID')}/kg`
-                : 'Supplier terdaftar via WhatsApp',
-              lastTime: '',
-              unreadCount: 0,
-              messages: [{
-                id: `intro-${s.id}`,
-                sender: 'supplier' as const,
-                text: `Halo! Saya ${s.name} dari ${s.location}. ${s.activeProducts.length > 0 ? `Saat ini saya menjual: ${s.activeProducts.map((p: any) => `${p.commodity} (${p.qty}kg @ Rp${p.price.toLocaleString('id-ID')})`).join(', ')}.` : ''} Ada yang bisa saya bantu?`,
-                timestamp: '',
-                status: 'read' as const,
-              }],
-            }));
-          return [...prev, ...newThreads];
-        });
+    if (!user?.phone) return;
+
+    const pollMessages = async () => {
+      try {
+        const result = await apiGet(`/api/chat/messages?buyerPhone=${encodeURIComponent(user.phone)}`, { timeout: 4000, retry: 0 });
+        if (result.success && Array.isArray(result.data)) {
+          setChats(prev => {
+            let updated = false;
+            let updatedThreadName = '';
+
+            const newChats = prev.map(thread => {
+              const remoteThread = result.data.find((t: any) =>
+                t.supplierPhone === thread.supplierPhone || t.supplierName === thread.supplierName
+              );
+
+              if (!remoteThread || !remoteThread.messages?.length) return thread;
+
+              const localMsgIds = new Set(thread.messages.map(m => m.id));
+              const missingMsgs = remoteThread.messages.filter((m: any) => !localMsgIds.has(m.id));
+
+              if (missingMsgs.length === 0) return thread;
+
+              updated = true;
+              updatedThreadName = thread.supplierName;
+              const formattedNewMsgs = missingMsgs.map((m: any) => ({
+                id: m.id,
+                sender: m.sender as 'buyer' | 'supplier',
+                text: m.text,
+                timestamp: new Date(m.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+                status: m.status || 'read',
+              }));
+
+              const lastMsg = formattedNewMsgs[formattedNewMsgs.length - 1];
+
+              return {
+                ...thread,
+                lastMessage: lastMsg.text,
+                lastTime: lastMsg.timestamp,
+                messages: [...thread.messages, ...formattedNewMsgs],
+              };
+            });
+
+            if (!updated) return prev;
+
+            // Reorder: move the updated thread to top (right below AI if AI exists)
+            const targetThread = newChats.find(t => t.supplierName === updatedThreadName);
+            if (!targetThread) return newChats;
+
+            const otherThreads = newChats.filter(t => t.supplierName !== updatedThreadName);
+            const aiThread = otherThreads.find(t => t.supplierName === 'Tumbasna AI Pintar');
+            const nonAi = otherThreads.filter(t => t.supplierName !== 'Tumbasna AI Pintar');
+
+            return aiThread
+              ? [aiThread, targetThread, ...nonAi]
+              : [targetThread, ...nonAi];
+          });
+        }
+      } catch (err) {
+        // Silent error for poll
       }
     };
-    fetchSuppliers();
-  }, []);
+
+    pollMessages();
+    const interval = setInterval(pollMessages, 5000);
+    return () => clearInterval(interval);
+  }, [user?.phone]);
 
   // â”€â”€ Fetch products dari dashboard API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const refreshProducts = async () => {
@@ -495,13 +572,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     setOrders((prev) => [newOrder, ...prev]); items.forEach(item => removeFromCart(item.product.id));
     if (user) setUser({ ...user, activeOrdersCount: user.activeOrdersCount + 1 });
-    
-    // Add notification for pending payment
-    notifications.addNotification(notificationTemplates.paymentPending(orderId, totalAmount));
     return orderId;
   };
 
-  // â”€â”€ Pay Order â€” update status ke Supabase â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Pay Order ─ update status ke Supabase ─────────────────────────────
   const payOrder = async (orderId: string) => {
     const currentTime = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
     setOrders((prev) =>
@@ -514,11 +588,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       })
     );
     
-    // Add notification for payment success
-    const paidOrder = orders.find((o) => o.id === orderId);
-    if (paidOrder) {
-      notifications.addNotification(notificationTemplates.paymentSuccess(orderId, paidOrder.supplierName));
-    }
     const order = orders.find((o) => o.id === orderId);
     const updatedTimeline = order ? [...order.trackingTimeline] : [];
     await apiPatch(`/api/orders/${orderId}`, { status: 'DIPROSES', trackingTimeline: updatedTimeline }, { timeout: 5000 });
@@ -537,11 +606,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       })
     );
     
-    // Add notification for order completion
-    const completedOrder = orders.find((o) => o.id === orderId);
-    if (completedOrder) {
-      notifications.addNotification(notificationTemplates.orderCompleted(orderId, completedOrder.totalAmount, completedOrder.supplierName));
-    }
+
     if (user) {
       const order = orders.find((o) => o.id === orderId);
       const cost = order?.totalAmount ?? 0;
@@ -554,9 +619,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const sendMessage = (supplierName: string, text: string, supplierPhone?: string) => {
     const newMessage: ChatMessage = { id: `msg-${Date.now()}`, sender: 'buyer', text, timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }), status: 'sent' };
     setChats((prev) => {
-      const exists = prev.some((t) => t.supplierName === supplierName);
-      if (exists) return prev.map((t) => t.supplierName === supplierName ? { ...t, supplierPhone: t.supplierPhone || supplierPhone, lastMessage: text, lastTime: newMessage.timestamp, messages: [...t.messages, newMessage] } : t);
-      return [...prev, { supplierName, supplierPhone, lastMessage: text, lastTime: newMessage.timestamp, unreadCount: 0, messages: [newMessage] }];
+      const existingThread = prev.find((t) => t.supplierName === supplierName);
+      const updatedThread: ChatThread = existingThread
+        ? {
+            ...existingThread,
+            supplierPhone: existingThread.supplierPhone || supplierPhone,
+            lastMessage: text,
+            lastTime: newMessage.timestamp,
+            messages: [...existingThread.messages, newMessage],
+          }
+        : {
+            supplierName,
+            supplierPhone,
+            lastMessage: text,
+            lastTime: newMessage.timestamp,
+            unreadCount: 0,
+            messages: [newMessage],
+          };
+
+      const otherThreads = prev.filter((t) => t.supplierName !== supplierName);
+      if (supplierName === 'Tumbasna AI Pintar') {
+        return [updatedThread, ...otherThreads];
+      } else {
+        const aiThread = otherThreads.find(t => t.supplierName === 'Tumbasna AI Pintar');
+        const nonAi = otherThreads.filter(t => t.supplierName !== 'Tumbasna AI Pintar');
+        return aiThread ? [aiThread, updatedThread, ...nonAi] : [updatedThread, ...nonAi];
+      }
     });
 
     if (supplierName === 'Tumbasna AI Pintar') {
@@ -745,9 +833,101 @@ Tugas Anda:
     return { success: false, error: result.error || 'Failed to update profile' };
   };
 
+  // ── Delivery Group Chat ─────────────────────────────────────────────
+  const fetchDeliveryGroup = async (orderId: string): Promise<DeliveryGroup | null> => {
+    try {
+      const res = await fetch(`${API_BASE}/api/delivery-group/${orderId}`);
+      const json = await res.json();
+      if (json.success && json.data) {
+        const group: DeliveryGroup = json.data;
+        setDeliveryGroups(prev => ({ ...prev, [orderId]: group }));
+        if (group.messages.length > 0) {
+          deliveryGroupLastTs.current[orderId] = group.messages[group.messages.length - 1].timestamp;
+        }
+        return group;
+      }
+    } catch (e) {
+      console.warn('[fetchDeliveryGroup] error:', e);
+    }
+    return null;
+  };
+
+  const sendDeliveryGroupMessage = async (orderId: string, text: string): Promise<boolean> => {
+    if (!user) return false;
+    try {
+      const senderName = user.businessName || user.ownerName || 'Pembeli';
+      const res = await fetch(`${API_BASE}/api/delivery-group/${orderId}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          senderRole: 'buyer',
+          senderName,
+          text,
+        }),
+      });
+      const json = await res.json();
+      if (json.success && json.data) {
+        const newMsg: DeliveryGroupMessage = json.data;
+        setDeliveryGroups(prev => {
+          const group = prev[orderId];
+          if (!group) return prev;
+          return {
+            ...prev,
+            [orderId]: { ...group, messages: [...group.messages, newMsg] },
+          };
+        });
+        deliveryGroupLastTs.current[orderId] = json.data.timestamp;
+        return true;
+      }
+    } catch (e) {
+      console.warn('[sendDeliveryGroupMessage] error:', e);
+    }
+    return false;
+  };
+
+  // Auto-poll pesan baru untuk semua grup aktif (setiap 5 detik saat user login)
+  useEffect(() => {
+    if (!user) return;
+    const pollDeliveryGroups = async () => {
+      const activeOrders = orders.filter(o => o.status === 'Dikirim');
+      for (const order of activeOrders) {
+        try {
+          const since = deliveryGroupLastTs.current[order.id];
+          const url = since
+            ? `${API_BASE}/api/delivery-group/${order.id}/messages?since=${encodeURIComponent(since)}`
+            : `${API_BASE}/api/delivery-group/${order.id}/messages`;
+          const res = await fetch(url);
+          const json = await res.json();
+          if (json.success && json.data?.length > 0) {
+            const newMsgs: DeliveryGroupMessage[] = json.data;
+            setDeliveryGroups(prev => {
+              const group = prev[order.id];
+              if (!group) return prev;
+              return {
+                ...prev,
+                [order.id]: { ...group, messages: [...group.messages, ...newMsgs] },
+              };
+            });
+            deliveryGroupLastTs.current[order.id] = newMsgs[newMsgs.length - 1].timestamp;
+          }
+        } catch {}
+      }
+    };
+
+    const interval = setInterval(pollDeliveryGroups, 5000);
+    return () => clearInterval(interval);
+  }, [user, orders]);
+
 
   return (
-    <AppContext.Provider value={{ user, products, cart, orders, chats, isApiOnline, login, register, logout, addToCart, removeFromCart, updateCartQuantity, clearCart, checkout, payOrder, confirmOrderReceived, sendMessage, refreshOrders, refreshProducts, updateProfile }}>
+    <AppContext.Provider value={{
+      user, products, cart, orders, chats, isApiOnline,
+      login, register, logout, addToCart, removeFromCart, updateCartQuantity,
+      clearCart, checkout, payOrder, confirmOrderReceived, sendMessage,
+      refreshOrders, refreshProducts, updateProfile,
+      // Delivery Group Chat
+      deliveryGroups, fetchDeliveryGroup, sendDeliveryGroupMessage,
+    }}>
       {children}
     </AppContext.Provider>
   );

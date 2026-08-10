@@ -2,6 +2,23 @@ import { AnyMessageContent } from '@whiskeysockets/baileys';
 import { extractMessageData } from '../ai/agent';
 import { apiService } from '../services/apiService';
 
+interface DeleteAccountState {
+    step: 1 | 2;
+    code?: string;
+    expiresAt: number;
+}
+
+interface DeleteProductState {
+    entryId: string;
+    commodityName: string;
+    qty: number;
+    price: number;
+    expiresAt: number;
+}
+
+const deleteAccountStateMap = new Map<string, DeleteAccountState>();
+const deleteProductStateMap = new Map<string, DeleteProductState>();
+
 export async function processIncomingMessage(
     sender: string,
     pushName: string,
@@ -31,6 +48,25 @@ export async function processIncomingMessage(
         // Tetap lanjut — bot harus selalu membalas meskipun dashboard offline
     }
     console.log(`✅ [WHITELIST DONE] isRegistered=${isRegistered}`);
+
+    // 1.2. Cek pembatalan alur penghapusan akun atau produk
+    if (cleanText === 'batal') {
+        let cancelledAny = false;
+        if (deleteAccountStateMap.has(phoneNumber)) {
+            deleteAccountStateMap.delete(phoneNumber);
+            cancelledAny = true;
+        }
+        if (deleteProductStateMap.has(phoneNumber)) {
+            deleteProductStateMap.delete(phoneNumber);
+            cancelledAny = true;
+        }
+        if (cancelledAny) {
+            await sendMessage(sender, {
+                text: `❌ *PENGHAPUSAN DIBATALKAN*\n\nProses penghapusan telah dibatalkan. Data Juragan tetap aman di Tumbasna. 🌾\n\n💡 Ketik *MENU* untuk kembali ke menu utama.`
+            });
+            return;
+        }
+    }
 
     // 1.3. Cek jika pesan adalah balasan supplier untuk buyer
     // Pattern: Supplier membalas pesan yang mengandung info buyer dari Tumbasna
@@ -71,7 +107,125 @@ export async function processIncomingMessage(
         }
     }
 
-    // 1.5. Cek jika pesan adalah konfirmasi pengiriman barang "KIRIM TRX-xxxxxx"
+    // 1.4. Cek jika pengguna sedang dalam alur konfirmasi Hapus Akun (Step 1 -> Step 2 -> Exec)
+    if (deleteAccountStateMap.has(phoneNumber)) {
+        const state = deleteAccountStateMap.get(phoneNumber)!;
+
+        // Cek jika sudah expired (> 5 menit)
+        if (Date.now() > state.expiresAt) {
+            deleteAccountStateMap.delete(phoneNumber);
+            await sendMessage(sender, {
+                text: `⏱️ *WAKTU KONFIRMASI HABIS*\n\nWaktu konfirmasi penghapusan akun telah kadaluarsa (5 menit). Akun Juragan tetap aman.\n\n💡 Ketik *8* jika ingin memulai kembali.`
+            });
+            return;
+        }
+
+        // TAHAP 1: Menunggu balasan "YAKIN HAPUS"
+        if (state.step === 1) {
+            if (cleanText === 'yakin hapus' || cleanText === 'yakin') {
+                const securityCode = Math.floor(1000 + Math.random() * 9000).toString();
+                deleteAccountStateMap.set(phoneNumber, {
+                    step: 2,
+                    code: securityCode,
+                    expiresAt: Date.now() + 5 * 60 * 1000,
+                });
+
+                const step2Text = `🚨 *KONFIRMASI TERAKHIR (FINAL CHECK)* 🚨\n\n` +
+                    `Untuk memastikan ini BENAR-BENAR Anda dan bukan tidak sengaja, silakan ketik balasan TEPAT berikut:\n\n` +
+                    `👉 *KONFIRMASI ${securityCode}*\n\n` +
+                    `_Catatan: Kode konfirmasi ini berlaku selama 5 menit. Ketik *BATAL* untuk membatalkan._`;
+                await sendMessage(sender, { text: step2Text });
+                return;
+            } else {
+                await sendMessage(sender, {
+                    text: `⚠️ Balasan tidak dikenali.\n\nJika Juragan yakin ingin menghapus akun, ketik: *YAKIN HAPUS*\nJika ingin membatalkan, ketik: *BATAL*`
+                });
+                return;
+            }
+        }
+
+        // TAHAP 2: Menunggu balasan "KONFIRMASI <KODE>"
+        if (state.step === 2) {
+            if (cleanText.startsWith('konfirmasi')) {
+                const inputCode = cleanText.replace('konfirmasi', '').trim();
+                if (inputCode === state.code) {
+                    // Eksekusi Hapus Akun
+                    try {
+                        const deleteRes = await apiService.deleteUserAccount(phoneNumber);
+                        deleteAccountStateMap.delete(phoneNumber);
+
+                        if (deleteRes.success) {
+                            const successText = `✅ *AKUN & DATA TERHAPUS*\n\n` +
+                                `Akun Mitra Tumbasna dan seluruh riwayat data Juragan (*+${phoneNumber}*) telah berhasil dihapus dari sistem kami.\n\n` +
+                                `Terima kasih pernah menjadi bagian dari Mitra Tumbasna. Jika ingin bergabung kembali di masa depan, Juragan dapat mendaftar ulang kapan saja via WhatsApp ini. 🌾`;
+                            await sendMessage(sender, { text: successText });
+                        } else {
+                            const failText = `⚠️ *PENGHAPUSAN AKUN GAGAL*\n\n` +
+                                `${deleteRes.error || 'Terjadi kesalahan saat menghapus data Anda.'}\n\n` +
+                                `💡 Akun Juragan tetap aman. Silakan hubungi CS (*6*) jika membutuhkan bantuan.`;
+                            await sendMessage(sender, { text: failText });
+                        }
+                    } catch (err: any) {
+                        deleteAccountStateMap.delete(phoneNumber);
+                        await sendMessage(sender, {
+                            text: `❌ Terjadi kesalahan sistem saat menghapus akun: ${err.message}. Silakan coba lagi nanti.`
+                        });
+                    }
+                    return;
+                } else {
+                    await sendMessage(sender, {
+                        text: `❌ Kode konfirmasi tidak cocok.\n\nHarap ketik persis: *KONFIRMASI ${state.code}*\natau ketik *BATAL* untuk membatalkan.`
+                    });
+                    return;
+                }
+            }
+        }
+    }
+
+    // 1.5. Cek jika pengguna sedang dalam alur konfirmasi Hapus Produk (YA / BATAL)
+    if (deleteProductStateMap.has(phoneNumber)) {
+        const state = deleteProductStateMap.get(phoneNumber)!;
+
+        if (Date.now() > state.expiresAt) {
+            deleteProductStateMap.delete(phoneNumber);
+            await sendMessage(sender, {
+                text: `⏱️ *WAKTU KONFIRMASI HABIS*\n\nWaktu konfirmasi penghapusan produk telah kadaluarsa (5 menit). Produk tetap aktif.\n\n💡 Ketik *3* jika ingin memilih produk kembali.`
+            });
+            return;
+        }
+
+        if (cleanText === 'ya' || cleanText === 'ya hapus' || cleanText === 'setuju') {
+            try {
+                const deleteRes = await apiService.deleteCommodityEntry(state.entryId, phoneNumber);
+                deleteProductStateMap.delete(phoneNumber);
+
+                if (deleteRes.success) {
+                    const successText = `✅ *PRODUK BERHASIL DIHAPUS*\n\n` +
+                        `Listing komoditas *${state.commodityName.toUpperCase()}* (${state.qty} kg) telah berhasil dihapus/dibatalkan dari sistem Tumbasna.\n\n` +
+                        `💡 Ketik *3* untuk melihat sisa listing komoditas Anda atau *MENU* untuk ke menu utama.`;
+                    await sendMessage(sender, { text: successText });
+                } else {
+                    const failText = `⚠️ *PENGHAPUSAN PRODUK GAGAL*\n\n` +
+                        `${deleteRes.error || 'Terjadi kesalahan saat menghapus produk.'}\n\n` +
+                        `💡 Ketik *3* untuk melihat daftar komoditas Anda.`;
+                    await sendMessage(sender, { text: failText });
+                }
+            } catch (err: any) {
+                deleteProductStateMap.delete(phoneNumber);
+                await sendMessage(sender, {
+                    text: `❌ Terjadi kesalahan sistem saat menghapus produk: ${err.message}. Silakan coba lagi nanti.`
+                });
+            }
+            return;
+        } else {
+            await sendMessage(sender, {
+                text: `⚠️ Balasan tidak dikenali.\n\nBalas *YA* untuk menghapus produk *${state.commodityName.toUpperCase()}*, atau ketik *BATAL* untuk membatalkan.`
+            });
+            return;
+        }
+    }
+
+    // 1.6. Cek jika pesan adalah konfirmasi pengiriman barang "KIRIM TRX-xxxxxx"
     // Format didukung:
     //   a) Teks biasa: "KIRIM TRX-987654 JNE1234567890"
     //   b) Foto resi: caption "[RESI FOTO] KIRIM TRX-987654 JNE1234567890 | URL Foto Resi: https://..."
@@ -162,9 +316,49 @@ export async function processIncomingMessage(
         return;
     }
 
+    // 1.6. Cek perintah hapus produk spesifik "HAPUS PRODUK <N>" atau "BATAL PRODUK <N>"
+    const deleteProductMatch = cleanText.match(/^(?:hapus|batal)\s+(?:produk\s+)?(\d+)$/i);
+    if (deleteProductMatch) {
+        const productIndex = parseInt(deleteProductMatch[1], 10) - 1;
+        try {
+            const result = await apiService.getUserEntries(phoneNumber);
+            const activeEntries = result.data ? result.data.filter((e: any) => e.status === 'ACTIVE') : [];
+
+            if (productIndex >= 0 && productIndex < activeEntries.length) {
+                const targetEntry = activeEntries[productIndex];
+                deleteProductStateMap.set(phoneNumber, {
+                    entryId: targetEntry.id,
+                    commodityName: targetEntry.commodity,
+                    qty: targetEntry.remainingQty || targetEntry.originalQty,
+                    price: targetEntry.price,
+                    expiresAt: Date.now() + 5 * 60 * 1000
+                });
+
+                const confirmText = `⚠️ *KONFIRMASI HAPUS PRODUK* ⚠️\n\n` +
+                    `Apakah Juragan yakin ingin menghapus/membatalkan listing komoditas berikut dari pasar Tumbasna?\n\n` +
+                    `• Komoditas: *${targetEntry.commodity.toUpperCase()}*\n` +
+                    `• Sisa Stok: *${targetEntry.remainingQty || targetEntry.originalQty} kg*\n` +
+                    `• Harga: *Rp ${Number(targetEntry.price).toLocaleString('id-ID')}/kg*\n` +
+                    `• Lokasi: ${targetEntry.location}\n\n` +
+                    `👉 Balas *YA* untuk menghapus produk ini.\n` +
+                    `👉 Balas *BATAL* untuk membatalkan.`;
+                await sendMessage(sender, { text: confirmText });
+            } else {
+                await sendMessage(sender, {
+                    text: `⚠️ Nomor produk tidak ditemukan.\n\nSilakan ketik *3* untuk melihat daftar komoditas aktif Anda beserta nomor urutnya.`
+                });
+            }
+        } catch (err: any) {
+            await sendMessage(sender, {
+                text: `❌ Gagal mengambil daftar produk: ${err.message}`
+            });
+        }
+        return;
+    }
+
     // 2. Tampilkan Menu Cepat (Numeric / Keyword Shortcuts)
     const menuKeywords = ['menu', 'help', 'bantuan', 'hallo', 'halo', 'p'];
-    const numberKeywords = ['1', '2', '3', '4', '5', '6', '7', 'profil', 'rekening', 'saldo', 'listing', 'produk', 'pesanan', 'order', 'jual', 'tambah', 'cs', 'bantuan', 'edit', 'ubah'];
+    const numberKeywords = ['1', '2', '3', '4', '5', '6', '7', '8', 'profil', 'rekening', 'saldo', 'listing', 'produk', 'pesanan', 'order', 'jual', 'tambah', 'cs', 'bantuan', 'edit', 'ubah', 'hapus akun', 'hapus data'];
 
     if (menuKeywords.includes(cleanText) || numberKeywords.includes(cleanText)) {
         if (isRegistered && userInfo) {
@@ -177,7 +371,8 @@ export async function processIncomingMessage(
                     `*4* 🛒 Lihat Pesanan Masuk (Order)\n` +
                     `*5* ✍️ Cara Jual / Daftarkan Komoditas\n` +
                     `*6* 📞 Hubungi Bantuan / CS\n` +
-                    `*7* ✏️ Edit Profil / Rekening Bank\n\n` +
+                    `*7* ✏️ Edit Profil / Rekening Bank\n` +
+                    `*8* 🗑️ Hapus Akun & Data Saya\n\n` +
                     `💡 _Atau Juragan bisa langsung mengetik pesan teks bebas untuk menawarkan hasil tani Juragan secara otomatis._`;
                 await sendMessage(sender, { text: menuText });
                 return;
@@ -219,20 +414,20 @@ export async function processIncomingMessage(
             if (cleanText === '3' || cleanText === 'listing' || cleanText === 'produk') {
                 try {
                     const result = await apiService.getUserEntries(phoneNumber);
-                    if (result.success && result.data.length > 0) {
+                    const activeEntries = result.data ? result.data.filter((e: any) => e.status === 'ACTIVE') : [];
+                    if (result.success && activeEntries.length > 0) {
                         let listText = `*DAFTAR KOMODITAS JURAGAN* 📦\n\n`;
-                        result.data.forEach((entry: any, index: number) => {
+                        activeEntries.forEach((entry: any, index: number) => {
                             listText += `${index + 1}. *${entry.commodity.toUpperCase()}* [${entry.status}]\n`;
-                            listText += `   - Stok Awal: *${entry.originalQty} kg*\n`;
-                            listText += `   - Terjual: *${entry.soldQty} kg*\n`;
-                            listText += `   - Sisa Stok: *${entry.remainingQty} kg*\n`;
+                            listText += `   - Stok Sisa: *${entry.remainingQty} kg* (Stok Awal: ${entry.originalQty} kg)\n`;
                             listText += `   - Harga: *Rp ${entry.price.toLocaleString('id-ID')}/kg*\n`;
-                            listText += `   - Lokasi: ${entry.location}\n\n`;
+                            listText += `   - Lokasi: ${entry.location}\n`;
+                            listText += `   👉 _Ketik *HAPUS PRODUK ${index + 1}* untuk membatalkan listing ini._\n\n`;
                         });
                         listText += `💡 Ketik *MENU* untuk kembali ke menu utama.`;
                         await sendMessage(sender, { text: listText });
                     } else {
-                        await sendMessage(sender, { text: "Juragan belum memiliki catatan penawaran komoditas di sistem kami.\n\n💡 Ketik *MENU* untuk kembali ke menu utama." });
+                        await sendMessage(sender, { text: "Juragan belum memiliki catatan penawaran komoditas aktif di sistem kami.\n\n💡 Ketik *MENU* untuk kembali ke menu utama." });
                     }
                 } catch (error) {
                     console.error(`❌ [ERROR LIST] Gagal mengambil list:`, error);
@@ -320,6 +515,24 @@ export async function processIncomingMessage(
                     `💡 _Asisten AI kami akan membaca dan memperbarui data Juragan secara otomatis tanpa repot!_\n\n` +
                     `Ketik *MENU* untuk kembali ke menu utama.`;
                 await sendMessage(sender, { text: editText });
+                return;
+            }
+
+            if (cleanText === '8' || cleanText === 'hapus akun' || cleanText === 'hapus data') {
+                deleteAccountStateMap.set(phoneNumber, {
+                    step: 1,
+                    expiresAt: Date.now() + 5 * 60 * 1000
+                });
+
+                const warningText = `⚠️ *PERINGATAN BAHAYA: HAPUS AKUN & DATA* ⚠️\n\n` +
+                    `Juragan *${userInfo.name || pushName}*, tindakan ini akan menghapus akun Anda secara PERMANEN:\n` +
+                    `• Profil & Rekening Bank akan dihapus dari sistem\n` +
+                    `• Seluruh Daftar Komoditas Jual/Beli akan dicabut\n` +
+                    `• Saldo Escrow & Riwayat Transaksi akan dibersihkan\n\n` +
+                    `Apakah Juragan BENAR-BENAR YAKIN ingin melanjutkan?\n\n` +
+                    `👉 Balas *YAKIN HAPUS* untuk melanjutkan ke konfirmasi final.\n` +
+                    `👉 Balas *BATAL* untuk membatalkan proses ini.`;
+                await sendMessage(sender, { text: warningText });
                 return;
             }
         } else {

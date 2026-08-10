@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { IonApp, IonIcon } from '@ionic/react';
 import { 
   homeOutline, home, 
@@ -27,11 +27,13 @@ import Notifications from './pages/Notifications';
 import LoginRegister from './pages/LoginRegister';
 import Welcome from './pages/Welcome';
 import Splash from './pages/Splash';
+import Cocokkan from './pages/Cocokkan';
+import DeliveryGroupChat from './pages/DeliveryGroupChat';
 
 import './MainAppShell.css';
 
 type TabState = 'beranda' | 'pasar' | 'pesanan' | 'chat' | 'profil';
-type ViewState = 'tabs' | 'detail_produk' | 'keranjang' | 'checkout' | 'order_detail_payment' | 'detail_pesanan' | 'notifications';
+type ViewState = 'tabs' | 'detail_produk' | 'keranjang' | 'checkout' | 'order_detail_payment' | 'detail_pesanan' | 'notifications' | 'cocokkan' | 'delivery_group_chat';
 
 const TABS: { id: TabState; label: string; iconActive: string; iconInactive: string }[] = [
   { id: 'beranda', label: 'Beranda', iconActive: home, iconInactive: homeOutline },
@@ -62,6 +64,7 @@ const MainAppShell: React.FC = () => {
   
   const [checkoutSupplierId, setCheckoutSupplierId] = useState<string | null>(null);
   const [checkoutSupplierItems, setCheckoutSupplierItems] = useState<CartItem[]>([]);
+  const [selectedDeliveryGroupOrderId, setSelectedDeliveryGroupOrderId] = useState<string | null>(null);
   // Auto-generate notifications based on order changes
   useEffect(() => {
     orders.forEach(order => {
@@ -81,6 +84,15 @@ const MainAppShell: React.FC = () => {
         if (!exists && order.items[0]) {
           const firstItem = order.items[0].product.name;
           notifications.addNotification(notificationTemplates.orderConfirmed(order.id, order.supplierName, firstItem));
+        }
+      }
+
+      if (order.status === 'Selesai') {
+        const exists = notifications.notifications.some(n => 
+          n.metadata?.orderId === order.id && n.title === 'Pesanan Selesai'
+        );
+        if (!exists) {
+          notifications.addNotification(notificationTemplates.orderCompleted(order.id, order.totalAmount, order.supplierName));
         }
       }
     });
@@ -165,8 +177,12 @@ const MainAppShell: React.FC = () => {
               onBack={() => setViewState('tabs')}
               onNavigateToCart={() => setViewState('keranjang')}
               onNavigateToChat={(supplierName, supplierPhone) => {
-                const message = encodeURIComponent(`Halo, saya tertarik dengan produk dari ${supplierName}`);
-                window.open(`https://wa.me/6285190943468?text=${message}`, '_blank');
+                setSelectedChatPartner(supplierName);
+                if (supplierPhone) {
+                  setSelectedChatPartnerPhone(supplierPhone);
+                }
+                setViewState('tabs');
+                setActiveTab('chat');
               }}
               onSelectProduct={(p) => setSelectedProduct(p)}
             />
@@ -195,9 +211,13 @@ const MainAppShell: React.FC = () => {
         return (
           <Checkout
             onBack={() => setViewState('keranjang')}
-            onOrderCreated={(orderId) => {
+            onOrderCreated={(orderId, paymentSuccess = false) => {
               setSelectedOrderId(orderId);
-              setViewState('order_detail_payment');
+              if (paymentSuccess) {
+                setViewState('detail_pesanan');
+              } else {
+                setViewState('order_detail_payment');
+              }
             }}
             supplierId={checkoutSupplierId || undefined}
             supplierItems={checkoutSupplierItems.length > 0 ? checkoutSupplierItems : undefined}
@@ -238,6 +258,22 @@ const MainAppShell: React.FC = () => {
               onNavigateToPayment={() => {
                 setViewState('order_detail_payment');
               }}
+              onNavigateToDeliveryGroup={(orderId) => {
+                setSelectedDeliveryGroupOrderId(orderId);
+                setViewState('delivery_group_chat');
+              }}
+            />
+          );
+        }
+        setViewState('tabs');
+        return null;
+
+      case 'delivery_group_chat':
+        if (selectedDeliveryGroupOrderId) {
+          return (
+            <DeliveryGroupChat
+              orderId={selectedDeliveryGroupOrderId}
+              onBack={() => setViewState('detail_pesanan')}
             />
           );
         }
@@ -251,6 +287,21 @@ const MainAppShell: React.FC = () => {
             onBack={() => {
               setViewState('tabs');
               setActiveTab('beranda');
+            }}
+          />
+        );
+
+      case 'cocokkan':
+        return (
+          <Cocokkan
+            onBack={() => {
+              setViewState('tabs');
+              setActiveTab('beranda');
+            }}
+            onNavigateToChat={(supplierName) => {
+              setSelectedChatPartner(supplierName);
+              setViewState('tabs');
+              setActiveTab('chat');
             }}
           />
         );
@@ -324,6 +375,7 @@ const MainAppShell: React.FC = () => {
                   setActiveTab('chat');
                   setViewState('tabs');
                 }}
+                onNavigateToCocokkan={() => setViewState('cocokkan')}
               />
             );
         }

@@ -96,6 +96,7 @@ model Order {
   items            OrderItem[]
   payment          Payment?
   review           Review?
+  deliveryGroup    DeliveryGroup?
   deliveryDate     DateTime?    @map("delivery_date") @db.Date
   deliveryTimeSlot String?      @map("delivery_time_slot") @db.VarChar(50)
   buyerAddress     String?      @map("buyer_address")
@@ -279,6 +280,7 @@ model Review {
   @@map("reviews")
 }
 
+<<<<<<< HEAD
 model CommodityRequest {
   id            String   @id @default(uuid()) @db.Uuid
   commodityName String   @map("commodity_name") @db.VarChar(100)
@@ -303,4 +305,37 @@ enum commodity_request_status {
   PENDING
   APPROVED
   REJECTED
+=======
+// ── Group Chat Pengiriman (Supplier × Kurir × Penerima) ──────────────
+
+model DeliveryGroup {
+  id                String                 @id @default(uuid()) @db.Uuid
+  orderId           String                 @unique @map("order_id")
+  status            String                 @default("ACTIVE") @db.VarChar(20) // ACTIVE | CLOSED
+  driverName        String?                @map("driver_name") @db.VarChar(100)
+  driverPhone       String?                @map("driver_phone") @db.VarChar(20)
+  // Token unik untuk akses kurir via link web (tidak perlu login)
+  driverAccessToken String?                @unique @map("driver_access_token") @db.Uuid
+  createdAt         DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime               @updatedAt @map("updated_at") @db.Timestamptz(6)
+  order             Order                  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  messages          DeliveryGroupMessage[]
+
+  @@map("delivery_groups")
+}
+
+model DeliveryGroupMessage {
+  id              String        @id @default(uuid()) @db.Uuid
+  groupId         String        @map("group_id") @db.Uuid
+  // Role pengirim: buyer | supplier | driver | system
+  senderRole      String        @map("sender_role") @db.VarChar(20)
+  senderName      String        @map("sender_name") @db.VarChar(150)
+  text            String
+  // Pesan otomatis dari sistem (status update, dll)
+  isSystemMessage Boolean       @default(false) @map("is_system_message")
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  group           DeliveryGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@map("delivery_group_messages")
+>>>>>>> ad01967f6a66a2277a55132b4198aaae5faf3b3b
 }
