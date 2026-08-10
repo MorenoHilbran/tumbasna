@@ -28,7 +28,7 @@ import './DetailPesanan.css';
 interface DetailPesananProps {
   orderId: string;
   onBack: () => void;
-  onNavigateToChat: (supplierName: string) => void;
+  onNavigateToChat: (supplierName: string, supplierPhone?: string) => void;
   onNavigateToPayment?: (orderId?: string) => void;
   onNavigateToDeliveryGroup?: (orderId: string) => void;
 }

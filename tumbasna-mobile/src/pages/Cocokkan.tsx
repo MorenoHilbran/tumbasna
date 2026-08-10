@@ -12,7 +12,7 @@ import './Cocokkan.css';
 
 interface CocokkanProps {
   onBack: () => void;
-  onNavigateToChat?: (supplierName: string) => void;
+  onNavigateToChat?: (supplierName: string, supplierPhone?: string) => void;
 }
 
 interface MatchResult {
