@@ -210,9 +210,13 @@ const MainAppShell: React.FC = () => {
         return (
           <Checkout
             onBack={() => setViewState('keranjang')}
-            onOrderCreated={(orderId) => {
+            onOrderCreated={(orderId, paymentSuccess = false) => {
               setSelectedOrderId(orderId);
-              setViewState('order_detail_payment');
+              if (paymentSuccess) {
+                setViewState('detail_pesanan');
+              } else {
+                setViewState('order_detail_payment');
+              }
             }}
             supplierId={checkoutSupplierId || undefined}
             supplierItems={checkoutSupplierItems.length > 0 ? checkoutSupplierItems : undefined}

@@ -37,9 +37,13 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
+const MIDTRANS_CLIENT_KEY = import.meta.env.VITE_MIDTRANS_CLIENT_KEY || 'Mid-client-PjI0Nu76GIkFIqVR';
+const IS_PRODUCTION = import.meta.env.VITE_MIDTRANS_IS_PRODUCTION === 'true';
+const API_URL = import.meta.env.VITE_API_URL || 'https://api.tumbasna.my.id';
+
 interface CheckoutProps {
   onBack: () => void;
-  onOrderCreated: (orderId: string) => void;
+  onOrderCreated: (orderId: string, paymentSuccess?: boolean) => void;
   supplierId?: string;
   supplierItems?: CartItem[];
 }
@@ -258,7 +262,7 @@ const MapController = ({ center, onMoveEnd }: { center: [number, number], onMove
   return null;
 };
 const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId, supplierItems }) => {
-  const { cart, user, checkout } = useApp();
+  const { cart, user, checkout, payOrder } = useApp();
 
   const checkoutItems = supplierItems || (supplierId 
     ? cart.filter(item => item.product.supplierName === supplierId)
@@ -283,6 +287,131 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
   const [ekspedisiExpanded, setEkspedisiExpanded] = useState(false);
   const [rajaOngkirCosts, setRajaOngkirCosts] = useState<any[]>([]);
   const [selectedEkspedisi, setSelectedEkspedisi] = useState<string>('');
+
+  const [snapScriptReady, setSnapScriptReady] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState<string | null>(null);
+  const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+
+  const handleRetryPayment = async () => {
+    if (!createdOrderId) return;
+    setIsPlacingOrder(true);
+    setLoadingMessage('Menghubungkan ke gerbang pembayaran aman...');
+    setPaymentError(null);
+
+    try {
+      const res = await fetch(`${API_URL}/api/payments/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: createdOrderId,
+          amount: totalAmount,
+          customerName: user?.ownerName || 'Pembeli Tumbasna',
+          customerPhone: user?.phone || '',
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Tidak dapat menghubungi server pembayaran. Silakan periksa koneksi internet Anda.');
+      }
+
+      const data = await res.json();
+      const snapToken = data.snapToken;
+      const midtransOrderId = data.midtransOrderId || createdOrderId;
+
+      if (!snapToken) {
+        throw new Error('Token pembayaran tidak ditemukan.');
+      }
+
+      if ((window as any).snap) {
+        setLoadingMessage(null);
+        (window as any).snap.pay(snapToken, {
+          onSuccess: async (result: any) => {
+            console.log('[Snap Retry] Payment success:', result);
+            setLoadingMessage('Mengonfirmasi pembayaran...');
+            try {
+              await payOrder(createdOrderId);
+            } catch (payErr) {
+              console.error('[Snap Retry] payOrder error:', payErr);
+            }
+            setLoadingMessage(null);
+            setIsPlacingOrder(false);
+            onOrderCreated(createdOrderId, true);
+          },
+          onPending: (result: any) => {
+            console.log('[Snap Retry] Payment pending:', result);
+            setIsPlacingOrder(false);
+            onOrderCreated(createdOrderId, false);
+          },
+          onError: (result: any) => {
+            console.error('[Snap Retry] Payment error:', result);
+            setIsPlacingOrder(false);
+            onOrderCreated(createdOrderId, false);
+          },
+          onClose: async () => {
+            console.log('[Snap Retry] Popup closed by user.');
+            setLoadingMessage('Memeriksa status pembayaran...');
+            try {
+              const resStatus = await fetch(`${API_URL}/api/payments/status?midtransOrderId=${midtransOrderId}`);
+              if (resStatus.ok) {
+                const statusData = await resStatus.json();
+                if (statusData.isPaid || statusData.transactionStatus === 'settlement' || statusData.transactionStatus === 'capture') {
+                  await payOrder(createdOrderId);
+                  setLoadingMessage(null);
+                  setIsPlacingOrder(false);
+                  onOrderCreated(createdOrderId, true);
+                  return;
+                }
+              }
+            } catch (checkErr) {
+              console.warn('[Snap Retry] Failed checking status on close:', checkErr);
+            }
+            setLoadingMessage(null);
+            setIsPlacingOrder(false);
+            onOrderCreated(createdOrderId, false);
+          }
+        });
+      } else {
+        throw new Error('Gerbang pembayaran Snap.js belum termuat sempurna.');
+      }
+    } catch (err: any) {
+      console.error('[Snap Retry] error:', err);
+      setPaymentError(err.message || 'Gagal menghubungkan ke pembayaran digital.');
+      setLoadingMessage(null);
+      setIsPlacingOrder(false);
+    }
+  };
+
+  const loadSnapScript = (isSandbox: boolean) => {
+    const scriptId = 'midtrans-snap-js';
+    const targetUrl = isSandbox
+      ? 'https://app.sandbox.midtrans.com/snap/snap.js'
+      : 'https://app.midtrans.com/snap/snap.js';
+
+    const existing = document.getElementById(scriptId) as HTMLScriptElement | null;
+    if (existing) {
+      if (existing.src === targetUrl) {
+        setSnapScriptReady(true);
+        return;
+      }
+      existing.remove();
+    }
+
+    setSnapScriptReady(false);
+    const script = document.createElement('script');
+    script.id = scriptId;
+    script.src = targetUrl;
+    script.setAttribute('data-client-key', MIDTRANS_CLIENT_KEY);
+    script.onload = () => setSnapScriptReady(true);
+    script.onerror = () => console.error('[Snap] Failed to load snap.js');
+    document.body.appendChild(script);
+  };
+
+  useEffect(() => {
+    if (paymentMethod === 'qris') {
+      loadSnapScript(!IS_PRODUCTION);
+    }
+  }, [paymentMethod]);
 
   const supplierName = checkoutItems[0]?.product?.supplierName || 'Supplier';
   const supplierLocation = checkoutItems[0]?.product?.supplierLocation || 'Unknown Location';
@@ -529,7 +658,9 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
     }
     
     console.log('[handlePlaceOrder] Validation passed, checkoutItems:', checkoutItems.length);
+    setLoadingMessage('Membuat pesanan Anda...');
     
+    let orderId = '';
     try {
       const supplierCoords = checkoutItems[0]?.product?.supplierLocation 
         ? locationCoords[Object.keys(locationCoords).find(k => 
@@ -537,7 +668,8 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
           ) || 'Banyumas'] || [-7.5151, 109.2941]
         : [-7.5151, 109.2941];
       
-      const supplierAddress = checkoutItems[0]?.product?.supplierLocation || '';      console.log('[handlePlaceOrder] Calling checkout with:', {
+      const supplierAddress = checkoutItems[0]?.product?.supplierLocation || '';
+      console.log('[handlePlaceOrder] Calling checkout with:', {
         selectedCourier,
         dynamicShippingCost,
         buyerCoords,
@@ -547,9 +679,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
         paymentMethod
       });
       
-
-      
-      const orderId = await checkout(checkoutItems, selectedCourier,
+      orderId = await checkout(checkoutItems, selectedCourier,
         dynamicShippingCost,
         buyerCoords,
         supplierCoords,
@@ -563,18 +693,108 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
       if (!orderId) {
         throw new Error('Order ID is empty or undefined');
       }
-      
-      onOrderCreated(orderId);
     } catch (err) {
       console.error('Order placement error:', err);
-      console.error('[handlePlaceOrder] Full error:', err);
-      if (err instanceof Error) {
-        console.error('[handlePlaceOrder] Error message:', err.message);
-        console.error('[handlePlaceOrder] Error stack:', err.stack);
-      }
       alert('Gagal membuat pesanan. Silakan coba lagi.');
-    } finally {
+      setLoadingMessage(null);
       setIsPlacingOrder(false);
+      return;
+    }
+
+    // Alur untuk pembayaran digital (Midtrans / qris)
+    if (paymentMethod === 'qris') {
+      setLoadingMessage('Menghubungkan ke gerbang pembayaran aman...');
+      try {
+        const res = await fetch(`${API_URL}/api/payments/create`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderId: orderId,
+            amount: totalAmount,
+            customerName: user?.ownerName || 'Pembeli Tumbasna',
+            customerPhone: user?.phone || '',
+          }),
+        });
+
+        if (!res.ok) {
+          throw new Error('Gagal membuat transaksi pembayaran');
+        }
+
+        const data = await res.json();
+        const snapToken = data.snapToken;
+        const midtransOrderId = data.midtransOrderId || orderId;
+
+        if (!snapToken) {
+          throw new Error('Token pembayaran tidak ditemukan');
+        }
+
+        // Buka Midtrans Snap
+        if ((window as any).snap) {
+          setLoadingMessage(null);
+          (window as any).snap.pay(snapToken, {
+            onSuccess: async (result: any) => {
+              console.log('[Snap Checkout] Payment success:', result);
+              setLoadingMessage('Mengonfirmasi pembayaran...');
+              try {
+                await payOrder(orderId);
+              } catch (payErr) {
+                console.error('[Snap Checkout] payOrder error:', payErr);
+              }
+              setLoadingMessage(null);
+              setIsPlacingOrder(false);
+              onOrderCreated(orderId, true);
+            },
+            onPending: (result: any) => {
+              console.log('[Snap Checkout] Payment pending:', result);
+              setIsPlacingOrder(false);
+              onOrderCreated(orderId, false);
+            },
+            onError: (result: any) => {
+              console.error('[Snap Checkout] Payment error:', result);
+              setIsPlacingOrder(false);
+              onOrderCreated(orderId, false);
+            },
+            onClose: async () => {
+              console.log('[Snap Checkout] Popup closed by user.');
+              setLoadingMessage('Memeriksa status pembayaran...');
+              try {
+                const resStatus = await fetch(`${API_URL}/api/payments/status?midtransOrderId=${midtransOrderId}`);
+                if (resStatus.ok) {
+                  const statusData = await resStatus.json();
+                  if (statusData.isPaid || statusData.transactionStatus === 'settlement' || statusData.transactionStatus === 'capture') {
+                    await payOrder(orderId);
+                    setLoadingMessage(null);
+                    setIsPlacingOrder(false);
+                    onOrderCreated(orderId, true);
+                    return;
+                  }
+                }
+              } catch (checkErr) {
+                console.warn('[Snap Checkout] Failed checking status on close:', checkErr);
+              }
+              setLoadingMessage(null);
+              setIsPlacingOrder(false);
+              onOrderCreated(orderId, false);
+            }
+          });
+        } else {
+          console.warn('[Snap Checkout] Snap.js is not loaded yet');
+          setCreatedOrderId(orderId);
+          setPaymentError('Gerbang pembayaran Snap.js belum termuat. Pastikan koneksi internet Anda stabil.');
+          setIsPlacingOrder(false);
+        }
+      } catch (payErr: any) {
+        console.error('[Snap Checkout] Midtrans trigger error:', payErr);
+        setCreatedOrderId(orderId);
+        setPaymentError('Tidak dapat terhubung ke server pembayaran. Periksa koneksi internet Anda.');
+        setLoadingMessage(null);
+        setIsPlacingOrder(false);
+      }
+    } else {
+      // COD atau metode lainnya
+      setLoadingMessage(null);
+      setIsPlacingOrder(false);
+      onOrderCreated(orderId, false);
     }
   };
 
@@ -675,7 +895,11 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
             </div>
 
             <div className="checkout-section-title">Alamat Pengiriman</div>
-            <div className="address-summary-card" onClick={() => setStep('map')}>
+            <div 
+              className="address-summary-card" 
+              onClick={() => { if (!createdOrderId) setStep('map'); }}
+              style={createdOrderId ? { opacity: 0.6, pointerEvents: 'none' } : undefined}
+            >
               <div className="address-icon-text">
                 <IonIcon icon={locationOutline} />
                 <p className="address-text">{buyerAddressLabel}</p>
@@ -684,7 +908,11 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
             </div>
 
             <div className="checkout-section-title">Waktu Pengiriman</div>
-            <IonRadioGroup value={deliveryTime} onIonChange={(e) => setDeliveryTime(e.detail.value)}>
+            <IonRadioGroup 
+              value={deliveryTime} 
+              onIonChange={(e) => { if (!createdOrderId) setDeliveryTime(e.detail.value); }}
+              style={createdOrderId ? { opacity: 0.6, pointerEvents: 'none' } : undefined}
+            >
               <div className="delivery-time-cards">
                 {DELIVERY_TIMES.map((time) => (
                   <div
@@ -706,10 +934,13 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
             </IonRadioGroup>
 
             <div className="checkout-section-title">Metode Pembayaran</div>
-            <div className="payment-method-section">
+            <div 
+              className="payment-method-section"
+              style={createdOrderId ? { opacity: 0.6, pointerEvents: 'none' } : undefined}
+            >
               <div
                 className={`payment-method-card ${paymentMethod === 'qris' ? 'active' : ''}`}
-                onClick={(e) => { e.stopPropagation(); console.log('Payment method changed to QRIS'); setPaymentMethod('qris'); }}
+                onClick={(e) => { e.stopPropagation(); if (createdOrderId) return; console.log('Payment method changed to QRIS'); setPaymentMethod('qris'); }}
               >
                 <div className="payment-method-info">
                   <h4>Pembayaran Digital (Midtrans)</h4>
@@ -720,7 +951,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
 
               <div
                 className={`payment-method-card ${paymentMethod === 'cod' ? 'active' : ''}`}
-                onClick={(e) => { e.stopPropagation(); console.log('Payment method changed to COD'); setPaymentMethod('cod'); }}
+                onClick={(e) => { e.stopPropagation(); if (createdOrderId) return; console.log('Payment method changed to COD'); setPaymentMethod('cod'); }}
               >
                 <div className="payment-method-info">
                   <h4>Bayar di Tempat (COD)</h4>
@@ -735,7 +966,11 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
               <IonIcon icon={locationOutline} />
               <span>{distanceInfo}</span>
             </div>
-            <IonRadioGroup value={selectedCourier} onIonChange={(e) => setSelectedCourier(e.detail.value)}>
+            <IonRadioGroup 
+              value={selectedCourier} 
+              onIonChange={(e) => { if (!createdOrderId) setSelectedCourier(e.detail.value); }}
+              style={createdOrderId ? { opacity: 0.6, pointerEvents: 'none' } : undefined}
+            >
               <div className="shipping-methods-list">
                 
                 {/* COD */}
@@ -898,6 +1133,43 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
               </div>
             </div>
 
+            {paymentError && (
+              <div style={{
+                margin: '16px',
+                padding: '16px',
+                background: '#FEF2F2',
+                border: '1px solid #FEE2E2',
+                borderRadius: '12px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                textAlign: 'center',
+                gap: '8px'
+              }}>
+                <IonIcon icon={informationCircleOutline} style={{ color: '#DC2626', fontSize: '32px' }} />
+                <h4 style={{ margin: 0, color: '#991B1B', fontWeight: 600 }}>Gagal Menghubungkan Pembayaran</h4>
+                <p style={{ margin: 0, fontSize: '13px', color: '#7F1D1D', lineHeight: 1.5 }}>
+                  {paymentError}
+                </p>
+                <button
+                  onClick={handleRetryPayment}
+                  style={{
+                    marginTop: '8px',
+                    padding: '8px 16px',
+                    background: '#006837',
+                    color: '#FFF',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontWeight: 600,
+                    fontSize: '13px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Coba Hubungkan Lagi
+                </button>
+              </div>
+            )}
+
             <div style={{ height: '140px' }}></div>
           </>
         )}
@@ -914,11 +1186,32 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
           </div>
           <IonButton
             className="checkout-btn-green-new"
-            onClick={handlePlaceOrder}
+            onClick={createdOrderId ? handleRetryPayment : handlePlaceOrder}
             disabled={isPlacingOrder}
           >
-            {isPlacingOrder ? <IonSpinner name="crescent" /> : 'Pesan Sekarang'}
+            {isPlacingOrder ? (
+              <IonSpinner name="crescent" />
+            ) : createdOrderId ? (
+              'Coba Hubungkan Pembayaran'
+            ) : (
+              'Pesan Sekarang'
+            )}
           </IonButton>
+        </div>
+      )}
+      {isPlacingOrder && loadingMessage && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(255, 255, 255, 0.85)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexDirection: 'column'
+        }}>
+          <IonSpinner name="crescent" style={{ transform: 'scale(1.5)', color: '#006837', marginBottom: '20px' }} />
+          <p style={{ fontWeight: 600, fontSize: '15px', color: '#1f2937', margin: 0 }}>{loadingMessage}</p>
         </div>
       )}
     </IonPage>
