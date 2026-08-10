@@ -241,7 +241,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
             const newChats = prev.map(thread => {
               const remoteThread = result.data.find((t: any) =>
-                t.supplierPhone === thread.supplierPhone || t.supplierName === thread.supplierName
+                t.supplierPhone === thread.supplierPhone
               );
 
               if (!remoteThread || !remoteThread.messages?.length) return thread;
@@ -252,19 +252,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               if (missingMsgs.length === 0) return thread;
 
               updated = true;
-              updatedThreadName = thread.supplierName;
-              const formattedNewMsgs = missingMsgs.map((m: any) => ({
-                id: m.id,
-                sender: m.sender as 'buyer' | 'supplier',
-                text: m.text,
-                timestamp: new Date(m.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
-                status: m.status || 'read',
-              }));
+              updatedThreadName = remoteThread.supplierName; // Use API response name
+              const formattedNewMsgs = missingMsgs.map((m: any) => {
+                // Validate timestamp to prevent "Invalid Date"
+                let formattedTime = '';
+                try {
+                  const dateObj = new Date(m.timestamp);
+                  if (!isNaN(dateObj.getTime())) {
+                    formattedTime = dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                  } else {
+                    formattedTime = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                  }
+                } catch (err) {
+                  formattedTime = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                }
+                
+                return {
+                  id: m.id,
+                  sender: m.sender as 'buyer' | 'supplier',
+                  text: m.text,
+                  timestamp: formattedTime,
+                  status: m.status || 'read',
+                };
+              });
 
               const lastMsg = formattedNewMsgs[formattedNewMsgs.length - 1];
 
               return {
                 ...thread,
+                supplierName: remoteThread.supplierName, // Update supplier name from API
                 lastMessage: lastMsg.text,
                 lastTime: lastMsg.timestamp,
                 messages: [...thread.messages, ...formattedNewMsgs],
@@ -774,16 +790,37 @@ Tugas Anda:
                 if (historyRes.ok) {
                   const historyData = await historyRes.json();
                   if (historyData.success && historyData.data.length > 0) {
-                    const messages: ChatMessage[] = historyData.data.map((msg: any) => ({
-                      id: msg.id,
-                      sender: msg.sender,
-                      text: msg.text,
-                      timestamp: new Date(msg.createdAt).toLocaleTimeString('id-ID', { 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                      }),
-                      status: 'read'
-                    }));
+                    const messages: ChatMessage[] = historyData.data.map((msg: any) => {
+                      // Validate timestamp to prevent "Invalid Date"
+                      let formattedTime = '';
+                      try {
+                        const dateObj = new Date(msg.createdAt || msg.timestamp);
+                        if (!isNaN(dateObj.getTime())) {
+                          formattedTime = dateObj.toLocaleTimeString('id-ID', { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          });
+                        } else {
+                          formattedTime = new Date().toLocaleTimeString('id-ID', { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          });
+                        }
+                      } catch (err) {
+                        formattedTime = new Date().toLocaleTimeString('id-ID', { 
+                          hour: '2-digit', 
+                          minute: '2-digit' 
+                        });
+                      }
+                      
+                      return {
+                        id: msg.id,
+                        sender: msg.sender,
+                        text: msg.text,
+                        timestamp: formattedTime,
+                        status: 'read'
+                      };
+                    });
 
                     setChats((prev) => prev.map((t) => {
                       if (t.supplierName !== supplierName) return t;
