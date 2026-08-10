@@ -615,11 +615,15 @@
   background: linear-gradient(180deg, #ffffff 0%, #f8f7f4 100%);
   border-top: 1px solid rgba(0, 104, 55, 0.08);
   padding: 14px 16px;
+  padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
   display: flex;
   gap: 12px;
   align-items: center;
   box-shadow: 0 -4px 16px rgba(0, 104, 55, 0.06);
   z-index: 1000;
+  /* Safari iOS fix */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 .footer-price-section {

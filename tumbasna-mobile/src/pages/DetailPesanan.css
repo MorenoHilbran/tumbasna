@@ -783,12 +783,16 @@
   right: 0;
   background: #ffffff;
   border-top: 1px solid rgba(0, 104, 55, 0.08);
-  padding: 12px 16px 24px;
+  padding: 12px 16px;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
   display: flex;
   flex-direction: column;
   gap: 10px;
   z-index: 100;
   box-shadow: 0 -4px 16px rgba(0, 104, 55, 0.04);
+  /* Safari iOS fix */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 .footer-notice-text {

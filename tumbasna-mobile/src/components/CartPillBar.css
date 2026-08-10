@@ -4,14 +4,20 @@
 
 .cart-pill-wrapper {
   position: fixed;
-  bottom: 74px;
+  bottom: calc(74px + env(safe-area-inset-bottom, 0px));
   left: 0;
   right: 0;
   display: flex;
   justify-content: center;
   z-index: 1000;
   padding: 0 14px;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   pointer-events: none;
+  /* Safari iOS fix untuk force hardware acceleration */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 .cart-pill-button {

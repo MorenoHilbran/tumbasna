@@ -171,7 +171,11 @@
   background: #ffffff;
   border-top: 1px solid rgba(0, 104, 55, 0.09);
   box-shadow: 0 -4px 16px rgba(0, 104, 55, 0.06);
-  padding: 14px 16px 26px;
+  padding: 14px 16px;
+  padding-bottom: calc(26px + env(safe-area-inset-bottom, 0px));
+  /* Safari iOS fix */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 .cart-summary-row {

@@ -512,6 +512,10 @@
   max-height: 80vh;
   overflow-y: auto;
   animation: slideUp 0.3s ease;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  /* Safari iOS fix */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 @keyframes slideUp {
