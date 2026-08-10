@@ -397,7 +397,7 @@ const MainAppShell: React.FC = () => {
         {renderContent()}
       </div>
 
-      {viewState === 'tabs' && !(activeTab === 'chat' && isChatThreadActive) && (
+      {viewState === 'tabs' && (
         <div className="bottom-nav">
           <ul className="bottom-nav-list">
             {TABS.map((tab) => {
