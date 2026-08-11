@@ -786,7 +786,6 @@ Tugas Anda:
           }
 
           if (!finalSupplierPhone) {
-            // 4. Fallback: check if supplierName itself is a phone number
             const digitsOnly = supplierName.replace(/\D/g, '');
             if (digitsOnly.length >= 10) {
               finalSupplierPhone = digitsOnly;
@@ -800,20 +799,6 @@ Tugas Anda:
             buyerPhone = buyerPhone.slice(1);
           }
 
-          console.log('[sendMessage] Relay WA debug:', {
-            supplierName,
-            supplierPhone,
-            threadSupplierPhone: thread?.supplierPhone,
-            finalSupplierPhone,
-            buyerPhone,
-            userPhone: user?.phone,
-            text
-          });
-
-          if (!finalSupplierPhone) {
-            console.warn(`[sendMessage] Skip relay WA because supplier phone is missing for "${supplierName}". Pesan disimpan secara lokal.`);
-          }
-
           if (finalSupplierPhone) {
             const res = await fetch(`${API_BASE}/api/chat/suppliers`, {
               method: 'POST',
@@ -825,11 +810,7 @@ Tugas Anda:
                 sender: 'buyer'
               }),
             });
-            console.log('[sendMessage] Relay WA response status:', res.status);
-            const resJson = await res.json();
-            console.log('[sendMessage] Relay WA response body:', resJson);
             
-            // Update status pesan jadi delivered setelah berhasil dikirim ke WA
             setChats((prev) => prev.map((t) => {
               if (t.supplierName !== supplierName) return t;
               const msgs = [...t.messages];
@@ -838,17 +819,22 @@ Tugas Anda:
               return { ...t, supplierPhone: t.supplierPhone || finalSupplierPhone, messages: msgs };
             }));
 
-            // Fetch chat history untuk update dengan reply supplier (polling)
             setTimeout(async () => {
               try {
+                if (!buyerPhone) return;
+
                 const historyRes = await fetch(
                   `${API_BASE}/api/chat/suppliers?action=history&buyerPhone=${buyerPhone}&supplierPhone=${finalSupplierPhone}`
                 );
                 if (historyRes.ok) {
                   const historyData = await historyRes.json();
-                  if (historyData.success && historyData.data.length > 0) {
+                  if (historyData.success && Array.isArray(historyData.data)) {
+                    if (historyData.data.length > 0 && historyData.data[0].phone) {
+                      console.warn('[sendMessage] API returned suppliers instead of chat history, skipping...');
+                      return;
+                    }
+                    
                     const messages: ChatMessage[] = historyData.data.map((msg: any) => {
-                      // Validate timestamp to prevent "Invalid Date"
                       let formattedTime = '';
                       try {
                         const dateObj = new Date(msg.createdAt || msg.timestamp);
@@ -872,24 +858,26 @@ Tugas Anda:
                       
                       return {
                         id: msg.id,
-                        sender: msg.sender,
-                        text: msg.text,
+                        sender: msg.sender || 'supplier',
+                        text: msg.text || '',
                         timestamp: formattedTime,
                         status: 'read'
                       };
-                    });
+                    }).filter((msg: ChatMessage) => msg.text.trim() !== '');
 
-                    setChats((prev) => prev.map((t) => {
-                      if (t.supplierName !== supplierName) return t;
-                      const lastMsg = messages[messages.length - 1];
-                      return {
-                        ...t,
-                        messages,
-                        lastMessage: lastMsg.text,
-                        lastTime: lastMsg.timestamp,
-                        unreadCount: messages.filter(m => m.sender === 'supplier').length
-                      };
-                    }));
+                    if (messages.length > 0) {
+                      setChats((prev) => prev.map((t) => {
+                        if (t.supplierName !== supplierName) return t;
+                        const lastMsg = messages[messages.length - 1];
+                        return {
+                          ...t,
+                          messages,
+                          lastMessage: lastMsg.text,
+                          lastTime: lastMsg.timestamp,
+                          unreadCount: messages.filter(m => m.sender === 'supplier').length
+                        };
+                      }));
+                    }
                   }
                 }
               } catch (pollErr) {
