@@ -401,7 +401,7 @@ export async function processIncomingMessage(
                 const isExplicitMenuCommand = explicitMenuKeywords.includes(cleanText);
 
                 // Jika supplier merespons quote notifikasi pembeli ATAU ada buyer aktif (dan bukan command menu eksplisit)
-                if (buyerPhone && !isSameNumber && text.trim().length > 0 && (!isExplicitMenuCommand || isReplyingToBuyerNotification)) {
+                if (buyerPhone && (!isSameNumber || isReplyingToBuyerNotification) && text.trim().length > 0 && (!isExplicitMenuCommand || isReplyingToBuyerNotification)) {
                     console.log(`💬 [CHAT REPLY] Supplier ${phoneNumber} membalas buyer ${buyerPhone}: "${text.trim()}"`);
                     
                     // Save reply supplier ke database
@@ -419,7 +419,7 @@ export async function processIncomingMessage(
                     
                     console.log(`✅ [CHAT REPLY SAVED] Reply dari supplier ${phoneNumber} untuk buyer ${buyerPhone}`);
                     return; // Stop processing, karena ini adalah chat reply
-                } else if (isSameNumber) {
+                } else if (isSameNumber && !isReplyingToBuyerNotification) {
                     console.log(`⚠️ [CHAT REPLY SKIP] buyerPhone === supplierPhone (${phoneNumber}), skip untuk hindari loop.`);
                 }
             }
