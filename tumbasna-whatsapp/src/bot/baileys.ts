@@ -188,14 +188,14 @@ export async function connectWhatsApp() {
 
                     const combinedText = `[Supplier mengirim share location] Nama Lokasi: ${addressName} | Lat: ${lat} | Lng: ${lng}`;
                     
-                    await processIncomingMessage(sender, pushName, combinedText, sendFn);
+                    await processIncomingMessage(sender, pushName, combinedText, sendFn, msg);
                     continue;
                 } else {
                     console.warn(`⚠️ [LOCATION] lat/lng keduanya 0, mungkin format tidak terbaca. locMsg:`, JSON.stringify(locMsg));
                     // Tetap coba proses dengan koordinat fallback dari nama lokasi
                     const addressName = locMsg.name || locMsg.address || 'Lokasi tidak diketahui';
                     const combinedText = `[Supplier mengirim share location] Nama Lokasi: ${addressName} | Lat: ${lat} | Lng: ${lng}`;
-                    await processIncomingMessage(sender, pushName, combinedText, sendFn);
+                    await processIncomingMessage(sender, pushName, combinedText, sendFn, msg);
                     continue;
                 }
             }
@@ -220,7 +220,7 @@ export async function connectWhatsApp() {
                         console.log(`📦 [RESI FOTO] Foto resi dari ${sender}, URL: ${imageUrl}`);
                         // Gabungkan perintah KIRIM + URL foto resi dalam satu teks khusus
                         const resiText = `[RESI FOTO] ${imageCaption.trim()}${imageUrl ? ` | URL Foto Resi: ${imageUrl}` : ''}`;
-                        await processIncomingMessage(sender, pushName, resiText, sendFn);
+                        await processIncomingMessage(sender, pushName, resiText, sendFn, msg);
                     } else {
                         // Foto produk biasa
                         const filename = `product_${Date.now()}.jpg`;
@@ -232,14 +232,14 @@ export async function connectWhatsApp() {
                         const combinedText = imageCaption
                             ? `[FOTO_PRODUK_DITERIMA] Supplier mengirim foto produk. Keterangan: ${imageCaption}${imageUrl ? ` | URL Foto: ${imageUrl}` : ''}`
                             : `[FOTO_PRODUK_DITERIMA] Supplier mengirim foto produk tanpa keterangan.${imageUrl ? ` | URL Foto: ${imageUrl}` : ''}`;
-                        await processIncomingMessage(sender, pushName, combinedText, sendFn);
+                        await processIncomingMessage(sender, pushName, combinedText, sendFn, msg);
                     }
                 } catch (err: any) {
                     console.error('[IMAGE ERROR] Gagal download gambar:', err.message);
                     const combinedText = imageCaption
                         ? `[Supplier mengirim foto] Keterangan: ${imageCaption}`
                         : `[Supplier mengirim foto tanpa keterangan.]`;
-                    await processIncomingMessage(sender, pushName, combinedText, sendFn);
+                    await processIncomingMessage(sender, pushName, combinedText, sendFn, msg);
                 }
                 continue;
             }
@@ -256,7 +256,7 @@ export async function connectWhatsApp() {
             }
 
             // Delegasi processing ke layer Handlers
-            await processIncomingMessage(sender, pushName, text, sendFn);
+            await processIncomingMessage(sender, pushName, text, sendFn, msg);
         }
     });
 
