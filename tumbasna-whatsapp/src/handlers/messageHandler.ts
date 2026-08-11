@@ -887,13 +887,15 @@ export async function processIncomingMessage(
 
             if (cleanText === '7' || cleanText === 'edit' || cleanText === 'ubah') {
                 const editText = `*MENU EDIT DATA JURAGAN* ✏️\n\n` +
-                    `Juragan dapat mengubah data profil atau rekening bank kapan saja dengan mudah:\n\n` +
+                    `Juragan dapat mengubah data profil, rekening bank, atau nomor WA terdaftar kapan saja:\n\n` +
                     `*1. Ubah Rekening Bank:*\n` +
                     `   Ketik: _"Ubah rekening saya ke BCA 1234567890"_\n` +
                     `   atau _"Ganti bank ke BRI 9876543210"_\n\n` +
                     `*2. Ubah Nama / Nama Usaha:*\n` +
                     `   Ketik: _"Ubah nama usaha saya jadi Kelompok Tani Subur"_\n\n` +
-                    `*3. Ubah Lokasi Kebun/Gudang:*\n` +
+                    `*3. Ubah Nomor WA / Telepon Terdaftar:*\n` +
+                    `   Ketik: _"Ubah nomor WA saya ke 081234567890"_\n\n` +
+                    `*4. Ubah Lokasi Kebun/Gudang:*\n` +
                     `   Kirimkan *Share Location* terbaru dari WhatsApp (tombol 📎 -> Lokasi).\n\n` +
                     `💡 _Asisten AI kami akan membaca dan memperbarui data Juragan secara otomatis tanpa repot!_\n\n` +
                     `Ketik *MENU* untuk kembali ke menu utama.`;
@@ -1176,10 +1178,11 @@ export async function processIncomingMessage(
             }
         }
 
-        // ─── EDIT: Update Profil / Rekening / Lokasi ───
+        // ─── EDIT: Update Profil / Rekening / Lokasi / Nomor WA ───
         if (parsedData.intent === 'EDIT') {
             try {
                 const updatePayload: any = { phone: phoneNumber };
+                if (parsedData.new_phone) updatePayload.newPhone = parsedData.new_phone;
                 if (parsedData.supplier_name) updatePayload.name = parsedData.supplier_name;
                 if (parsedData.supplier_location) updatePayload.location = parsedData.supplier_location;
                 if (parsedData.bank_name) updatePayload.bankName = parsedData.bank_name;
@@ -1191,6 +1194,7 @@ export async function processIncomingMessage(
                 parsedData.reply_message = `✅ *DATA BERHASIL DIPERBARUI!*\n\n` +
                     `Data profil Juragan telah diperbarui di sistem Tumbasna:\n` +
                     (parsedData.supplier_name ? `• Nama: *${parsedData.supplier_name}*\n` : '') +
+                    (parsedData.new_phone ? `• Nomor WA Baru: *+${parsedData.new_phone.replace(/\D/g, '')}*\n` : '') +
                     (parsedData.supplier_location ? `• Lokasi: *${parsedData.supplier_location}*\n` : '') +
                     (parsedData.bank_name ? `• Bank: *${parsedData.bank_name}*\n` : '') +
                     (parsedData.bank_account ? `• Rekening: *${parsedData.bank_account}*\n` : '') +
@@ -1200,7 +1204,8 @@ export async function processIncomingMessage(
                 await saveSessionHistory(sender, [], true);
             } catch (err: any) {
                 console.error(`❌ [EDIT ERROR] Gagal update profil:`, err.message);
-                parsedData.reply_message = `Maaf, terjadi kesalahan saat memperbarui data Juragan. Silakan coba beberapa saat lagi.`;
+                const errMsg = err.response?.data?.error || err.message || 'Terjadi kesalahan saat memperbarui data.';
+                parsedData.reply_message = `Maaf, terjadi kesalahan saat memperbarui data Juragan: ${errMsg}`;
             }
         }
 

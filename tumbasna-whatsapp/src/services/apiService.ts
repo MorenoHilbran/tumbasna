@@ -94,10 +94,11 @@ export const apiService = {
             throw error;
         }
     },
-    async updateUserProfile(data: { phone: string; name?: string; location?: string; bankName?: string; bankAccount?: string }) {
+    async updateUserProfile(data: { phone: string; newPhone?: string; name?: string; location?: string; bankName?: string; bankAccount?: string }) {
         try {
             const response = await apiClient.post(`${API_URL}/api/auth/update`, {
                 phone: data.phone,
+                ...(data.newPhone && { newPhone: data.newPhone }),
                 ...(data.name && { name: data.name, businessName: data.name }),
                 ...(data.location && { address: data.location }),
                 ...(data.bankName && { bankName: data.bankName }),

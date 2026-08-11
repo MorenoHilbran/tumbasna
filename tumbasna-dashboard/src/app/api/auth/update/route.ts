@@ -14,7 +14,7 @@ function normalizePhone(phone: string): string {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { id, phone, name, businessName, email, address, businessType, bankName, bankAccount, lat, lng } = body;
+    const { id, phone, newPhone, newPhoneNumber, name, businessName, email, address, businessType, bankName, bankAccount, lat, lng } = body;
 
     let userId = id;
     if (!userId && phone) {
@@ -41,10 +41,24 @@ export async function POST(req: Request) {
       }
     }
 
+    // Cek duplikasi nomor HP jika nomor HP diubah
+    const targetNewPhone = newPhone || newPhoneNumber;
+    let normalizedNewPhone: string | undefined = undefined;
+    if (targetNewPhone) {
+      normalizedNewPhone = normalizePhone(targetNewPhone);
+      if (normalizedNewPhone !== userExist.phoneNumber) {
+        const phoneDup = await prisma.user.findUnique({ where: { phoneNumber: normalizedNewPhone } });
+        if (phoneDup) {
+          return NextResponse.json({ error: `Nomor HP/WA ${normalizedNewPhone} sudah terdaftar pada akun lain.` }, { status: 409 });
+        }
+      }
+    }
+
     // Update user di database
     const updated = await prisma.user.update({
       where: { id: userId },
       data: {
+        ...(normalizedNewPhone && { phoneNumber: normalizedNewPhone }),
         name: name !== undefined ? name : undefined,
         businessName: businessName !== undefined ? businessName : undefined,
         email: email !== undefined ? email : undefined,

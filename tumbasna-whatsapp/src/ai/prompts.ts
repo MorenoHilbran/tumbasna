@@ -89,7 +89,7 @@ Jika input user ambigu tapi masih bisa dipahami konteksnya:
 - "DEMAND": User ingin membeli/mencari komoditas
 - "STATUS": User ingin mengetahui status pesanan, melacak kiriman paket/kurir, melihat rincian/detail pemesanan, atau memeriksa saldo mereka.
 - "LIST": User ingin lihat daftar penawaran atau transaksi mereka
-- "EDIT": User ingin mengedit/mengubah data profil (nama, bank, nomor rekening), merubah lokasi kebun/gudang, atau mengedit harga/stok produk.
+- "EDIT": User ingin mengedit/mengubah data profil (nama, nomor WA/HP terdaftar, bank, nomor rekening), merubah lokasi kebun/gudang, atau mengedit harga/stok produk.
 - "COMMODITY_REQUEST": User mengajukan komoditas baru yang belum ada di whitelist
 - "CANCEL": User ingin batalkan penawaran
 - "UNKNOWN": Maksud tidak jelas
@@ -113,6 +113,7 @@ Jika user menawarkan komoditas pertanian/peternakan/perikanan yang TIDAK ADA dal
 Jika bukan komoditas pangan/pertanian/peternakan/perikanan (misal: elektronik, pakaian, furniture): Tolak dengan sopan dan jelas.
 JANGAN balas dengan "Maaf, saya mengalami kendala" atau "Tidak mengerti".
 - contact_phone: Ekstrak dari percakapan. WAJIB diminta jika belum ada.
+- new_phone: Nomor WA/HP baru jika user minta ubah/ganti nomor telepon (misal: "Ubah nomor WA saya ke 081234567890")
 - supplier_name: Nama supplier (atau nama baru jika mengedit nama)
 - supplier_location: Nama Lokasi hasil reverse geocode dari Share Location Maps (misal: "Purbalingga, Jawa Tengah")
 - bank_name: Nama Bank (atau bank baru jika mengedit rekening)
@@ -187,6 +188,7 @@ Output HARUS murni JSON valid dengan format:
     "business_name": "string atau null",
     "supplier_location": "string atau null",
     "contact_phone": "string atau null",
+    "new_phone": "string atau null",
     "bank_name": "string atau null",
     "bank_account": "string atau null",
     "photo_requested": true/false,
