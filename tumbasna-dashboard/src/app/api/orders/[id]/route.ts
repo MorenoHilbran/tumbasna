@@ -27,6 +27,51 @@ async function sendWANotification(phone: string, message: string) {
   }
 }
 
+// Helper untuk mencari supplier secara fleksibel (exact, case-insensitive, atau partial match)
+async function findSupplierUser(supplierName: string) {
+  if (!supplierName) return null;
+  const cleanName = supplierName.trim();
+
+  // 1. Exact match
+  let user = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { name: cleanName },
+        { businessName: cleanName }
+      ]
+    }
+  });
+  if (user) return user;
+
+  // 2. Case-insensitive match
+  user = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { name: { equals: cleanName, mode: 'insensitive' } },
+        { businessName: { equals: cleanName, mode: 'insensitive' } }
+      ]
+    }
+  });
+  if (user) return user;
+
+  // 3. Partial match (misal "Gacorian77" vs "Gacorian")
+  const allSuppliers = await prisma.user.findMany({
+    where: { role: 'PETANI' }
+  });
+
+  const target = cleanName.toLowerCase();
+  user = allSuppliers.find(s => {
+    const sName = (s.name || '').toLowerCase();
+    const bName = (s.businessName || '').toLowerCase();
+    return (
+      (sName && (target.includes(sName) || sName.includes(target))) ||
+      (bName && (target.includes(bName) || bName.includes(target)))
+    );
+  }) || null;
+
+  return user;
+}
+
 // PATCH /api/orders/[id]  — update status pesanan (bayar, konfirmasi terima)
 export async function PATCH(req: Request, { params }: Params) {
   try {
@@ -49,8 +94,12 @@ export async function PATCH(req: Request, { params }: Params) {
     }
 
     let shouldReleaseFunds = false;
-    // Jika status baru adalah SELESAI, dan order sebelumnya belum SELESAI serta belum dirilis dananya
-    if (status === 'SELESAI' && existingOrder.status !== 'SELESAI' && !existingOrder.fundsReleased) {
+    const reqStatusUpper = (status || '').toUpperCase();
+    // Jika status baru adalah SELESAI atau fundsReleased=true, dan sebelumnya belum dirilis
+    if (
+      (reqStatusUpper === 'SELESAI' || fundsReleased === true) &&
+      !existingOrder.fundsReleased
+    ) {
       shouldReleaseFunds = true;
     }
 
@@ -81,31 +130,25 @@ export async function PATCH(req: Request, { params }: Params) {
     // 3. Jika perlu merilis dana ke saldo supplier (Escrow Release)
     let supplierUser: any = null;
     if (shouldReleaseFunds) {
-      // Hitung total dana komoditas (sum of price * qty)
+      // Hitung total dana komoditas, jika 0 fallback ke totalAmount
       const commodityTotal = existingOrder.items.reduce((sum, item) => {
         return sum + Number(item.price) * Number(item.qty);
       }, 0);
 
-      // Cari supplier berdasarkan nama/nama usaha
-      supplierUser = await prisma.user.findFirst({
-        where: {
-          OR: [
-            { name: existingOrder.supplierName },
-            { businessName: existingOrder.supplierName }
-          ]
-        }
-      });
+      const releaseAmount = commodityTotal > 0 ? commodityTotal : Number(existingOrder.totalAmount);
 
-      if (supplierUser) {
+      supplierUser = await findSupplierUser(existingOrder.supplierName);
+
+      if (supplierUser && releaseAmount > 0) {
         await prisma.user.update({
           where: { id: supplierUser.id },
           data: {
             balance: {
-              increment: commodityTotal
+              increment: releaseAmount
             }
           }
         });
-        console.log(`💰 [ESCROW RELEASE] Berhasil mencairkan dana Rp ${commodityTotal.toLocaleString('id-ID')} ke saldo supplier ${supplierUser.name} untuk order ${id}`);
+        console.log(`💰 [ESCROW RELEASE] Berhasil mencairkan dana Rp ${releaseAmount.toLocaleString('id-ID')} ke saldo supplier ${supplierUser.name} untuk order ${id}`);
       } else {
         console.warn(`⚠️ [ESCROW RELEASE] Gagal menemukan supplier dengan nama "${existingOrder.supplierName}" untuk mencairkan dana order ${id}`);
       }
@@ -119,14 +162,7 @@ export async function PATCH(req: Request, { params }: Params) {
         }) : null;
 
         // Cari supplier jika belum dicari di atas
-        const supplier = supplierUser || await prisma.user.findFirst({
-          where: {
-            OR: [
-              { name: existingOrder.supplierName },
-              { businessName: existingOrder.supplierName }
-            ]
-          }
-        });
+        const supplier = supplierUser || await findSupplierUser(existingOrder.supplierName);
 
         const itemsDescription = existingOrder.items.map(it => `${it.commodity.toUpperCase()} (${Number(it.qty)} kg)`).join(', ');
         const formattedTotal = Number(existingOrder.totalAmount).toLocaleString('id-ID');

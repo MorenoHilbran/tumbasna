@@ -43,12 +43,60 @@ export async function GET(req: Request) {
         });
 
         if (user) {
+            let currentBalance = Number(user.balance);
+
+            // Auto-sync saldo untuk supplier jika ada pesanan SELESAI / Dana Dicaikan yang belum masuk ke balance
+            if (user.role === 'PETANI') {
+              try {
+                const uName = (user.name || '').toLowerCase();
+                const bName = (user.businessName || '').toLowerCase();
+
+                const completedOrders = await prisma.order.findMany({
+                  where: {
+                    OR: [
+                      { status: 'SELESAI' },
+                      { fundsReleased: true }
+                    ]
+                  },
+                  include: { items: true }
+                });
+
+                let totalEarned = 0;
+                for (const ord of completedOrders) {
+                  const sName = (ord.supplierName || '').toLowerCase();
+                  const isMatch =
+                    (uName && (sName.includes(uName) || uName.includes(sName))) ||
+                    (bName && (sName.includes(bName) || bName.includes(sName)));
+
+                  if (isMatch) {
+                    const commTotal = ord.items.reduce(
+                      (sum: number, item: any) => sum + Number(item.price) * Number(item.qty),
+                      0
+                    );
+                    const amt = commTotal > 0 ? commTotal : Number(ord.totalAmount);
+                    totalEarned += amt;
+                  }
+                }
+
+                if (totalEarned > currentBalance) {
+                  await prisma.user.update({
+                    where: { id: user.id },
+                    data: { balance: totalEarned }
+                  });
+                  currentBalance = totalEarned;
+                  console.log(`🔄 [BALANCE AUTO-SYNC] Updated balance for ${user.name} (+${phone}) to Rp ${totalEarned}`);
+                }
+              } catch (syncErr: any) {
+                console.warn(`⚠️ [BALANCE AUTO-SYNC WARN]`, syncErr.message);
+              }
+            }
+
             return NextResponse.json({ 
                 success: true, 
                 isWhitelisted: true, 
                 isRegistered: !!(user.name || user.businessName),
                 name: user.name || user.businessName || '',
-                balance: Number(user.balance),
+                balance: currentBalance,
                 role: user.role,
                 bankName: user.bankName,
                 bankAccount: user.bankAccount,
