@@ -12,6 +12,8 @@ export interface ParsedData {
     items: ParsedItem[];
     supplier_name?: string | null;
     supplier_location?: string | null;
+    business_name?: string | null;
+    farm_name?: string | null;
     contact_phone?: string | null;
     bank_name?: string | null;
     bank_account?: string | null;
