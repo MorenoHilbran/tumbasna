@@ -106,6 +106,7 @@ export async function GET(req: Request) {
             : order.status === 'SELESAI' ? 'Selesai'
             : order.status === 'DIBATALKAN' ? 'Dibatalkan'
             : order.status,
+      rawStatus: order.status,
       paymentQrCode: order.paymentQrCode || '',
       fundsReleased: order.fundsReleased,
       notes: order.notes || '',

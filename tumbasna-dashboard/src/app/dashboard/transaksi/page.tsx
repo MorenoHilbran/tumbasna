@@ -78,10 +78,11 @@ export default function TransaksiPage() {
             .then(json => {
                 if (json.success) {
                     const mapped = json.data.map((o: any) => {
+                        const rawSt = String(o.rawStatus || o.dbStatus || o.status || '').toUpperCase();
                         let statusUI = 'menunggu';
-                        if (o.status === 'SELESAI') statusUI = 'selesai';
-                        if (o.status === 'DIPROSES' || o.status === 'DIKIRIM') statusUI = 'proses';
-                        if (o.status === 'DIBATALKAN') statusUI = 'batal';
+                        if (rawSt.includes('SELESAI')) statusUI = 'selesai';
+                        else if (rawSt.includes('PROSES') || rawSt.includes('KIRIM') || rawSt.includes('DIPROSES') || rawSt.includes('DIKIRIM')) statusUI = 'proses';
+                        else if (rawSt.includes('BATAL') || rawSt.includes('DIBATALKAN')) statusUI = 'batal';
 
                         return {
                             id: o.id,
@@ -89,12 +90,12 @@ export default function TransaksiPage() {
                             supplier: o.supplierName,
                             produk: o.items?.[0]?.product?.name || 'Komoditas',
                             qty: (o.items?.[0]?.quantity || 100) + ' kg',
-                            nilai: o.totalAmount,
+                            nilai: Number(o.totalAmount || 0),
                             status: statusUI,
                             tanggal: o.date,
-                            wilayah: o.supplierLocation.split(',')[0] || 'Cilacap',
-                            metode: 'QRIS',
-                            dbStatus: o.status,
+                            wilayah: (o.supplierLocation || 'Cilacap').split(',')[0].trim() || 'Cilacap',
+                            metode: 'COD/QRIS',
+                            dbStatus: o.rawStatus || o.dbStatus || o.status,
                             trackingTimeline: o.trackingTimeline || [],
                             rawNotes: o.notes || null,
                         };
