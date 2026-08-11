@@ -23,12 +23,14 @@ interface ChatViewState {
 
 // State pendaftaran hardcoded (tidak bergantung AI) agar contoh jawaban selalu konsisten
 interface RegisterState {
-    step: 1 | 2 | 3; // 1=nama, 2=lokasi, 3=rekening
+    step: 1 | 2 | 3 | 4; // 1=nama, 2=lokasi, 3=rekening, 4=nomor HP
     name?: string;
     businessName?: string;
     location?: string;
     lat?: number;
     lng?: number;
+    bankName?: string;
+    bankAccount?: string;
     expiresAt: number;
 }
 
@@ -39,7 +41,7 @@ const registerStateMap = new Map<string, RegisterState>();
 
 // Pesan hardcoded untuk tiap langkah pendaftaran
 const REGISTER_STEP_1 = 
-    `*Langkah 1 dari 3 — Nama*\n\n` +
+    `*Langkah 1 dari 4 — Nama*\n\n` +
     `Siapa nama lengkap Anda dan nama usaha/kebun Anda?\n\n` +
     `📝 Contoh jawaban:\n` +
     `_Pak Sugeng — Kebun Makmur Wonosobo_\n` +
@@ -47,7 +49,7 @@ const REGISTER_STEP_1 =
     `_Alfaen — Kebun Alfaen Banyumas_`;
 
 const REGISTER_STEP_2 =
-    `*Langkah 2 dari 3 — Lokasi Kebun/Gudang*\n\n` +
+    `*Langkah 2 dari 4 — Lokasi Kebun/Gudang*\n\n` +
     `Kirim titik lokasi kebun atau gudang Anda menggunakan fitur *Share Location* WhatsApp:\n\n` +
     `1️⃣ Tekan ikon 📎 *(Lampiran)* di bawah layar\n` +
     `2️⃣ Pilih *Lokasi*\n` +
@@ -63,7 +65,7 @@ const REGISTER_STEP_2_RETRY =
     `Koordinat GPS dibutuhkan agar kebun/gudang Anda tampil di peta aplikasi Tumbasna.`;
 
 const REGISTER_STEP_3 =
-    `*Langkah 3 dari 3 — Rekening Bank* (Terakhir!)\n\n` +
+    `*Langkah 3 dari 4 — Rekening Bank*\n\n` +
     `Untuk pencairan dana hasil penjualan QRIS, kirimkan informasi rekening bank Anda.\n\n` +
     `📝 Format: *[Nama Bank] [Nomor Rekening]*\n\n` +
     `Contoh jawaban:\n` +
@@ -71,6 +73,15 @@ const REGISTER_STEP_3 =
     `_BCA 8801234567_\n` +
     `_Mandiri 1230004567890_\n` +
     `_BSI 7123456789_`;
+
+const REGISTER_STEP_4 =
+    `*Langkah 4 dari 4 — Nomor WhatsApp* (Terakhir!)\n\n` +
+    `Ketik nomor WhatsApp aktif Anda untuk dihubungi oleh pembeli dari aplikasi Tumbasna.\n\n` +
+    `📝 Format: awali dengan *08* atau *628*\n\n` +
+    `Contoh jawaban:\n` +
+    `_085869236023_\n` +
+    `_6285869236023_\n\n` +
+    `_(Nomor ini yang akan tampil ke pembeli di aplikasi Tumbasna)_`;
 
 
 export async function processIncomingMessage(
@@ -150,11 +161,10 @@ export async function processIncomingMessage(
                     step: 1,
                     expiresAt: Date.now() + 30 * 60 * 1000 // 30 menit
                 });
-                const localPhone = '0' + phoneNumber.replace(/^62/, '');
                 const welcomeText =
                     `*SELAMAT DATANG DI MITRA TUMBASNA* 🌾\n\n` +
                     `Platform jual beli komoditas pertanian langsung dari supplier ke pedagang pasar.\n\n` +
-                    `Nomor Anda (*${localPhone}*) belum terdaftar. Saya akan pandu pendaftaran Anda dalam *3 langkah cepat*.\n\n` +
+                    `Nomor Anda belum terdaftar. Saya akan pandu pendaftaran Anda dalam *4 langkah cepat*.\n\n` +
                     `━━━━━━━━━━━━━━━\n\n` +
                     REGISTER_STEP_1;
                 await sendMessage(sender, { text: welcomeText });
@@ -238,7 +248,7 @@ export async function processIncomingMessage(
                 return;
             }
 
-            // STEP 3: Menerima rekening bank
+            // STEP 3: Menerima rekening bank → simpan ke state, lanjut ke step 4
             if (regState.step === 3) {
                 if (isLocationMsg) {
                     await sendMessage(sender, { text: REGISTER_STEP_3 });
@@ -263,21 +273,64 @@ export async function processIncomingMessage(
                     });
                     return;
                 }
+                // Simpan bank info ke state, lanjut step 4
+                registerStateMap.set(phoneNumber, {
+                    ...regState,
+                    step: 4,
+                    bankName,
+                    bankAccount,
+                    expiresAt: Date.now() + 30 * 60 * 1000
+                });
+                const step4Text =
+                    `✅ Rekening tercatat: *${bankName}* ${bankAccount}\n\n` +
+                    `━━━━━━━━━━━━━━━\n\n` +
+                    REGISTER_STEP_4;
+                await sendMessage(sender, { text: step4Text });
+                return;
+            }
+
+            // STEP 4: Menerima nomor HP → daftarkan ke API
+            if (regState.step === 4) {
+                if (isLocationMsg) {
+                    await sendMessage(sender, { text: REGISTER_STEP_4 });
+                    return;
+                }
+                // Parse nomor HP — normalisasi ke format 628xxx
+                const digitsOnly = text.replace(/\D/g, '');
+                let finalPhone = digitsOnly;
+                if (finalPhone.startsWith('08')) {
+                    finalPhone = '62' + finalPhone.slice(1);
+                } else if (finalPhone.startsWith('8') && finalPhone.length >= 9) {
+                    finalPhone = '62' + finalPhone;
+                }
+                if (finalPhone.length < 10 || !finalPhone.startsWith('62')) {
+                    await sendMessage(sender, {
+                        text: `⚠️ Nomor tidak valid. Pastikan format yang benar.\n\n` + REGISTER_STEP_4
+                    });
+                    return;
+                }
 
                 // Semua data lengkap → daftarkan ke API
                 registerStateMap.delete(phoneNumber);
                 try {
-                    const result = await apiService.registerSupplier({
-                        phone: phoneNumber,
+                    await apiService.registerSupplier({
+                        phone: finalPhone,
                         name: regState.name || pushName,
                         businessName: regState.businessName || regState.name || pushName,
                         location: regState.location || '',
-                        bankName,
-                        bankAccount,
+                        bankName: regState.bankName || '',
+                        bankAccount: regState.bankAccount || '',
                         lat: regState.lat ?? null,
                         lng: regState.lng ?? null
                     });
 
+                    // Jika nomor WA (sender) berbeda dengan nomor yang diinput, simpan mapping
+                    if (finalPhone !== phoneNumber) {
+                        const { saveMetadata } = await import('../ai/memory');
+                        await saveMetadata(sender, { mappedPhone: finalPhone });
+                    }
+
+                    const displayPhone = '0' + finalPhone.replace(/^62/, '');
                     const menuText =
                         `*MENU UTAMA MITRA TUMBASNA* 🌾\n\n` +
                         `Halo Bpk/Ibu *${regState.name}*, akun Anda sudah aktif! Ketik kode angka:\n\n` +
@@ -297,26 +350,26 @@ export async function processIncomingMessage(
                         `🎉 *PENDAFTARAN BERHASIL!*\n\n` +
                         `Selamat bergabung, *${regState.name}*!\n\n` +
                         `Data tersimpan:\n` +
+                        `📞 No. HP: ${displayPhone}\n` +
                         `📍 Lokasi: ${regState.location}\n` +
-                        `🏦 Bank: ${bankName}\n` +
-                        `💳 No. Rek: ${bankAccount}\n\n` +
+                        `🏦 Bank: ${regState.bankName}\n` +
+                        `💳 No. Rek: ${regState.bankAccount}\n\n` +
                         `✅ Akun Anda sudah aktif!`;
 
                     await sendMessage(sender, { text: successText });
                     await sendMessage(sender, { text: menuText });
-                    console.log(`✅ [REGISTER HARDCODED] ${regState.name} (${phoneNumber}) berhasil didaftarkan`);
+                    console.log(`✅ [REGISTER HARDCODED] ${regState.name} (${finalPhone}) berhasil didaftarkan`);
                 } catch (err: any) {
                     if (err?.response?.status === 409) {
                         await sendMessage(sender, {
-                            text: `ℹ️ Nomor Anda sudah terdaftar sebelumnya.\n\nKetik *MENU* untuk melihat menu utama.`
+                            text: `ℹ️ Nomor ${finalPhone} sudah terdaftar sebelumnya.\n\nKetik *MENU* untuk melihat menu utama.`
                         });
                     } else {
                         console.error(`❌ [REGISTER HARDCODED ERROR]`, err.message);
                         await sendMessage(sender, {
                             text: `❌ Maaf, terjadi kesalahan saat mendaftarkan akun Anda.\n\nSilakan coba lagi atau hubungi CS kami.`
                         });
-                        // Restore state jika gagal
-                        registerStateMap.set(phoneNumber, { ...regState, step: 3 });
+                        registerStateMap.set(phoneNumber, { ...regState, step: 4 });
                     }
                 }
                 return;
