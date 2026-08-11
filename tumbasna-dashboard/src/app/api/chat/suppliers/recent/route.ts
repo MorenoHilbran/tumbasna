@@ -33,13 +33,22 @@ export async function GET(req: Request) {
       ? [supplierUser.name, supplierUser.businessName, supplierPhone].filter((n): n is string => Boolean(n && n.trim() !== ''))
       : [supplierPhone];
 
-    const allChats = await prisma.chatMessage.findMany({
+    const nameFilterConditions = [];
+    if (supplierUser?.name) {
+      nameFilterConditions.push({ supplierName: { contains: supplierUser.name, mode: 'insensitive' as const } });
+    }
+    if (supplierUser?.businessName) {
+      nameFilterConditions.push({ supplierName: { contains: supplierUser.businessName, mode: 'insensitive' as const } });
+    }
+
+    let allChats = await prisma.chatMessage.findMany({
       where: {
+        sender: 'buyer',
         OR: [
           { supplierPhone: { in: [supplierPhone, cleaned, altPhone] } },
-          { supplierName: { in: supplierNames } }
-        ],
-        sender: 'buyer'
+          { supplierName: { in: supplierNames } },
+          ...nameFilterConditions
+        ]
       },
       orderBy: { createdAt: 'desc' },
       take: 100,
@@ -49,6 +58,20 @@ export async function GET(req: Request) {
         createdAt: true
       }
     });
+
+    // Fallback: Jika belum ada match spesifik, ambil recent buyer chat terakhir di sistem
+    if (allChats.length === 0) {
+      allChats = await prisma.chatMessage.findMany({
+        where: { sender: 'buyer' },
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+        select: {
+          buyerPhone: true,
+          text: true,
+          createdAt: true
+        }
+      });
+    }
 
     // Deduplicate: ambil pesan terakhir per buyerPhone (data sudah urut desc)
     const seen = new Set<string>();

@@ -385,8 +385,10 @@ export async function processIncomingMessage(
 
     // Cek apakah supplier merespons (quote/reply) notifikasi pembeli dari WhatsApp UI
     const quotedMsgText = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage?.conversation ||
-                          msg.message?.extendedTextMessage?.contextInfo?.quotedMessage?.extendedTextMessage?.text || '';
-    const isReplyingToBuyerNotification = quotedMsgText.includes('Pesan Baru dari') || quotedMsgText.includes('Pembeli Tumbasna');
+                          msg.message?.extendedTextMessage?.contextInfo?.quotedMessage?.extendedTextMessage?.text ||
+                          (msg.message as any)?.contextInfo?.quotedMessage?.conversation ||
+                          (msg.message as any)?.contextInfo?.quotedMessage?.extendedTextMessage?.text || '';
+    const isReplyingToBuyerNotification = quotedMsgText.includes('Pesan Baru dari') || quotedMsgText.includes('Pembeli Tumbasna') || quotedMsgText.includes('membalas pembeli');
 
     if (isRegistered && text && !text.startsWith('[') && !text.toLowerCase().startsWith('kirim ') && !isTumbasnaSystemMessage) {
         try {
