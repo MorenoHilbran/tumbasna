@@ -333,18 +333,17 @@ export async function processIncomingMessage(
                     const displayPhone = '0' + finalPhone.replace(/^62/, '');
                     const menuText =
                         `*MENU UTAMA MITRA TUMBASNA* 🌾\n\n` +
-                        `Halo Bpk/Ibu *${regState.name}*, akun Anda sudah aktif! Ketik kode angka:\n\n` +
+                        `Halo Bpk/Ibu *${regState.name}*, akun Anda sudah aktif! Ketik kode angka berikut:\n\n` +
                         `*1* 👤 Lihat Profil & Rekening Bank\n` +
                         `*2* 💰 Lihat Saldo Escrow QRIS\n` +
                         `*3* 📦 Lihat Daftar Listing Produk Aktif\n` +
-                        `*4* ➕ Tambah Komoditas Jual\n` +
-                        `*5* 📋 Status & Rincian Pesanan Masuk\n` +
-                        `*6* 💬 Hubungi CS Admin Tumbasna\n` +
+                        `*4* 🛒 Lihat Pesanan Masuk (Order)\n` +
+                        `*5* ✍️ Cara Jual / Daftarkan Komoditas\n` +
+                        `*6* 📞 Hubungi Bantuan / CS\n` +
                         `*7* ✏️ Edit Profil / Rekening Bank\n` +
-                        `*8* 🗑️ Hapus Akun & Semua Data\n` +
-                        `*9* 📥 Inbox Chat Pembeli\n\n` +
-                        `💡 Atau langsung ketik penawaran:\n` +
-                        `_"Jual cabai rawit 500 kg harga 35.000/kg"_`;
+                        `*8* 🗑️ Hapus Akun & Data Saya\n` +
+                        `*9* 💬 Inbox Chat Pembeli\n\n` +
+                        `💡 _Atau Juragan bisa langsung mengetik pesan teks bebas untuk menawarkan hasil tani Juragan secara otomatis._`;
 
                     const successText =
                         `🎉 *PENDAFTARAN BERHASIL!*\n\n` +
@@ -1064,14 +1063,13 @@ export async function processIncomingMessage(
                             `*1* 👤 Lihat Profil & Rekening Bank\n` +
                             `*2* 💰 Lihat Saldo Escrow QRIS\n` +
                             `*3* 📦 Lihat Daftar Listing Produk Aktif\n` +
-                            `*4* ➕ Tambah Komoditas Jual (Penawaran Baru)\n` +
-                            `*5* 📋 Status & Rincian Pesanan Masuk\n` +
-                            `*6* 💬 Hubungi CS Admin Tumbasna\n` +
+                            `*4* 🛒 Lihat Pesanan Masuk (Order)\n` +
+                            `*5* ✍️ Cara Jual / Daftarkan Komoditas\n` +
+                            `*6* 📞 Hubungi Bantuan / CS\n` +
                             `*7* ✏️ Edit Profil / Rekening Bank\n` +
-                            `*8* 🗑️ Hapus Akun & Semua Data\n` +
-                            `*9* 📥 Inbox Chat Pembeli\n\n` +
-                            `💡 Atau langsung kirim penawaran, contoh:\n` +
-                            `_"Jual cabai rawit 500 kg harga 35.000/kg"_`;
+                            `*8* 🗑️ Hapus Akun & Data Saya\n` +
+                            `*9* 💬 Inbox Chat Pembeli\n\n` +
+                            `💡 _Atau Juragan bisa langsung mengetik pesan teks bebas untuk menawarkan hasil tani Juragan secara otomatis._`;
 
                         parsedData.reply_message = `🎉 *REGISTRASI BERHASIL!*\n\n` +
                             `Selamat datang di Tumbasna, *${name}*!\n\n` +
