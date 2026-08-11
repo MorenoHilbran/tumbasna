@@ -742,6 +742,21 @@ export async function processIncomingMessage(
                     });
                     console.log(`✅ [REGISTER] Supplier ${name} berhasil didaftarkan:`, result);
                     if (result.success !== false) {
+                        const menuText =
+                            `*MENU UTAMA MITRA TUMBASNA* 🌾\n\n` +
+                            `Halo Bpk/Ibu *${name}*, selamat datang! Akun Anda sudah aktif. Ketik kode angka berikut:\n\n` +
+                            `*1* 👤 Lihat Profil & Rekening Bank\n` +
+                            `*2* 💰 Lihat Saldo Escrow QRIS\n` +
+                            `*3* 📦 Lihat Daftar Listing Produk Aktif\n` +
+                            `*4* ➕ Tambah Komoditas Jual (Penawaran Baru)\n` +
+                            `*5* 📋 Status & Rincian Pesanan Masuk\n` +
+                            `*6* 💬 Hubungi CS Admin Tumbasna\n` +
+                            `*7* ✏️ Edit Profil / Rekening Bank\n` +
+                            `*8* 🗑️ Hapus Akun & Semua Data\n` +
+                            `*9* 📥 Inbox Chat Pembeli\n\n` +
+                            `💡 Atau langsung kirim penawaran, contoh:\n` +
+                            `_"Jual cabai rawit 500 kg harga 35.000/kg"_`;
+
                         parsedData.reply_message = `🎉 *REGISTRASI BERHASIL!*\n\n` +
                             `Selamat datang di Tumbasna, *${name}*!\n\n` +
                             `Data Anda telah tersimpan:\n` +
@@ -749,8 +764,12 @@ export async function processIncomingMessage(
                             `📞 Telepon: ${phone}\n` +
                             (bankName ? `🏦 Bank: ${bankName}\n` : '') +
                             (bankAccount ? `💳 No. Rek: ${bankAccount}\n` : '') +
-                            `\n✅ Anda sekarang dapat mulai menjual komoditas pertanian Anda!\n\n` +
-                            `Ketik *MENU* untuk melihat panduan atau langsung kirim penawaran produk Anda.`;
+                            `\n✅ Akun Anda sudah aktif! Berikut menu yang tersedia:`;
+
+                        // Kirim pesan sukses dulu, lalu otomatis kirim menu
+                        await sendMessage(sender, { text: parsedData.reply_message });
+                        await sendMessage(sender, { text: menuText });
+                        parsedData.reply_message = ''; // sudah dikirim manual, skip final reply
                     }
                     if (phone !== rawPhoneNumber) {
                         await saveMetadata(sender, { mappedPhone: phone });
@@ -986,7 +1005,12 @@ export async function processIncomingMessage(
         // ─── Build final reply ───
         let finalReply = parsedData.reply_message;
 
+        // Jika sudah dikirim manual di handler REGISTER, parsedData.reply_message dikosongkan — skip
         if (!finalReply || !finalReply.trim()) {
+            if (parsedData.intent === 'REGISTER' && parsedData.status === 'COMPLETE') {
+                console.log(`💬 Balasan REGISTER COMPLETE sudah dikirim manual, skip.`);
+                return;
+            }
             finalReply = "Halo Juragan! Ada yang bisa saya bantu terkait penawaran hasil tani atau pesanan komoditas Anda? 🌾";
         }
 
@@ -997,8 +1021,8 @@ export async function processIncomingMessage(
             }
         }
 
-        // Tambahkan petunjuk menu cepat jika user terdaftar agar AI tidak mengulang
-        if (isRegistered) {
+        // Tambahkan petunjuk MENU hanya jika user terdaftar dan bukan sedang dalam alur REGISTER
+        if (isRegistered && parsedData.intent !== 'REGISTER') {
             finalReply += '\n\n💡 _Ketik *MENU* untuk melihat menu cepat atau bantuan._';
         }
 
