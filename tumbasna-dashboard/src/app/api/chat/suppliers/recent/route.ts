@@ -16,9 +16,29 @@ export async function GET(req: Request) {
       ? '0' + cleaned.slice(2) 
       : (cleaned.startsWith('0') ? '62' + cleaned.slice(1) : '62' + cleaned);
 
+    // Cari supplierUser untuk mendapatkan variasi nama / nama usaha supplier
+    const supplierUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { phoneNumber: supplierPhone },
+          { phoneNumber: cleaned },
+          { phoneNumber: altPhone },
+          { name: supplierPhone },
+          { businessName: supplierPhone }
+        ]
+      }
+    });
+
+    const supplierNames = supplierUser
+      ? [supplierUser.name, supplierUser.businessName, supplierPhone].filter((n): n is string => Boolean(n && n.trim() !== ''))
+      : [supplierPhone];
+
     const allChats = await prisma.chatMessage.findMany({
       where: {
-        supplierPhone: { in: [supplierPhone, cleaned, altPhone] },
+        OR: [
+          { supplierPhone: { in: [supplierPhone, cleaned, altPhone] } },
+          { supplierName: { in: supplierNames } }
+        ],
         sender: 'buyer'
       },
       orderBy: { createdAt: 'desc' },

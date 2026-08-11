@@ -20,11 +20,27 @@ export async function GET(req: Request) {
       const buyerPhoneVariants = [buyerPhone, cleanBuyer, altBuyer];
       const supplierPhoneVariants = [supplierPhone, cleanSupplier, altSupplier];
 
+      // Cari supplierUser untuk variasi name & businessName
+      const supplierUser = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { phoneNumber: { in: supplierPhoneVariants } },
+            { name: supplierPhone },
+            { businessName: supplierPhone }
+          ]
+        }
+      });
+
+      const supplierNames = supplierUser
+        ? [supplierUser.name, supplierUser.businessName, supplierPhone].filter((n): n is string => Boolean(n && n.trim() !== ''))
+        : [supplierPhone];
+
       const messages = await (prisma as any).chatMessage.findMany({
         where: {
           OR: [
             { buyerPhone: { in: buyerPhoneVariants }, supplierPhone: { in: supplierPhoneVariants } },
-            { buyerPhone: { in: supplierPhoneVariants }, supplierPhone: { in: buyerPhoneVariants } }, // swap untuk cover both directions
+            { buyerPhone: { in: buyerPhoneVariants }, supplierName: { in: supplierNames } },
+            { buyerPhone: { in: supplierPhoneVariants }, supplierPhone: { in: buyerPhoneVariants } },
           ]
         },
         orderBy: { createdAt: 'asc' },

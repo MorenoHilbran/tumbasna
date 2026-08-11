@@ -378,29 +378,29 @@ export async function processIncomingMessage(
 
     // 1.3. Cek jika pesan adalah balasan supplier untuk buyer
     // Pattern: Supplier membalas pesan yang mengandung info buyer dari Tumbasna
-    // Kita deteksi jika supplier baru saja menerima pesan dari buyer (dalam konteks chat terakhir)
-    // Definisikan keyword bot di sini untuk dipakai pada pengecekan awal
-    const botMenuKeywords = ['menu', 'help', 'bantuan', 'hallo', 'halo', 'p'];
+    const explicitMenuKeywords = ['menu', 'help', 'bantuan', 'batal', 'keluar'];
     const botNumberKeywords = ['1', '2', '3', '4', '5', '6', '7', '8', 'profil', 'rekening', 'saldo', 'listing', 'produk', 'pesanan', 'order', 'jual', 'tambah', 'cs', 'edit', 'ubah', 'hapus akun', 'hapus data'];
     // Pesan sistem relay dari Tumbasna — jangan diproses sebagai supplier reply
     const isTumbasnaSystemMessage = text.includes('Pesan dari Pembeli Tumbasna') || text.includes('tumbasna-rahasia') || text.startsWith('✅ Pesan Anda telah terkirim');
 
+    // Cek apakah supplier merespons (quote/reply) notifikasi pembeli dari WhatsApp UI
+    const quotedMsgText = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage?.conversation ||
+                          msg.message?.extendedTextMessage?.contextInfo?.quotedMessage?.extendedTextMessage?.text || '';
+    const isReplyingToBuyerNotification = quotedMsgText.includes('Pesan Baru dari') || quotedMsgText.includes('Pembeli Tumbasna');
+
     if (isRegistered && text && !text.startsWith('[') && !text.toLowerCase().startsWith('kirim ') && !isTumbasnaSystemMessage) {
-        // Cek apakah supplier ini baru saja menerima pesan dari buyer (cek recent chat history)
         try {
             const recentChats = await apiService.getRecentChatsForSupplier(phoneNumber);
             if (recentChats && recentChats.length > 0) {
-                // Ambil buyer phone dari chat terakhir
                 const lastChat = recentChats[0];
                 const buyerPhone = lastChat.buyerPhone;
                 
-                // Guard: skip jika buyerPhone sama dengan supplierPhone
-                // (kasus testing dengan nomor yang sama — mencegah infinite loop)
                 const isSameNumber = buyerPhone && buyerPhone.replace(/\D/g, '') === phoneNumber.replace(/\D/g, '');
+                const isExplicitMenuCommand = explicitMenuKeywords.includes(cleanText);
 
-                // Jika ada buyer phone yang berbeda dan pesan ini bukan command bot
-                if (buyerPhone && !isSameNumber && text.trim().length > 0 && !botMenuKeywords.includes(cleanText) && !botNumberKeywords.includes(cleanText)) {
-                    console.log(`💬 [CHAT REPLY] Supplier ${phoneNumber} membalas buyer ${buyerPhone}`);
+                // Jika supplier merespons quote notifikasi pembeli ATAU ada buyer aktif (dan bukan command menu eksplisit)
+                if (buyerPhone && !isSameNumber && text.trim().length > 0 && (!isExplicitMenuCommand || isReplyingToBuyerNotification)) {
+                    console.log(`💬 [CHAT REPLY] Supplier ${phoneNumber} membalas buyer ${buyerPhone}: "${text.trim()}"`);
                     
                     // Save reply supplier ke database
                     await apiService.saveChatMessage({
@@ -423,7 +423,6 @@ export async function processIncomingMessage(
             }
         } catch (chatErr: any) {
             console.warn(`⚠️ [CHAT REPLY CHECK] Error checking recent chats: ${chatErr.message}`);
-            // Lanjutkan ke flow normal jika error
         }
     }
 

@@ -92,6 +92,78 @@ const Chat: React.FC<ChatProps> = ({ initialPartner, initialPartnerPhone, onClea
     }
   }, [selectedThread, chats]);
 
+  // Periodic polling (every 3 seconds) for active conversation thread to display live supplier WA replies
+  useEffect(() => {
+    if (!selectedThread || selectedThread.supplierName === 'Tumbasna AI Pintar') return;
+
+    const suppPhone = selectedThread.supplierPhone || selectedThread.supplierName;
+    const interval = setInterval(async () => {
+      try {
+        const storedUser = localStorage.getItem('tumbasna_user');
+        let buyerPhone = '';
+        if (storedUser) {
+          try {
+            const u = JSON.parse(storedUser);
+            buyerPhone = u.phone || '';
+          } catch {}
+        }
+
+        if (!buyerPhone) return;
+
+        if (buyerPhone.startsWith('0')) {
+          buyerPhone = '62' + buyerPhone.slice(1);
+        } else if (buyerPhone.startsWith('+62')) {
+          buyerPhone = buyerPhone.slice(1);
+        }
+
+        const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:3000' : '';
+        const historyRes = await fetch(
+          `${API_BASE}/api/chat/suppliers?action=history&buyerPhone=${buyerPhone}&supplierPhone=${encodeURIComponent(suppPhone)}`
+        );
+        if (historyRes.ok) {
+          const historyData = await historyRes.json();
+          if (historyData.success && Array.isArray(historyData.data)) {
+            const fetchedMsgs = historyData.data.map((msg: any) => {
+              let formattedTime = '';
+              try {
+                const dateObj = new Date(msg.createdAt || msg.timestamp);
+                formattedTime = !isNaN(dateObj.getTime())
+                  ? dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+                  : new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+              } catch {
+                formattedTime = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+              }
+              return {
+                id: msg.id,
+                sender: msg.sender || 'supplier',
+                text: msg.text || '',
+                timestamp: formattedTime,
+                status: 'read'
+              };
+            }).filter((msg: any) => msg.text.trim() !== '');
+
+            if (fetchedMsgs.length > 0) {
+              setChats((prev) => prev.map((t) => {
+                if (t.supplierName !== selectedThread.supplierName) return t;
+                const lastMsg = fetchedMsgs[fetchedMsgs.length - 1];
+                return {
+                  ...t,
+                  messages: fetchedMsgs,
+                  lastMessage: lastMsg.text,
+                  lastTime: lastMsg.timestamp
+                };
+              }));
+            }
+          }
+        }
+      } catch (err) {
+        // silent error during background poll
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [selectedThread, setChats]);
+
   // Handle initial partner navigation from external trigger
   useEffect(() => {
     if (initialPartner) {
