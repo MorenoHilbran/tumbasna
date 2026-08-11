@@ -14,13 +14,14 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Deploy ke VPS via SSH
-        uses: appleboy/ssh-action@v0.1.10
+        uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
           port: 22
-          timeout: 15m
+          timeout: 60s
+          command_timeout: 25m
           script: |
             cd /opt/tumbasna
             echo "1. Fetching latest changes from origin..."
