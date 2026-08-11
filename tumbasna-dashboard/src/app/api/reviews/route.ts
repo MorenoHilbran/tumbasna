@@ -25,9 +25,20 @@ export async function GET(req: Request) {
       return NextResponse.json({ success: true, data: review }, { headers: corsHeaders });
     }
 
+    // Ambil seluruh nama supplier/user aktif di tabel User
+    const activeUsers = await prisma.user.findMany({
+      select: { name: true, businessName: true },
+    });
+
+    const validSupplierNames = activeUsers
+      .flatMap((u) => [u.name, u.businessName])
+      .filter((n): n is string => Boolean(n && n.trim() !== ""));
+
     const where: any = {};
     if (supplierName) {
       where.supplierName = supplierName;
+    } else {
+      where.supplierName = { in: validSupplierNames };
     }
 
     const reviews = await prisma.review.findMany({

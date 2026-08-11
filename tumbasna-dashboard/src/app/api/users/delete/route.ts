@@ -90,7 +90,21 @@ export async function POST(req: Request) {
       where: { phoneNumber: normalizedPhone }
     });
 
-    // B. Hapus User (ProductEntries terhapus otomatis via Cascade)
+    // B. Hapus Reviews pengguna
+    try {
+      await prisma.review.deleteMany({
+        where: {
+          OR: [
+            { buyerUserId: user.id },
+            ...(userBusinessNames.length > 0 ? [{ supplierName: { in: userBusinessNames } }] : [])
+          ]
+        }
+      });
+    } catch (reviewErr: any) {
+      console.warn('[DELETE USER] Warning deleting reviews:', reviewErr.message);
+    }
+
+    // C. Hapus User (ProductEntries terhapus otomatis via Cascade)
     await prisma.user.delete({
       where: { id: user.id }
     });

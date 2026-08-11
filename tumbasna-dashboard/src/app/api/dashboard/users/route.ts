@@ -80,6 +80,21 @@ export async function DELETE(req: Request) {
     }
 
     const phone = user.phoneNumber;
+    const userNames = [user.name, user.businessName].filter(Boolean) as string[];
+
+    // Delete reviews associated with this user (as buyer or supplier)
+    try {
+      await prisma.review.deleteMany({
+        where: {
+          OR: [
+            { buyerUserId: id },
+            ...(userNames.length > 0 ? [{ supplierName: { in: userNames } }] : [])
+          ]
+        }
+      });
+    } catch (reviewErr: any) {
+      console.warn('[DELETE USER] Warning deleting reviews:', reviewErr.message);
+    }
 
     // 2. Delete User (Prisma Cascade will handle productEntries, matches, and chatMessages)
     await prisma.user.delete({
