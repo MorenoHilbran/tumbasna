@@ -79,7 +79,8 @@ export async function POST(req: Request) {
       const supplierReply = await prisma.chatMessage.create({
         data: {
           buyerUserId: lastChatFromBuyer.buyerUserId,
-          supplierName: sender,
+          supplierPhone: lastChatFromBuyer.supplierPhone || sender,
+          supplierName: lastChatFromBuyer.supplierName || sender,
           sender: 'supplier',
           text: message,
           status: 'read'

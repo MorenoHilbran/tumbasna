@@ -49,7 +49,7 @@ export async function POST(req: Request) {
       where: {
         buyerUserId: user.id,
         status: {
-          in: ['MENUNGGU_PEMBAYARAN', 'MENUNGGU_KONFIRMASI', 'DIPROSES', 'TERKIRIM']
+          in: ['MENUNGGU_PEMBAYARAN', 'DIPROSES', 'DIKIRIM']
         }
       }
     });
@@ -71,7 +71,7 @@ export async function POST(req: Request) {
             mode: 'insensitive'
           },
           status: {
-            in: ['MENUNGGU_PEMBAYARAN', 'MENUNGGU_KONFIRMASI', 'DIPROSES', 'TERKIRIM']
+            in: ['MENUNGGU_PEMBAYARAN', 'DIPROSES', 'DIKIRIM']
           }
         }
       });
