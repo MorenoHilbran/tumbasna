@@ -37,8 +37,7 @@ interface PasarProps {
 const Pasar: React.FC<PasarProps> = ({ onSelectProduct, onNavigateToCart, initialCategory }) => {
   const { products, addToCart } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState<'semua' | 'termurah' | 'terdekat' | 'terbaru'>('semua');
-  const [activeCategory, setActiveCategory] = useState<string>('semua');
+  const [activeFilter, setActiveFilter] = useState<string>('semua');
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
@@ -51,7 +50,7 @@ const Pasar: React.FC<PasarProps> = ({ onSelectProduct, onNavigateToCart, initia
   // Set initial category dari props
   React.useEffect(() => {
     if (initialCategory && initialCategory !== 'semua') {
-      setActiveCategory(initialCategory);
+      setActiveFilter(initialCategory);
     }
   }, [initialCategory]);
 
@@ -88,10 +87,11 @@ const Pasar: React.FC<PasarProps> = ({ onSelectProduct, onNavigateToCart, initia
     }
 
     // Category filter
-    if (activeCategory !== 'semua') {
+    const categoryOptions = ['sayuran', 'bumbu', 'beras', 'buah', 'lainnya'];
+    if (categoryOptions.includes(activeFilter.toLowerCase())) {
       result = result.filter((p) => {
         const productCategory = p.category.toLowerCase();
-        const filterCategory = activeCategory.toLowerCase();
+        const filterCategory = activeFilter.toLowerCase();
         
         // Mapping kategori untuk handle variations
         if (filterCategory === 'sayuran') {
@@ -211,33 +211,25 @@ const Pasar: React.FC<PasarProps> = ({ onSelectProduct, onNavigateToCart, initia
 
       {/* Content */}
       <IonContent className="pasar-content">
-        {/* Category filter chips */}
+        {/* Single Filter Chips Row (No Emojis) */}
         <div className="filter-chips-row">
-          {(['semua', 'sayuran', 'bumbu', 'beras', 'buah', 'lainnya'] as const).map((cat) => (
+          {[
+            { id: 'semua', label: 'Semua' },
+            { id: 'sayuran', label: 'Sayuran' },
+            { id: 'bumbu', label: 'Bumbu' },
+            { id: 'beras', label: 'Beras' },
+            { id: 'buah', label: 'Buah' },
+            { id: 'lainnya', label: 'Lainnya' },
+            { id: 'termurah', label: 'Harga Termurah' },
+            { id: 'terdekat', label: 'Terdekat' },
+            { id: 'terbaru', label: 'Terbaru' }
+          ].map((item) => (
             <button
-              key={cat}
-              className={`filter-chip ${activeCategory === cat ? 'active' : ''}`}
-              onClick={() => setActiveCategory(cat)}
+              key={item.id}
+              className={`filter-chip ${activeFilter === item.id ? 'active' : ''}`}
+              onClick={() => setActiveFilter(item.id)}
             >
-              {cat === 'semua' ? '🌾 Semua' : 
-               cat === 'sayuran' ? '🥕 Sayuran' : 
-               cat === 'bumbu' ? '🌶️ Bumbu' : 
-               cat === 'beras' ? '🍚 Beras' : 
-               cat === 'buah' ? '🍎 Buah' : 
-               '📦 Lainnya'}
-            </button>
-          ))}
-        </div>
-
-        {/* Sorting filter chips */}
-        <div className="filter-chips-row" style={{ marginTop: '8px' }}>
-          {(['semua', 'termurah', 'terdekat', 'terbaru'] as const).map((f) => (
-            <button
-              key={f}
-              className={`filter-chip ${activeFilter === f ? 'active' : ''}`}
-              onClick={() => setActiveFilter(f)}
-            >
-              {f === 'semua' ? 'Semua' : f === 'termurah' ? 'Harga Termurah' : f === 'terdekat' ? 'Terdekat' : 'Terbaru'}
+              {item.label}
             </button>
           ))}
         </div>
