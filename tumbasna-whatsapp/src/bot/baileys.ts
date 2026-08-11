@@ -177,16 +177,24 @@ export async function connectWhatsApp() {
             
             // ─── Handle Location Message ─────────────────────────────
             const isLocation = !!msg.message?.locationMessage;
-            if (isLocation && enableRealWA && msg.message?.locationMessage) {
+            if (isLocation && msg.message?.locationMessage) {
                 const locMsg = msg.message!.locationMessage!;
                 const lat = locMsg.degreesLatitude || 0;
                 const lng = locMsg.degreesLongitude || 0;
-                if (lat && lng) {
+                console.log(`📍 [LOCATION] Diterima dari ${sender}: lat=${lat}, lng=${lng}`);
+                if (lat !== 0 || lng !== 0) {
                     const addressName = await reverseGeocode(lat, lng);
                     console.log(`📍 [LOCATION] Alamat terdeteksi: ${addressName}`);
 
                     const combinedText = `[Supplier mengirim share location] Nama Lokasi: ${addressName} | Lat: ${lat} | Lng: ${lng}`;
                     
+                    await processIncomingMessage(sender, pushName, combinedText, sendFn);
+                    continue;
+                } else {
+                    console.warn(`⚠️ [LOCATION] lat/lng keduanya 0, mungkin format tidak terbaca. locMsg:`, JSON.stringify(locMsg));
+                    // Tetap coba proses dengan koordinat fallback dari nama lokasi
+                    const addressName = locMsg.name || locMsg.address || 'Lokasi tidak diketahui';
+                    const combinedText = `[Supplier mengirim share location] Nama Lokasi: ${addressName} | Lat: ${lat} | Lng: ${lng}`;
                     await processIncomingMessage(sender, pushName, combinedText, sendFn);
                     continue;
                 }
@@ -197,7 +205,7 @@ export async function connectWhatsApp() {
             let imageCaption = msg.message?.imageMessage?.caption || '';
             let imageUrl: string | null = null;
 
-            if (isImage && enableRealWA) {
+            if (isImage) {
                 console.log(`🖼️ [IMAGE] Gambar diterima dari ${sender}`);
                 try {
                     const buffer = await downloadMediaMessage(msg, 'buffer', {}) as Buffer;
