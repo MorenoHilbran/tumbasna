@@ -11,11 +11,20 @@ export async function GET(req: Request) {
 
     // Jika action=history, ambil chat history antara buyer dan supplier
     if (action === 'history' && buyerPhone && supplierPhone) {
+      const cleanBuyer = buyerPhone.replace(/\D/g, '');
+      const altBuyer = cleanBuyer.startsWith('62') ? '0' + cleanBuyer.slice(2) : (cleanBuyer.startsWith('0') ? '62' + cleanBuyer.slice(1) : cleanBuyer);
+
+      const cleanSupplier = supplierPhone.replace(/\D/g, '');
+      const altSupplier = cleanSupplier.startsWith('62') ? '0' + cleanSupplier.slice(2) : (cleanSupplier.startsWith('0') ? '62' + cleanSupplier.slice(1) : cleanSupplier);
+
+      const buyerPhoneVariants = [buyerPhone, cleanBuyer, altBuyer];
+      const supplierPhoneVariants = [supplierPhone, cleanSupplier, altSupplier];
+
       const messages = await (prisma as any).chatMessage.findMany({
         where: {
           OR: [
-            { buyerPhone, supplierPhone },
-            { buyerPhone: supplierPhone, supplierPhone: buyerPhone }, // swap untuk cover both directions
+            { buyerPhone: { in: buyerPhoneVariants }, supplierPhone: { in: supplierPhoneVariants } },
+            { buyerPhone: { in: supplierPhoneVariants }, supplierPhone: { in: buyerPhoneVariants } }, // swap untuk cover both directions
           ]
         },
         orderBy: { createdAt: 'asc' },
@@ -69,7 +78,7 @@ export async function GET(req: Request) {
 // POST /api/chat/suppliers — Simpan pesan dari buyer ATAU supplier
 export async function POST(req: Request) {
   try {
-    const { buyerPhone, supplierPhone, message, sender } = await req.json();
+    const { buyerPhone, supplierPhone, message, sender, buyerName: bodyBuyerName } = await req.json();
     
     const supplierPhoneTrimmed = (supplierPhone || '').trim();
     const messageTrimmed = (message || '').trim();
@@ -88,11 +97,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid sender (must be buyer or supplier)', got: sender }, { status: 400 });
     }
 
-    // Temukan buyer di DB (jika ada)
+    // Temukan buyer di DB (jika ada) - coba variasi format 08 / 628
     let buyer = null;
     if (buyerPhone) {
-      buyer = await prisma.user.findUnique({
-        where: { phoneNumber: buyerPhone }
+      const cleaned = buyerPhone.replace(/\D/g, '');
+      const altPhone = cleaned.startsWith('62') 
+        ? '0' + cleaned.slice(2) 
+        : (cleaned.startsWith('0') ? '62' + cleaned.slice(1) : '62' + cleaned);
+
+      buyer = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { phoneNumber: buyerPhone },
+            { phoneNumber: cleaned },
+            { phoneNumber: altPhone }
+          ]
+        }
       });
     }
 
@@ -124,18 +144,14 @@ export async function POST(req: Request) {
       const waApiKey = process.env.WHATSAPP_API_KEY || process.env.TUMBASNA_SECRET_KEY || 'tumbasna-rahasia-banget';
       
       try {
-        const buyerName = buyer?.name || 'Pedagang Tumbasna';
-        const businessInfo = buyer?.businessName ? ` _(${buyer.businessName})_` : '';
-        const locationInfo = buyer?.address ? ` — ${buyer.address}` : '';
-        const waLink = `wa.me/${(buyerPhone || buyer?.phoneNumber || '').replace(/\D/g, '')}`;
+        const rawName = (bodyBuyerName || buyer?.name || buyer?.businessName || 'Pembeli Tumbasna').trim();
+        const finalBuyerName = (rawName === 'Pedagang Tumbasna' || !rawName) ? 'Pembeli Tumbasna' : rawName;
+        const businessInfo = (buyer?.businessName && buyer?.businessName !== finalBuyerName) ? ` (${buyer.businessName})` : '';
 
         const relayMsg =
-          `💬 *Pesan dari Pembeli Tumbasna* 🛒\n` +
-          `*Dari:* ${buyerName}${businessInfo}${locationInfo}\n` +
-          `*Kontak WA:* ${waLink}\n` +
-          `─────────────────────────\n\n` +
-          `"${message}"\n\n` +
-          `_Balas pesan ini untuk membalas pembeli. Pesan Anda akan otomatis tersimpan di chat history._`;
+          `🛒 *Pesan Baru dari ${finalBuyerName}${businessInfo}*\n\n` +
+          `"${messageTrimmed}"\n\n` +
+          `_Balas pesan ini untuk membalas pembeli._`;
 
         const waRes = await fetch(`${waUrl}/api/send`, {
           method: 'POST',

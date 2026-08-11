@@ -805,6 +805,7 @@ Tugas Anda:
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ 
                 buyerPhone, 
+                buyerName: user?.ownerName || user?.businessName || '',
                 supplierPhone: finalSupplierPhone, 
                 message: text,
                 sender: 'buyer'

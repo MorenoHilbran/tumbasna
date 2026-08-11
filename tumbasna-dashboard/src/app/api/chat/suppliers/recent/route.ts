@@ -11,14 +11,15 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'supplierPhone is required' }, { status: 400 });
     }
 
-    // Ambil semua chat dalam 7 hari terakhir (lebih lebar dari sebelumnya 24 jam)
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const cleaned = supplierPhone.replace(/\D/g, '');
+    const altPhone = cleaned.startsWith('62') 
+      ? '0' + cleaned.slice(2) 
+      : (cleaned.startsWith('0') ? '62' + cleaned.slice(1) : '62' + cleaned);
 
     const allChats = await prisma.chatMessage.findMany({
       where: {
-        supplierPhone,
-        sender: 'buyer',
-        createdAt: { gte: sevenDaysAgo }
+        supplierPhone: { in: [supplierPhone, cleaned, altPhone] },
+        sender: 'buyer'
       },
       orderBy: { createdAt: 'desc' },
       take: 100,
