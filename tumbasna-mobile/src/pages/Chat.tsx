@@ -73,7 +73,7 @@ interface ChatProps {
 }
 
 const Chat: React.FC<ChatProps> = ({ initialPartner, initialPartnerPhone, onClearInitialPartner, onThreadChange }) => {
-  const { chats, sendMessage } = useApp();
+  const { chats, setChats, sendMessage } = useApp();
   const [selectedThread, setSelectedThread] = useState<ChatThread | null>(null);
   const [typedMessage, setTypedMessage] = useState('');
   const chatEndRef = useRef<HTMLDivElement>(null);

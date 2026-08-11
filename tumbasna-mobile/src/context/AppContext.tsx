@@ -64,6 +64,7 @@ export interface User {
 interface AppContextType {
   user: User | null; products: Product[]; cart: CartItem[];
   orders: Order[]; chats: ChatThread[];
+  setChats: React.Dispatch<React.SetStateAction<ChatThread[]>>;
   isApiOnline: boolean;
   login: (phone: string) => Promise<boolean>;
   register: (userData: Omit<User, 'balance' | 'purchasesThisMonth' | 'activeOrdersCount'>) => Promise<boolean>;
@@ -1004,7 +1005,7 @@ Tugas Anda:
 
   return (
     <AppContext.Provider value={{
-      user, products, cart, orders, chats, isApiOnline,
+      user, products, cart, orders, chats, setChats, isApiOnline,
       login, register, logout, addToCart, removeFromCart, updateCartQuantity,
       clearCart, checkout, payOrder, confirmOrderReceived, sendMessage,
       refreshOrders, refreshProducts, updateProfile,
