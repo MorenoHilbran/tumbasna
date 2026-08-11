@@ -142,8 +142,8 @@ const FadeUp = ({
 const SectionLabel = ({ children, color = 'orange' }: { children: React.ReactNode; color?: 'orange' | 'green' | 'lime' }) => {
   const colors = {
     orange: 'text-[#F7941D] border-[#F7941D]/20 bg-[#F7941D]/6',
-    green:  'text-[#006837] border-[#006837]/20 bg-[#006837]/6',
-    lime:   'text-[#5A8A2A] border-[#8CC63F]/20 bg-[#8CC63F]/8',
+    green: 'text-[#006837] border-[#006837]/20 bg-[#006837]/6',
+    lime: 'text-[#5A8A2A] border-[#8CC63F]/20 bg-[#8CC63F]/8',
   };
   return (
     <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold tracking-[0.14em] uppercase px-3 py-1 rounded-full border ${colors[color]}`}>
@@ -178,11 +178,10 @@ const LandingPage = () => {
         className="fixed top-0 left-0 right-0 z-50"
       >
         <div className={`mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 transition-all duration-300 ${scrolled ? 'py-2' : 'py-5'}`}>
-          <div className={`flex items-center justify-between rounded-2xl px-5 h-[58px] transition-all duration-300 ${
-            scrolled
+          <div className={`flex items-center justify-between rounded-2xl px-5 h-[58px] transition-all duration-300 ${scrolled
               ? 'bg-white/96 backdrop-blur-xl shadow-[0_2px_20px_rgba(0,104,55,0.08)] border border-[#006837]/8'
               : 'bg-transparent'
-          }`}>
+            }`}>
             <img src="/logo.png" alt="TumbasNa" className="h-9 sm:h-10 w-auto object-contain" />
 
             <nav className="hidden md:flex items-center gap-8 text-[13px] font-semibold text-[#4A5E4E]">
@@ -282,9 +281,9 @@ const LandingPage = () => {
 
         <div className="max-w-7xl mx-auto w-full relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
-            
+
             {/* LEFT COLUMN: Content & Conversion */}
-            <div className="lg:col-span-6 flex flex-col items-start text-left">
+            <div className="lg:col-span-6 flex flex-col items-center lg:items-start text-center lg:text-left">
               <motion.h1
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -310,7 +309,7 @@ const LandingPage = () => {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.3 }}
-                className="flex flex-col sm:flex-row gap-3.5 w-full sm:w-auto items-stretch sm:items-center mb-8"
+                className="flex flex-col sm:flex-row gap-3.5 w-full sm:w-auto items-stretch sm:items-center mb-8 justify-center lg:justify-start"
               >
                 <a
                   href="https://app.tumbasna.my.id"
@@ -337,7 +336,7 @@ const LandingPage = () => {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4, duration: 0.5 }}
-                className="flex flex-wrap items-center gap-4 text-[12px] font-semibold text-[#6B7A6F] border-t border-[#006837]/8 pt-5 w-full"
+                className="flex flex-wrap items-center justify-center lg:justify-start gap-4 text-[12px] font-semibold text-[#6B7A6F] border-t border-[#006837]/8 pt-5 w-full"
               >
                 <div className="flex items-center gap-1.5">
                   <Zap className="w-3.5 h-3.5 text-[#006837]" />
@@ -354,32 +353,32 @@ const LandingPage = () => {
               </motion.div>
             </div>
 
-            {/* RIGHT COLUMN: App Mockup + WhatsApp Chat Side-by-Side */}
-            <div className="lg:col-span-6 flex justify-center lg:justify-end">
+            {/* RIGHT COLUMN: App Mockup + WhatsApp Chat Side-by-Side (Overlapping 50% on mobile) */}
+            <div className="lg:col-span-6 flex justify-center lg:justify-end -mb-20 sm:-mb-28 lg:mb-0 pt-6 lg:pt-0 relative z-20">
               <motion.div
                 initial={{ opacity: 0, scale: 0.96, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 transition={{ delay: 0.35, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                className="flex flex-row items-center justify-center gap-3 sm:gap-4 relative"
+                className="flex flex-row items-center justify-center gap-2.5 sm:gap-4 relative"
               >
                 {/* App mockup — real screenshot */}
                 <div className="relative">
                   <img
                     src="/mockups/mockup-app.webp"
                     alt="TumbasNa Mobile App"
-                    className="w-[185px] sm:w-[210px] md:w-[230px] h-auto drop-shadow-[0_24px_40px_rgba(0,0,0,0.18)] select-none pointer-events-none"
+                    className="w-[160px] sm:w-[210px] md:w-[230px] h-auto drop-shadow-[0_24px_40px_rgba(0,0,0,0.18)] select-none pointer-events-none"
                     draggable={false}
                   />
-                  <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-white px-3 py-1 rounded-full shadow-md border border-[#006837]/8 whitespace-nowrap">
-                    <p className="text-[9px] font-bold text-[#006837]">Mobile App</p>
+                  <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-white px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full shadow-md border border-[#006837]/8 whitespace-nowrap">
+                    <p className="text-[8.5px] sm:text-[9px] font-bold text-[#006837]">Mobile App</p>
                   </div>
                 </div>
 
                 {/* WhatsApp simulation card */}
                 <div className="relative">
                   <WhatsAppChatMockup />
-                  <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-white px-3 py-1 rounded-full shadow-md border border-[#006837]/8 whitespace-nowrap">
-                    <p className="text-[9px] font-bold text-[#006837]">via WhatsApp</p>
+                  <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-white px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full shadow-md border border-[#006837]/8 whitespace-nowrap">
+                    <p className="text-[8.5px] sm:text-[9px] font-bold text-[#006837]">via WhatsApp</p>
                   </div>
                 </div>
               </motion.div>
@@ -390,13 +389,13 @@ const LandingPage = () => {
       </section>
 
       {/* ─── UNIFIED TRUST, PARTNERS & IMPACT SECTION (BEHANCE & UNICORN STARTUP STYLE) ─── */}
-      <section id="tentang" className="py-24 px-4 sm:px-6 bg-[#081C10] relative overflow-hidden text-white border-y border-white/5">
+      <section id="tentang" className="pt-28 pb-24 sm:py-24 px-4 sm:px-6 bg-[#081C10] relative overflow-hidden text-white border-y border-white/5">
         {/* Subtle Ambient Lighting */}
         <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-[#8CC63F]/10 blur-[140px] rounded-full pointer-events-none" />
         <div className="absolute bottom-0 left-1/4 w-[400px] h-[400px] bg-[#F7941D]/8 blur-[130px] rounded-full pointer-events-none" />
 
         <div className="max-w-7xl mx-auto relative z-10">
-          
+
           {/* Main Headline & Partner Logo Strip */}
           <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-8 mb-16 pb-12 border-b border-white/10">
             <FadeUp className="max-w-2xl">
@@ -409,20 +408,20 @@ const LandingPage = () => {
               </p>
             </FadeUp>
 
-            {/* White Full Rounded Card for Partner Logos */}
-            <FadeUp delay={0.1} className="flex items-center">
-              <div className="bg-white/95 backdrop-blur-md px-7 py-3.5 rounded-full shadow-lg border border-white/20 flex items-center gap-6 sm:gap-8">
+            {/* White Full Rounded Card for Partner Logos (Mobile Overflow Fixed) */}
+            <FadeUp delay={0.1} className="flex items-center justify-start lg:justify-end w-full lg:w-auto">
+              <div className="bg-white/95 backdrop-blur-md px-4 sm:px-7 py-3 rounded-full shadow-lg border border-white/20 flex items-center gap-3 sm:gap-8 max-w-full overflow-hidden">
                 <img
                   src="/pemkab banyumas.png"
                   alt="Pemkab Banyumas"
-                  className="h-12 sm:h-14 w-auto object-contain transition-transform hover:scale-105"
+                  className="h-9 sm:h-14 max-w-[85px] sm:max-w-none w-auto object-contain flex-shrink transition-transform hover:scale-105"
                   onError={e => ((e.target as HTMLImageElement).style.display = 'none')}
                 />
-                <div className="w-px h-9 bg-gray-200" />
+                <div className="w-px h-7 sm:h-9 bg-gray-200 flex-shrink-0" />
                 <img
                   src="/bank-indonesia-seeklogo.png"
                   alt="Bank Indonesia"
-                  className="h-12 sm:h-14 w-auto object-contain transition-transform hover:scale-105"
+                  className="h-8 sm:h-14 max-w-[130px] sm:max-w-none w-auto object-contain flex-shrink transition-transform hover:scale-105"
                   onError={e => ((e.target as HTMLImageElement).style.display = 'none')}
                 />
               </div>
@@ -432,10 +431,10 @@ const LandingPage = () => {
           {/* 4 Main Real Stat Cards Grid (Behance Startup Style) */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-12">
             {[
-              { value: '847+',   label: 'UMKM Tergabung',        sub: 'Warung, resto, & katering', icon: <Users className="w-5 h-5 text-[#8CC63F]" /> },
-              { value: '63+',    label: 'Supplier Terverifikasi', sub: 'Petani & distributor lokal', icon: <ShieldCheck className="w-5 h-5 text-[#8CC63F]" /> },
-              { value: '120+',   label: 'Komoditas Pangan',       sub: 'Sayur, buah, & bumbu',    icon: <Package className="w-5 h-5 text-[#8CC63F]" /> },
-              { value: '2.400+', label: 'Transaksi Ditangani',    sub: 'Pengiriman aman ter-escrow', icon: <TrendingUp className="w-5 h-5 text-[#8CC63F]" /> },
+              { value: '847+', label: 'UMKM Tergabung', sub: 'Warung, resto, & katering', icon: <Users className="w-5 h-5 text-[#8CC63F]" /> },
+              { value: '63+', label: 'Supplier Terverifikasi', sub: 'Petani & distributor lokal', icon: <ShieldCheck className="w-5 h-5 text-[#8CC63F]" /> },
+              { value: '120+', label: 'Komoditas Pangan', sub: 'Sayur, buah, & bumbu', icon: <Package className="w-5 h-5 text-[#8CC63F]" /> },
+              { value: '2.400+', label: 'Transaksi Ditangani', sub: 'Pengiriman aman ter-escrow', icon: <TrendingUp className="w-5 h-5 text-[#8CC63F]" /> },
             ].map((stat, i) => (
               <FadeUp key={i} delay={i * 0.08}>
                 <div className="bg-white/[0.04] backdrop-blur-md rounded-2xl p-6 sm:p-7 border border-white/10 hover:border-[#8CC63F]/40 hover:bg-white/[0.07] transition-all duration-300 group">
@@ -459,9 +458,9 @@ const LandingPage = () => {
           {/* 3 Efficiency Highlights Strip */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {[
-              { icon: <Clock className="w-4.5 h-4.5 text-[#F7941D]" />,     label: 'Belanja Bahan Baku',        value: '78% Lebih Cepat' },
-              { icon: <Leaf className="w-4.5 h-4.5 text-[#8CC63F]" />,      label: 'Estimasi Food Waste',     value: 'Turun ±35%' },
-              { icon: <HandCoins className="w-4.5 h-4.5 text-[#F7941D]" />, label: '94 Petani Banyumas',            value: 'Terhubung Langsung' },
+              { icon: <Clock className="w-4.5 h-4.5 text-[#F7941D]" />, label: 'Belanja Bahan Baku', value: '78% Lebih Cepat' },
+              { icon: <Leaf className="w-4.5 h-4.5 text-[#8CC63F]" />, label: 'Estimasi Food Waste', value: 'Turun ±35%' },
+              { icon: <HandCoins className="w-4.5 h-4.5 text-[#F7941D]" />, label: '94 Petani Banyumas', value: 'Terhubung Langsung' },
             ].map((item, i) => (
               <FadeUp key={i} delay={0.3 + i * 0.08}>
                 <div className="flex items-center gap-3.5 bg-white/[0.03] border border-white/8 rounded-2xl p-4 hover:border-white/20 transition-all">
@@ -908,8 +907,8 @@ const LandingPage = () => {
             {/* Left nodes */}
             <div className="flex flex-col gap-10">
               {[
-                { icon: <Sprout className="w-6 h-6" />,   label: 'Petani Lokal',       sub: '94+ petani Banyumas',          bg: 'bg-[#EEF6E5]', text: 'text-[#5A8A2A]', border: 'border-[#C5E0A0]' },
-                { icon: <Warehouse className="w-6 h-6" />, label: 'Supplier & Pengepul', sub: '63+ supplier terverifikasi',      bg: 'bg-[#FFF4E5]', text: 'text-[#B07020]', border: 'border-[#F5D08A]' },
+                { icon: <Sprout className="w-6 h-6" />, label: 'Petani Lokal', sub: '94+ petani Banyumas', bg: 'bg-[#EEF6E5]', text: 'text-[#5A8A2A]', border: 'border-[#C5E0A0]' },
+                { icon: <Warehouse className="w-6 h-6" />, label: 'Supplier & Pengepul', sub: '63+ supplier terverifikasi', bg: 'bg-[#FFF4E5]', text: 'text-[#B07020]', border: 'border-[#F5D08A]' },
               ].map((node, i) => (
                 <FadeUp key={i} delay={i * 0.1}>
                   <div className="flex flex-col items-center gap-2.5">
@@ -976,8 +975,8 @@ const LandingPage = () => {
             {/* Right nodes */}
             <div className="flex flex-col gap-10">
               {[
-                { icon: <Store className="w-6 h-6" />,    label: 'UMKM Kuliner',       sub: 'XX+ warung & restoran',         bg: 'bg-[#FFF4E5]', text: 'text-[#B07020]', border: 'border-[#F5D08A]' },
-                { icon: <Users className="w-6 h-6" />,    label: 'Konsumen Akhir',     sub: 'Harga lebih terjangkau',        bg: 'bg-[#EEF6E5]', text: 'text-[#5A8A2A]', border: 'border-[#C5E0A0]' },
+                { icon: <Store className="w-6 h-6" />, label: 'UMKM Kuliner', sub: 'warung & restoran', bg: 'bg-[#FFF4E5]', text: 'text-[#B07020]', border: 'border-[#F5D08A]' },
+                { icon: <Users className="w-6 h-6" />, label: 'Konsumen Akhir', sub: 'Harga lebih terjangkau', bg: 'bg-[#EEF6E5]', text: 'text-[#5A8A2A]', border: 'border-[#C5E0A0]' },
               ].map((node, i) => (
                 <FadeUp key={i} delay={0.3 + i * 0.1}>
                   <div className="flex flex-col items-center gap-2.5">
@@ -993,26 +992,26 @@ const LandingPage = () => {
           </div>
 
           {/* Mobile vertical */}
-            <div className="lg:hidden space-y-0 mt-10">
-              {[
-                { icon: <Sprout className="w-5 h-5" />,    label: 'Petani Lokal',       sub: '94+ petani Banyumas',       bg: 'bg-[#EEF6E5]', text: 'text-[#5A8A2A]', border: 'border-[#C5E0A0]' },
-                { icon: <Warehouse className="w-5 h-5" />, label: 'Supplier & Pengepul', sub: '63+ supplier terverifikasi', bg: 'bg-[#FFF4E5]', text: 'text-[#B07020]', border: 'border-[#F5D08A]' },
-                { icon: null,                               label: 'TumbasNa',            sub: 'Digital Food Infrastructure',bg: 'bg-white',    text: 'text-[#006837]', border: 'border-[#E8EDE9]', isHub: true },
-                { icon: <Store className="w-5 h-5" />,     label: 'UMKM Kuliner',        sub: '847+ warung & restoran',    bg: 'bg-[#FFF4E5]', text: 'text-[#B07020]', border: 'border-[#F5D08A]' },
-                { icon: <Users className="w-5 h-5" />,     label: 'Konsumen Akhir',      sub: 'Harga lebih terjangkau',    bg: 'bg-[#EEF6E5]', text: 'text-[#5A8A2A]', border: 'border-[#C5E0A0]' },
-              ].map((node, i, arr) => (
-                <React.Fragment key={i}>
-                  <FadeUp delay={i * 0.08}>
-                    <div className="flex items-center gap-4">
-                      <div className={`w-14 h-14 rounded-2xl ${node.bg} ${node.border} border flex items-center justify-center ${node.text} shadow-sm flex-shrink-0`}>
-                        {node.isHub ? <img src="/logo.png" alt="TumbasNa" className="h-7 w-auto object-contain" /> : node.icon}
-                      </div>
-                      <div className="bg-[#FAFCFA] flex-1 rounded-xl p-3.5 border border-[#E8EDE9]">
-                        <p className="font-bold text-[#1a2e1e] text-[14px]">{node.label}</p>
-                        <p className="text-[11px] text-[#9CA8A0] mt-0.5">{node.sub}</p>
-                      </div>
+          <div className="lg:hidden space-y-0 mt-10">
+            {[
+              { icon: <Sprout className="w-5 h-5" />, label: 'Petani Lokal', sub: '94+ petani Banyumas', bg: 'bg-[#EEF6E5]', text: 'text-[#5A8A2A]', border: 'border-[#C5E0A0]' },
+              { icon: <Warehouse className="w-5 h-5" />, label: 'Supplier & Pengepul', sub: '63+ supplier terverifikasi', bg: 'bg-[#FFF4E5]', text: 'text-[#B07020]', border: 'border-[#F5D08A]' },
+              { icon: null, label: 'TumbasNa', sub: 'Digital Food Infrastructure', bg: 'bg-white', text: 'text-[#006837]', border: 'border-[#E8EDE9]', isHub: true },
+              { icon: <Store className="w-5 h-5" />, label: 'UMKM Kuliner', sub: '847+ warung & restoran', bg: 'bg-[#FFF4E5]', text: 'text-[#B07020]', border: 'border-[#F5D08A]' },
+              { icon: <Users className="w-5 h-5" />, label: 'Konsumen Akhir', sub: 'Harga lebih terjangkau', bg: 'bg-[#EEF6E5]', text: 'text-[#5A8A2A]', border: 'border-[#C5E0A0]' },
+            ].map((node, i, arr) => (
+              <React.Fragment key={i}>
+                <FadeUp delay={i * 0.08}>
+                  <div className="flex items-center gap-4">
+                    <div className={`w-14 h-14 rounded-2xl ${node.bg} ${node.border} border flex items-center justify-center ${node.text} shadow-sm flex-shrink-0`}>
+                      {node.isHub ? <img src="/logo.png" alt="TumbasNa" className="h-7 w-auto object-contain" /> : node.icon}
                     </div>
-                  </FadeUp>
+                    <div className="bg-[#FAFCFA] flex-1 rounded-xl p-3.5 border border-[#E8EDE9]">
+                      <p className="font-bold text-[#1a2e1e] text-[14px]">{node.label}</p>
+                      <p className="text-[11px] text-[#9CA8A0] mt-0.5">{node.sub}</p>
+                    </div>
+                  </div>
+                </FadeUp>
                 {i < arr.length - 1 && (
                   <div className="flex justify-start pl-7 h-6 overflow-hidden">
                     <div className="w-px h-full bg-[#E8EDE9] relative overflow-hidden">
@@ -1035,7 +1034,7 @@ const LandingPage = () => {
 
 
 
-      {/* ─── TESTIMONIAL ─────────────────────────────────────── */}
+      {/* ─── TESTIMONIAL (DESKTOP GRID & MOBILE SWIPE SLIDER CAROUSEL) ─────── */}
       <section className="py-24 px-4 sm:px-6 bg-[#081C10] relative overflow-hidden text-white border-y border-white/5">
         {/* Subtle Ambient Lighting */}
         <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-[#8CC63F]/10 blur-[140px] rounded-full pointer-events-none" />
@@ -1051,41 +1050,42 @@ const LandingPage = () => {
             </p>
           </FadeUp>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          {/* Testimonial Cards — Mobile Horizontal Touch Slider Carousel / Desktop Grid */}
+          <div className="flex md:grid md:grid-cols-3 gap-5 overflow-x-auto md:overflow-visible snap-x snap-mandatory scrollbar-none no-scrollbar [&::-webkit-scrollbar]:hidden [scrollbar-width:none] [-ms-overflow-style:none] pb-6 md:pb-0 px-2 md:px-0 -mx-2 md:mx-0">
             {[
               {
-                photo:   '/testimonial_ratna.jpg',
-                name:    'Ratna Dewi',
-                role:    'Pemilik Warung Mie Ayam',
-                loc:     'Purwokerto',
+                photo: '/testimonial_ratna.jpg',
+                name: 'Ratna Dewi',
+                role: 'Pemilik Warung Mie Ayam',
+                loc: 'Purwokerto',
                 persona: 'UMKM Kuliner',
-                text:    'Dulu saya harus bangun subuh dan ke pasar cari bahan sendiri. Sekarang tinggal kirim pesan, barang sampai siang. Hemat waktu, hemat bensin.',
-                accent:  '#F7941D',
+                text: 'Dulu saya harus bangun subuh dan ke pasar cari bahan sendiri. Sekarang tinggal kirim pesan, barang sampai siang. Hemat waktu, hemat bensin.',
+                accent: '#F7941D',
               },
               {
-                photo:   '/testimonial_budi.jpg',
-                name:    'Budi Prasetyo',
-                role:    'Pemilik Restoran',
-                loc:     'Purwokerto Selatan',
+                photo: '/testimonial_budi.jpg',
+                name: 'Budi Prasetyo',
+                role: 'Pemilik Restoran',
+                loc: 'Purwokerto Selatan',
                 persona: 'UMKM Kuliner',
-                text:    'Restoran saya tidak pernah lagi kehabisan stok bahan pokok. Harga langsung bisa saya bandingkan, dan selalu kompetitif.',
-                accent:  '#8CC63F',
+                text: 'Restoran saya tidak pernah lagi kehabisan stok bahan pokok. Harga langsung bisa saya bandingkan, dan selalu kompetitif.',
+                accent: '#8CC63F',
               },
               {
-                photo:   '/testimonial_sumarno.jpg',
-                name:    'Pak Sumarno',
-                role:    'Petani Sayur Lokal',
-                loc:     'Sumbang, Banyumas',
+                photo: '/testimonial_sumarno.jpg',
+                name: 'Pak Sumarno',
+                role: 'Petani Sayur Lokal',
+                loc: 'Sumbang, Banyumas',
                 persona: 'Petani',
-                text:    'Hasil panen saya sekarang bisa terdistribusi lebih cepat ke pembeli langsung. Tidak ada lagi sayur segar yang terbuang sia-sia.',
-                accent:  '#F7941D',
+                text: 'Hasil panen saya sekarang bisa terdistribusi lebih cepat ke pembeli langsung. Tidak ada lagi sayur segar yang terbuang sia-sia.',
+                accent: '#F7941D',
               },
             ].map((t, i) => (
-              <FadeUp key={i} delay={i * 0.1}>
+              <FadeUp key={i} delay={i * 0.1} className="snap-center min-w-[285px] sm:min-w-[340px] max-w-[340px] md:max-w-none flex-shrink-0 md:flex-shrink w-full">
                 <div className="bg-white/[0.04] backdrop-blur-md p-7 sm:p-8 rounded-2xl border border-white/10 hover:border-[#8CC63F]/40 hover:bg-white/[0.07] transition-all duration-300 flex flex-col justify-between h-full group">
                   <div>
                     <div className="flex gap-1 mb-5">
-                      {[1,2,3,4,5].map(s => (
+                      {[1, 2, 3, 4, 5].map(s => (
                         <Star key={s} className="w-4 h-4 text-[#F7941D] fill-current" />
                       ))}
                     </div>
@@ -1110,6 +1110,13 @@ const LandingPage = () => {
                 </div>
               </FadeUp>
             ))}
+          </div>
+
+          {/* Carousel Hint & Swipe Dots (Mobile Only) */}
+          <div className="flex md:hidden justify-center items-center gap-2 mt-2">
+            <span className="w-6 h-1.5 rounded-full bg-[#8CC63F]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-white/20" />
+            <span className="w-1.5 h-1.5 rounded-full bg-white/20" />
           </div>
         </div>
       </section>
@@ -1158,9 +1165,8 @@ const LandingPage = () => {
                     <span className="font-bold text-[#1a2e1e] text-[15px] sm:text-base md:text-[17px] pr-6 group-hover:text-[#006837] transition-colors leading-snug">
                       {faq.q}
                     </span>
-                    <div className={`w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
-                      activeFaq === i ? 'bg-[#F7941D] text-white rotate-0 shadow-sm' : 'bg-[#F0F4F0] text-[#6B7A6F] group-hover:bg-[#006837]/10 group-hover:text-[#006837]'
-                    }`}>
+                    <div className={`w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${activeFaq === i ? 'bg-[#F7941D] text-white rotate-0 shadow-sm' : 'bg-[#F0F4F0] text-[#6B7A6F] group-hover:bg-[#006837]/10 group-hover:text-[#006837]'
+                      }`}>
                       {activeFaq === i ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
                     </div>
                   </button>

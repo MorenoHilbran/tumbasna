@@ -78,6 +78,20 @@ h1, h2, h3, h4, h5, h6 {
     background: #DDE5D8;
     border-radius: 4px;
   }
+
+  /* Hide scrollbar completely while allowing scrolling */
+  .no-scrollbar::-webkit-scrollbar,
+  .scrollbar-none::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  .no-scrollbar,
+  .scrollbar-none {
+    -ms-overflow-style: none !important;  /* IE and Edge */
+    scrollbar-width: none !important;  /* Firefox */
+  }
 }
 
 /* Glass morphism */
