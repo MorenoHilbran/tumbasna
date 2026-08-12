@@ -379,6 +379,7 @@ const MainAppShell: React.FC = () => {
                   setViewState('tabs');
                 }}
                 onNavigateToCocokkan={() => setViewState('cocokkan')}
+                onNavigateToCart={() => setViewState('keranjang')}
               />
             );
         }

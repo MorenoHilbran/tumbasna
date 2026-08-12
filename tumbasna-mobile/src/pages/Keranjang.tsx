@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import {
   IonContent,
   IonHeader,
@@ -27,13 +27,28 @@ interface KeranjangProps {
 const Keranjang: React.FC<KeranjangProps> = ({ onNavigateToPasar, onCheckout, onBack }) => {
   const { cart, updateCartQuantity, removeFromCart } = useApp();
 
+  // Helper to extract item product safely
+  const getItemDetails = (item: any) => {
+    const prod = item?.product || item || {};
+    return {
+      id: prod.id || item?.id || 'unknown',
+      name: prod.name || item?.name || 'Komoditas Pangan',
+      price: Number(prod.price ?? item?.price ?? 0),
+      supplierName: prod.supplierName || item?.supplierName || 'Supplier Tumbasna',
+      supplierCity: prod.supplierLocation || item?.supplierLocation || 'Barlingmascakeb',
+      image: prod.image || item?.image || '/logotum.png',
+      quantity: Number(item?.quantity ?? item?.qty ?? 1),
+    };
+  };
+
   // Group cart items by supplier
   const groupedBySupplier = cart.reduce((acc, item) => {
-    const supplierId = item.product.supplierName;
+    const details = getItemDetails(item);
+    const supplierId = details.supplierName;
     if (!acc[supplierId]) {
       acc[supplierId] = {
-        supplierName: item.product.supplierName,
-        supplierCity: item.product.supplierLocation,
+        supplierName: details.supplierName,
+        supplierCity: details.supplierCity,
         items: []
       };
     }
@@ -63,10 +78,10 @@ const Keranjang: React.FC<KeranjangProps> = ({ onNavigateToPasar, onCheckout, on
             {/* Group by Supplier Cards */}
             <div className="supplier-groups">
               {suppliers.map((supplier, index) => {
-                const supplierTotal = supplier.items.reduce(
-                  (acc, item) => acc + item.product.price * item.quantity, 
-                  0
-                );
+                const supplierTotal = supplier.items.reduce((acc, rawItem) => {
+                  const details = getItemDetails(rawItem);
+                  return acc + details.price * details.quantity;
+                }, 0);
 
                 return (
                   <div key={index} className="supplier-card">
@@ -80,45 +95,54 @@ const Keranjang: React.FC<KeranjangProps> = ({ onNavigateToPasar, onCheckout, on
 
                     {/* Items in this supplier */}
                     <div className="supplier-items">
-                      {supplier.items.map((item) => (
-                        <div key={item.product.id} className="cart-item-card">
-                          <div className="cart-item-img-wrapper">
-                            <img src={item.product.image} alt={item.product.name} />
-                          </div>
+                      {supplier.items.map((item, itemIdx) => {
+                        const details = getItemDetails(item);
+                        return (
+                          <div key={details.id || itemIdx} className="cart-item-card">
+                            <div className="cart-item-img-wrapper">
+                              <img 
+                                src={details.image} 
+                                alt={details.name} 
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = '/logotum.png';
+                                }}
+                              />
+                            </div>
 
-                          <div className="cart-item-details">
-                            <h3 className="cart-item-name">{item.product.name}</h3>
-                            <div className="cart-item-price">Rp {item.product.price.toLocaleString('id-ID')}/kg</div>
-                            
-                            <div className="cart-item-actions-row">
-                              {/* Quantity Modifier */}
-                              <div className="cart-qty-selector">
+                            <div className="cart-item-details">
+                              <h3 className="cart-item-name">{details.name}</h3>
+                              <div className="cart-item-price">Rp {details.price.toLocaleString('id-ID')}/kg</div>
+                              
+                              <div className="cart-item-actions-row">
+                                {/* Quantity Modifier */}
+                                <div className="cart-qty-selector">
+                                  <button
+                                    className="cart-qty-btn"
+                                    onClick={() => updateCartQuantity(details.id, details.quantity - 1)}
+                                  >
+                                    <IonIcon icon={removeOutline} />
+                                  </button>
+                                  <span className="cart-qty-val">{details.quantity} kg</span>
+                                  <button
+                                    className="cart-qty-btn"
+                                    onClick={() => updateCartQuantity(details.id, details.quantity + 1)}
+                                  >
+                                    <IonIcon icon={addOutline} />
+                                  </button>
+                                </div>
+
+                                {/* Remove Button */}
                                 <button
-                                  className="cart-qty-btn"
-                                  onClick={() => updateCartQuantity(item.product.id, item.quantity - 1)}
+                                  className="cart-delete-btn"
+                                  onClick={() => removeFromCart(details.id)}
                                 >
-                                  <IonIcon icon={removeOutline} />
-                                </button>
-                                <span className="cart-qty-val">{item.quantity} kg</span>
-                                <button
-                                  className="cart-qty-btn"
-                                  onClick={() => updateCartQuantity(item.product.id, item.quantity + 1)}
-                                >
-                                  <IonIcon icon={addOutline} />
+                                  <IonIcon icon={trashOutline} />
                                 </button>
                               </div>
-
-                              {/* Remove Button */}
-                              <button
-                                className="cart-delete-btn"
-                                onClick={() => removeFromCart(item.product.id)}
-                              >
-                                <IonIcon icon={trashOutline} />
-                              </button>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
 
                     {/* Supplier Total & Checkout */}

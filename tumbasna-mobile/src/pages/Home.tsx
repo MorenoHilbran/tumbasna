@@ -54,6 +54,7 @@ interface HomeProps {
   onSelectProduct?: (product: Product) => void;
   onNavigateToChat?: () => void;
   onNavigateToCocokkan?: () => void;
+  onNavigateToCart?: () => void;
 }
 
 const getAiRecommendation = (productName: string) => {
@@ -82,7 +83,8 @@ const Home: React.FC<HomeProps> = ({
   onNavigateToNotifications,
   onSelectProduct, 
   onNavigateToChat,
-  onNavigateToCocokkan 
+  onNavigateToCocokkan,
+  onNavigateToCart 
 }) => {
   const { user, products, cart, addToCart } = useApp();
   const { unreadCount } = useNotifications();
@@ -360,7 +362,7 @@ const Home: React.FC<HomeProps> = ({
 
           </div>
 
-          <CartPillBar onNavigateToCart={onNavigateToPasar} />
+          <CartPillBar onNavigateToCart={onNavigateToCart || onNavigateToPasar} />
 
           <IonToast
             isOpen={showToast}

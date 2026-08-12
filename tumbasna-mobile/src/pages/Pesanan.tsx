@@ -126,23 +126,35 @@ const Pesanan: React.FC<PesananProps> = ({ onSelectOrder, onNavigateToPayment })
                   </div>
 
                   <div className="history-card-body">
-                    <div className="history-item-img-wrapper">
-                      <img 
-                        src={primaryItem.product.image || '/logotum.png'} 
-                        alt={primaryItem.product.name} 
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = '/logotum.png';
-                        }}
-                      />
-                    </div>
+                    {(() => {
+                      const prod = primaryItem?.product || primaryItem || {};
+                      const img = prod.image || (primaryItem as any)?.image || '/logotum.png';
+                      const name = prod.name || (primaryItem as any)?.name || 'Komoditas Pangan';
+                      const price = Number(prod.price ?? (primaryItem as any)?.price ?? 0);
+                      const qty = Number(primaryItem?.quantity ?? (primaryItem as any)?.qty ?? 1);
 
-                    <div className="history-item-details">
-                      <h4 className="history-item-title">{primaryItem.product.name}</h4>
-                      <p className="history-item-qty">{primaryItem.quantity} kg x Rp {primaryItem.product.price.toLocaleString('id-ID')}</p>
-                      {remainingItemsCount > 0 && (
-                        <p className="history-extra-items">+{remainingItemsCount} produk lainnya</p>
-                      )}
-                    </div>
+                      return (
+                        <>
+                          <div className="history-item-img-wrapper">
+                            <img 
+                              src={img} 
+                              alt={name} 
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = '/logotum.png';
+                              }}
+                            />
+                          </div>
+
+                          <div className="history-item-details">
+                            <h4 className="history-item-title">{name}</h4>
+                            <p className="history-item-qty">{qty} kg x Rp {price.toLocaleString('id-ID')}</p>
+                            {remainingItemsCount > 0 && (
+                              <p className="history-extra-items">+{remainingItemsCount} produk lainnya</p>
+                            )}
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
 
                   <div className="history-card-footer">

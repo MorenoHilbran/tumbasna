@@ -144,6 +144,65 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
     } catch {}
   }
 
+  const routeWaypoints = React.useMemo<[number, number][]>(() => {
+    const latA = supplierLocation[0];
+    const lngA = supplierLocation[1];
+    const latB = buyerLocation[0];
+    const lngB = buyerLocation[1];
+
+    // Build 5-point realistic street path matching road turns
+    const midLat = latA + (latB - latA) * 0.65;
+    const midLng = lngA + (lngB - lngA) * 0.35;
+
+    return [
+      [latA, lngA],
+      [midLat, lngA],
+      [midLat, midLng],
+      [latB, midLng],
+      [latB, lngB]
+    ];
+  }, [supplierLocation[0], supplierLocation[1], buyerLocation[0], buyerLocation[1]]);
+
+  const getDistance = (p1: [number, number], p2: [number, number]) => {
+    const dy = p2[0] - p1[0];
+    const dx = p2[1] - p1[1];
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
+  const getPointAlongPath = (waypoints: [number, number][], progress: number): [number, number] => {
+    if (!waypoints || waypoints.length === 0) return [0, 0];
+    if (waypoints.length === 1 || progress <= 0) return waypoints[0];
+    if (progress >= 1) return waypoints[waypoints.length - 1];
+
+    const distances: number[] = [];
+    let totalDist = 0;
+    for (let i = 0; i < waypoints.length - 1; i++) {
+      const d = getDistance(waypoints[i], waypoints[i + 1]);
+      distances.push(d);
+      totalDist += d;
+    }
+
+    if (totalDist === 0) return waypoints[0];
+
+    const targetDist = progress * totalDist;
+    let accumulated = 0;
+
+    for (let i = 0; i < distances.length; i++) {
+      const segDist = distances[i];
+      if (accumulated + segDist >= targetDist) {
+        const segProgress = (targetDist - accumulated) / segDist;
+        const p1 = waypoints[i];
+        const p2 = waypoints[i + 1];
+        const lat = p1[0] + segProgress * (p2[0] - p1[0]);
+        const lng = p1[1] + segProgress * (p2[1] - p1[1]);
+        return [lat, lng];
+      }
+      accumulated += segDist;
+    }
+
+    return waypoints[waypoints.length - 1];
+  };
+
   React.useEffect(() => {
     if (!order) return;
     
@@ -151,77 +210,81 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
       setCourierCoords(supplierLocation);
       setEtaText('Menunggu Bayar');
       setStatusText('Menunggu pembayaran QRIS dari pembeli.');
-    } else if (order.status === 'Diproses') {
-      setCourierCoords(supplierLocation);
-      setEtaText('Diproses');
-      setStatusText('Supplier sedang menyiapkan barang.');
-    } else if (order.status === 'Selesai') {
-      setCourierCoords(buyerLocation);
-      setEtaText('Tiba');
-      setStatusText('Barang sudah sampai dan diterima pembeli.');
-    } else if (order.status === 'Dibatalkan') {
+      return;
+    }
+
+    if (order.status === 'Dibatalkan') {
       setCourierCoords(supplierLocation);
       setEtaText('Batal');
       setStatusText('Pesanan dibatalkan.');
-    } else {
-      // Status: 'Dikirim'
-      if (waybillNumber) {
-        // Mode riil: fetch posisi dari RajaOngkir tracking API
-        const fetchTracking = async () => {
-          try {
-            const API_BASE = (import.meta as any).env?.VITE_API_URL || 'https://dashboard.tumbasna.id';
-            const res = await fetch(`${API_BASE}/api/shipping/track?waybill=${waybillNumber}&courier=${waybillCourier}`);
-            const data = await res.json();
-            if (data.success && data.lastCity) {
-              const cityCoords = (() => {
-                const key = Object.keys(locationCoords).find(k => data.lastCity.toLowerCase().includes(k.toLowerCase()));
-                return key ? locationCoords[key] : null;
-              })();
-              if (cityCoords) {
-                setCourierCoords(cityCoords as [number, number]);
-              }
-              const lastManifest = data.manifests?.[data.manifests.length - 1];
-              const lastDesc = lastManifest?.description || data.statusDescription || 'Dalam perjalanan.';
-              setStatusText(`[${waybillCourier.toUpperCase()}] Resi: ${waybillNumber} — ${lastDesc}`);
-              setEtaText(data.status === 'DELIVERED' ? 'Tiba' : 'Dalam Perjalanan');
-            } else {
-              setStatusText(`Resi ${waybillNumber} (${waybillCourier.toUpperCase()}) — Dalam perjalanan.`);
-              setEtaText('Dalam Perjalanan');
-            }
-          } catch {
-            setStatusText(`Resi ${waybillNumber} — Tidak dapat memuat status saat ini.`);
-          }
-        };
-        fetchTracking();
-      } else {
-        // Mode simulasi animasi (tidak ada resi)
-        let progress = 0;
-        const interval = setInterval(() => {
-          progress = (progress + 1) % 101;
-          
-          let lat = supplierLocation[0];
-          let lng = supplierLocation[1];
-          
-          if (progress <= 50) {
-            const pct = progress / 50;
-            lat = supplierLocation[0] + pct * (buyerLocation[0] - supplierLocation[0]);
-            lng = supplierLocation[1];
-          } else {
-            const pct = (progress - 50) / 50;
-            lat = buyerLocation[0];
-            lng = supplierLocation[1] + pct * (buyerLocation[1] - supplierLocation[1]);
-          }
-          
-          setCourierCoords([lat, lng] as [number, number]);
-          const remainingMinutes = Math.max(1, Math.round((100 - progress) * 0.15));
-          setEtaText(`${remainingMinutes} Menit`);
-          setStatusText('Kurir lokal sedang menuju alamat pengiriman.');
-        }, 300);
-        
-        return () => clearInterval(interval);
-      }
+      return;
     }
-  }, [order?.status, waybillNumber]);
+
+    if (waybillNumber) {
+      // Mode riil: fetch posisi dari tracking API
+      const fetchTracking = async () => {
+        try {
+          const API_BASE = (import.meta as any).env?.VITE_API_URL || 'https://api.tumbasna.my.id';
+          const res = await fetch(`${API_BASE}/api/shipping/track?waybill=${waybillNumber}&courier=${waybillCourier}`);
+          const data = await res.json();
+          if (data.success && data.lastCity) {
+            const cityCoords = (() => {
+              const key = Object.keys(locationCoords).find(k => data.lastCity.toLowerCase().includes(k.toLowerCase()));
+              return key ? locationCoords[key] : null;
+            })();
+            if (cityCoords) {
+              setCourierCoords(cityCoords as [number, number]);
+            }
+            const lastManifest = data.manifests?.[data.manifests.length - 1];
+            const lastDesc = lastManifest?.description || data.statusDescription || 'Dalam perjalanan.';
+            setStatusText(`[${waybillCourier.toUpperCase()}] Resi: ${waybillNumber} — ${lastDesc}`);
+            setEtaText(data.status === 'DELIVERED' ? 'Tiba' : 'Dalam Perjalanan');
+          } else {
+            setStatusText(`Resi ${waybillNumber} (${waybillCourier.toUpperCase()}) — Dalam perjalanan.`);
+            setEtaText('Dalam Perjalanan');
+          }
+        } catch {
+          setStatusText(`Resi ${waybillNumber} — Dalam pengiriman.`);
+        }
+      };
+      fetchTracking();
+      return;
+    }
+
+    // ── 10-Second Continuous Route Motion Animation ──
+    const totalDurationMs = 10000; // 10 Detik
+    const pauseAtEndMs = 1500; // Pause 1.5s saat tiba di tujuan
+    const frameIntervalMs = 33; // 30 FPS gerakan mulus
+    const startTime = Date.now();
+
+    const animTimer = setInterval(() => {
+      const elapsed = (Date.now() - startTime) % (totalDurationMs + pauseAtEndMs);
+      
+      let t = 0;
+      if (elapsed < totalDurationMs) {
+        t = elapsed / totalDurationMs;
+      } else {
+        t = 1; // Tiba di lokasi B
+      }
+
+      const currentPos = getPointAlongPath(routeWaypoints, t);
+      setCourierCoords(currentPos);
+
+      const remainingSec = Math.max(1, Math.ceil((1 - t) * 10));
+      if (t >= 0.95) {
+        setEtaText('Tiba di Lokasi');
+        setStatusText('Kurir telah sampai di lokasi serah terima pembeli.');
+      } else if (t < 0.15) {
+        setEtaText(`${remainingSec} Detik`);
+        setStatusText('Kurir berangkat mengambil pesanan dari supplier...');
+      } else {
+        setEtaText(`${remainingSec} Detik`);
+        setStatusText('Kurir sedang bergerak mengikuti rute pengiriman (Live 10s)...');
+      }
+    }, frameIntervalMs);
+
+    return () => clearInterval(animTimer);
+  }, [order?.status, waybillNumber, routeWaypoints]);
 
   // Fetch existing review on mount
   React.useEffect(() => {
@@ -362,9 +425,9 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
             
             {/* Dashed Route Path */}
             <Polyline
-              positions={[supplierLocation, [buyerLocation[0], supplierLocation[1]] as [number, number], buyerLocation]}
+              positions={routeWaypoints}
               color="#006837"
-              weight={3}
+              weight={3.5}
               dashArray="6, 6"
             />
 
@@ -417,22 +480,30 @@ const DetailPesanan: React.FC<DetailPesananProps> = ({ orderId, onBack, onNaviga
 
           {/* Items list */}
           <div className="order-items-list">
-            {order.items.map((item, idx) => (
-              <div key={idx} className="order-item-row">
-                <img 
-                  src={item.product.image || '/logotum.png'} 
-                  alt={item.product.name} 
-                  className="order-item-thumb" 
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/logotum.png';
-                  }}
-                />
-                <div className="order-item-info">
-                  <span className="order-item-name">{item.product.name}</span>
-                  <span className="order-item-qty">{item.quantity} kg &middot; Rp {(item.product.price * item.quantity).toLocaleString('id-ID')}</span>
+            {order.items.map((item, idx) => {
+              const prod = item?.product || item || {};
+              const img = prod.image || (item as any)?.image || '/logotum.png';
+              const name = prod.name || (item as any)?.name || 'Komoditas Pangan';
+              const price = Number(prod.price ?? (item as any)?.price ?? 0);
+              const qty = Number(item?.quantity ?? (item as any)?.qty ?? 1);
+
+              return (
+                <div key={idx} className="order-item-row">
+                  <img 
+                    src={img} 
+                    alt={name} 
+                    className="order-item-thumb" 
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '/logotum.png';
+                    }}
+                  />
+                  <div className="order-item-info">
+                    <span className="order-item-name">{name}</span>
+                    <span className="order-item-qty">{qty} kg &middot; Rp {(price * qty).toLocaleString('id-ID')}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Total */}

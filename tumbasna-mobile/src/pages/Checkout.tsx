@@ -265,7 +265,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
   const { cart, user, checkout, payOrder } = useApp();
 
   const checkoutItems = supplierItems || (supplierId 
-    ? cart.filter(item => item.product.supplierName === supplierId)
+    ? cart.filter(item => (item.product?.supplierName || (item as any)?.supplierName) === supplierId)
     : cart);
 
   const [step, setStep] = useState<'map' | 'summary'>('summary');
@@ -413,8 +413,8 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
     }
   }, [paymentMethod]);
 
-  const supplierName = checkoutItems[0]?.product?.supplierName || 'Supplier';
-  const supplierLocation = checkoutItems[0]?.product?.supplierLocation || 'Unknown Location';
+  const supplierName = checkoutItems[0]?.product?.supplierName || (checkoutItems[0] as any)?.supplierName || 'Supplier';
+  const supplierLocation = checkoutItems[0]?.product?.supplierLocation || (checkoutItems[0] as any)?.supplierLocation || 'Unknown Location';
 
   const supplierCoords: [number, number] = (() => {
     for (const [city, coords] of Object.entries(locationCoords)) {
@@ -426,7 +426,11 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
   const distanceKm = haversineKm(buyerCoords[0], buyerCoords[1], supplierCoords[0], supplierCoords[1]);
   const distanceInfo = `Jarak: ${distanceKm.toFixed(1)} km dari supplier`;
 
-  const itemsTotal = checkoutItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  const itemsTotal = checkoutItems.reduce((sum, item) => {
+    const p = Number(item.product?.price ?? (item as any)?.price ?? 0);
+    const q = Number(item.quantity ?? (item as any)?.qty ?? 1);
+    return sum + p * q;
+  }, 0);
   const serviceFee = 2000; // Fixed Rp 2.000
   const totalAmount = itemsTotal + dynamicShippingCost + serviceFee;
 
@@ -1083,20 +1087,35 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
 
             <div className="checkout-section-title">Ringkasan Pesanan</div>
             <div className="checkout-items-summary-card">
-              {checkoutItems.map((item) => (
-                <div key={item.product.id} className="summary-item-row">
-                  <div className="summary-item-img">
-                    <img src={item.product.image} alt={item.product.name} />
+              {checkoutItems.map((item, idx) => {
+                const prod = item?.product || item || {};
+                const id = prod.id || (item as any)?.id || `item-${idx}`;
+                const name = prod.name || (item as any)?.name || 'Komoditas Pangan';
+                const price = Number(prod.price ?? (item as any)?.price ?? 0);
+                const qty = Number(item?.quantity ?? (item as any)?.qty ?? 1);
+                const image = prod.image || (item as any)?.image || '/logotum.png';
+
+                return (
+                  <div key={id} className="summary-item-row">
+                    <div className="summary-item-img">
+                      <img 
+                        src={image} 
+                        alt={name} 
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = '/logotum.png';
+                        }}
+                      />
+                    </div>
+                    <div className="summary-item-details">
+                      <h4 className="summary-item-title">{name}</h4>
+                      <p className="summary-item-qty">{qty} kg x Rp {price.toLocaleString('id-ID')}</p>
+                    </div>
+                    <div className="summary-item-total">
+                      Rp {(qty * price).toLocaleString('id-ID')}
+                    </div>
                   </div>
-                  <div className="summary-item-details">
-                    <h4 className="summary-item-title">{item.product.name}</h4>
-                    <p className="summary-item-qty">{item.quantity} kg x Rp {item.product.price.toLocaleString('id-ID')}</p>
-                  </div>
-                  <div className="summary-item-total">
-                    Rp {(item.quantity * item.product.price).toLocaleString('id-ID')}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="checkout-section-title">Rincian Pembayaran</div>
