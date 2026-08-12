@@ -33,16 +33,29 @@ export async function POST(req: Request) {
     });
 
     // Kirim notifikasi WA secara asinkron ke supplier via tumbasna-whatsapp
-    try {
-      await axios.post(`${WA_BOT_URL}/api/notify-verification`, {
-        phone: user.phoneNumber,
-        status: status,
-        name: user.name || user.businessName || 'Supplier',
-        notes: notes || ''
-      }, { timeout: 4000 });
-      console.log(`[VERIFY SUPPLIER] Notifikasi WA terkirim ke ${user.phoneNumber} (${status})`);
-    } catch (waErr: any) {
-      console.warn(`[VERIFY SUPPLIER WARN] Gagal mengirim notifikasi WA ke ${user.phoneNumber}:`, waErr.message);
+    const botUrls = Array.from(new Set([
+      process.env.WA_BOT_URL,
+      'http://whatsapp-bot:3002',
+      'http://127.0.0.1:3002',
+      'http://localhost:3002',
+      'http://127.0.0.1:3001'
+    ].filter(Boolean))) as string[];
+
+    let sentNotification = false;
+    for (const botUrl of botUrls) {
+      try {
+        await axios.post(`${botUrl}/api/notify-verification`, {
+          phone: user.phoneNumber,
+          status: status,
+          name: user.name || user.businessName || 'Supplier',
+          notes: notes || ''
+        }, { timeout: 4000 });
+        console.log(`[VERIFY SUPPLIER] Notifikasi WA terkirim via ${botUrl} ke ${user.phoneNumber} (${status})`);
+        sentNotification = true;
+        break;
+      } catch (waErr: any) {
+        console.warn(`[VERIFY SUPPLIER WARN] Gagal via ${botUrl}:`, waErr.message);
+      }
     }
 
     return NextResponse.json({

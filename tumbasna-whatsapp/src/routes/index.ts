@@ -192,20 +192,29 @@ router.post('/api/notify-verification', async (req: Request, res: Response) => {
     }
 
     try {
-        const cleanPhone = phone.split('@')[0].trim().replace(/\D/g, '');
-        let formattedPhone = cleanPhone;
-        if (cleanPhone.startsWith('0')) {
-            formattedPhone = '62' + cleanPhone.substring(1);
-        } else if (!cleanPhone.startsWith('62')) {
-            formattedPhone = '62' + cleanPhone;
-        }
-
-        let jid = `${formattedPhone}@s.whatsapp.net`;
-        try {
-            const [onWa] = await sock.onWhatsApp(formattedPhone);
-            if (onWa && onWa.jid) jid = onWa.jid;
-        } catch (e) {
-            console.warn('[WA JID LOOKUP] Using default JID:', jid);
+        const cleanPhone = phone.split('@')[0].trim();
+        let jid = '';
+        if (phone.includes('@lid') || cleanPhone.length > 13) {
+            jid = `${cleanPhone}@lid`;
+        } else {
+            const onlyDigits = cleanPhone.replace(/\D/g, '');
+            let formattedDigits = onlyDigits;
+            if (onlyDigits.startsWith('0')) {
+                formattedDigits = '62' + onlyDigits.substring(1);
+            } else if (onlyDigits.length > 0 && !onlyDigits.startsWith('62')) {
+                formattedDigits = '62' + onlyDigits;
+            }
+            
+            try {
+                const [onWa] = await sock.onWhatsApp(formattedDigits);
+                if (onWa && onWa.jid) {
+                    jid = onWa.jid;
+                } else {
+                    jid = `${formattedDigits}@s.whatsapp.net`;
+                }
+            } catch {
+                jid = `${formattedDigits}@s.whatsapp.net`;
+            }
         }
 
         let notificationMsg = '';
