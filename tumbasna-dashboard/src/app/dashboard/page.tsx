@@ -82,13 +82,13 @@ const kpiData = [
 ];
 
 const dailyTransactions = [
-    { day: 'Sen', value: 320, label: 'Senin' },
-    { day: 'Sel', value: 485, label: 'Selasa' },
-    { day: 'Rab', value: 392, label: 'Rabu' },
-    { day: 'Kam', value: 618, label: 'Kamis' },
-    { day: 'Jum', value: 554, label: 'Jumat' },
-    { day: 'Sab', value: 287, label: 'Sabtu' },
-    { day: 'Min', value: 190, label: 'Minggu' },
+    { day: 'Sen', value: 12, label: 'Senin' },
+    { day: 'Sel', value: 16, label: 'Selasa' },
+    { day: 'Rab', value: 11, label: 'Rabu' },
+    { day: 'Kam', value: 18, label: 'Kamis' },
+    { day: 'Jum', value: 14, label: 'Jumat' },
+    { day: 'Sab', value: 7, label: 'Sabtu' },
+    { day: 'Min', value: 5, label: 'Minggu' },
 ];
 
 const topCommodities = [
@@ -166,34 +166,43 @@ function BarChart({ transactions }: { transactions: typeof dailyTransactions }) 
     const [hovered, setHovered] = useState<number | null>(null);
 
     return (
-        <div className="flex items-end gap-3 h-48 px-2">
+        <div className="flex items-end gap-2.5 sm:gap-4 h-56 px-1 pt-2">
             {transactions.map((d, i) => {
-                const heightPct = (d.value / max) * 100;
+                const heightPct = Math.max(10, Math.round((d.value / max) * 100));
                 const isHov = hovered === i;
                 return (
                     <div
                         key={d.day}
-                        className="flex-1 flex flex-col items-center gap-2 cursor-pointer group"
+                        className="flex-1 flex flex-col items-center gap-2 cursor-pointer group relative"
                         onMouseEnter={() => setHovered(i)}
                         onMouseLeave={() => setHovered(null)}
                     >
-                        <div className="h-6 relative w-full flex justify-center">
-                            {isHov && (
-                                <div className="absolute bottom-0 text-[10px] font-bold px-2 py-0.5 rounded bg-slate-900 text-white shadow-sm whitespace-nowrap z-10">
-                                    {d.value} tx
-                                </div>
-                            )}
+                        {/* Transaction count badge above bar */}
+                        <div className="h-6 flex items-center justify-center">
+                            <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded transition-all duration-200 ${
+                                isHov 
+                                    ? 'bg-emerald-900 text-white shadow-md scale-110' 
+                                    : 'text-slate-600 bg-slate-100/80 group-hover:bg-emerald-100 group-hover:text-emerald-800'
+                            }`}>
+                                {d.value}
+                            </span>
                         </div>
-                        <div
-                            className="w-full rounded-t transition-all duration-200"
-                            style={{
-                                height: `${heightPct}%`,
-                                backgroundColor: isHov ? '#047857' : '#059669', // Emerald-700 / Emerald-600
-                                opacity: isHov ? 1 : 0.85,
-                                minHeight: '8px',
-                            }}
-                        />
-                        <span className="text-[10px] font-semibold text-slate-400 group-hover:text-slate-700 transition-colors uppercase tracking-wider">{d.day}</span>
+
+                        {/* Bar Track & Fill */}
+                        <div className="w-full bg-slate-50/80 border border-slate-100 rounded-xl h-40 flex items-end p-1.5 relative overflow-hidden group-hover:border-emerald-200/60 transition-colors">
+                            <div
+                                className="w-full rounded-lg transition-all duration-300 bg-gradient-to-t from-emerald-600 via-emerald-500 to-emerald-400 group-hover:from-emerald-700 group-hover:to-emerald-500 shadow-sm"
+                                style={{
+                                    height: `${heightPct}%`,
+                                    opacity: isHov ? 1 : 0.88,
+                                }}
+                            />
+                        </div>
+
+                        {/* Day Label */}
+                        <span className="text-[10px] sm:text-[11px] font-extrabold text-slate-400 group-hover:text-emerald-700 transition-colors uppercase tracking-wider">
+                            {d.day}
+                        </span>
                     </div>
                 );
             })}
