@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, memo } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -130,9 +130,8 @@ const getDistance = (p1: [number, number], p2: [number, number]) => {
 };
 
 const getPositionAlongPath = (path: [number, number][], progressPercent: number): [number, number] => {
-    if (path.length === 0) return [0, 0];
-    if (path.length === 1) return path[0];
-    if (progressPercent <= 0) return path[0];
+    if (!path || path.length === 0) return [-7.55, 109.25];
+    if (path.length === 1 || progressPercent <= 0) return path[0];
     if (progressPercent >= 100) return path[path.length - 1];
 
     let totalLength = 0;
@@ -143,6 +142,8 @@ const getPositionAlongPath = (path: [number, number][], progressPercent: number)
         totalLength += len;
     }
 
+    if (totalLength === 0) return path[0];
+
     const targetLength = totalLength * (progressPercent / 100);
     let accumulatedLength = 0;
 
@@ -150,11 +151,12 @@ const getPositionAlongPath = (path: [number, number][], progressPercent: number)
         const segLen = segmentLengths[i];
         if (accumulatedLength + segLen >= targetLength) {
             const remaining = targetLength - accumulatedLength;
-            const fraction = remaining / segLen;
+            const fraction = segLen > 0 ? remaining / segLen : 0;
             const p1 = path[i];
             const p2 = path[i + 1];
             const lat = p1[0] + (p2[0] - p1[0]) * fraction;
             const lng = p1[1] + (p2[1] - p1[1]) * fraction;
+            if (isNaN(lat) || isNaN(lng)) return p1;
             return [lat, lng];
         }
         accumulatedLength += segLen;
@@ -172,21 +174,31 @@ function PanToSelectedTruck({ armadaData, selectedId, routePaths, coordsCache }:
 }) {
     const map = useMap();
     useEffect(() => {
-        if (!selectedId) return;
+        if (!selectedId || !map) return;
         const a = armadaData.find(x => x.id === selectedId);
         if (a) {
             const origin = a.supplierCoords || coordsCache[a.supplierLocation || a.rute.dari] || coordsCache[a.rute.dari];
             const dest = a.buyerCoords || coordsCache[a.buyerAddress || a.rute.ke] || coordsCache[a.rute.ke];
-            if (origin && dest) {
+
+            if (origin && Array.isArray(origin) && !isNaN(origin[0]) && !isNaN(origin[1]) &&
+                dest && Array.isArray(dest) && !isNaN(dest[0]) && !isNaN(dest[1])) {
+                let targetPos: [number, number] | null = null;
                 const path = routePaths[a.id];
                 if (path && path.length > 0) {
-                    const currentPos = getPositionAlongPath(path, a.progress);
-                    map.flyTo(currentPos, 11, { duration: 1.2 });
+                    targetPos = getPositionAlongPath(path, a.progress);
                 } else {
-                    const fraction = a.progress / 100;
+                    const fraction = (a.progress || 0) / 100;
                     const lat = origin[0] + (dest[0] - origin[0]) * fraction;
                     const lng = origin[1] + (dest[1] - origin[1]) * fraction;
-                    map.flyTo([lat, lng], 11, { duration: 1.2 });
+                    targetPos = [lat, lng];
+                }
+
+                if (targetPos && !isNaN(targetPos[0]) && !isNaN(targetPos[1]) && isFinite(targetPos[0]) && isFinite(targetPos[1])) {
+                    try {
+                        map.flyTo(targetPos, 11, { duration: 1.2 });
+                    } catch (e) {
+                        console.warn('PanToSelectedTruck flyTo warning:', e);
+                    }
                 }
             }
         }
@@ -194,8 +206,47 @@ function PanToSelectedTruck({ armadaData, selectedId, routePaths, coordsCache }:
     return null;
 }
 
-// ─── Main Map Component ───────────────────────────────────────
-export default function LogistikMapLeaflet({ armadaData, selectedId, onSelect }: LogistikMapLeafletProps) {
+export default memo(function LogistikMapLeaflet({ armadaData, selectedId, onSelect }: LogistikMapLeafletProps) {
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    const [animProgress, setAnimProgress] = useState(0);
+
+    // 10-Second Continuous Moving Truck Animation Loop
+    useEffect(() => {
+        if (!mounted) return;
+        let startTime: number | null = null;
+        let animationFrameId: number;
+
+        const duration = 10000; // 10 Detik tepat
+
+        const step = (timestamp: number) => {
+            if (!startTime) startTime = timestamp;
+            const elapsed = timestamp - startTime;
+            const progress = Math.min((elapsed / duration) * 100, 100);
+            
+            setAnimProgress(progress);
+
+            if (progress < 100) {
+                animationFrameId = requestAnimationFrame(step);
+            } else {
+                // Tunggu 1.5 detik saat sampai di tujuan, lalu animasi ulang dari lokasi asal
+                setTimeout(() => {
+                    startTime = null;
+                    animationFrameId = requestAnimationFrame(step);
+                }, 1500);
+            }
+        };
+
+        animationFrameId = requestAnimationFrame(step);
+        return () => {
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+        };
+    }, [mounted]);
+
     const center: [number, number] = [-7.55, 109.25]; // Center of Barlingmascakeb
     const [routePaths, setRoutePaths] = useState<Record<string, [number, number][]>>({});
     const [coordsCache, setCoordsCache] = useState<Record<string, [number, number]>>(coordsMap);
@@ -290,8 +341,17 @@ export default function LogistikMapLeaflet({ armadaData, selectedId, onSelect }:
         fetchRoutes();
     }, [armadaData, routePaths, coordsCache]);
 
+    if (!mounted) {
+        return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 border-r border-slate-200/65">
+                <p className="text-xs font-semibold text-slate-400">Memuat peta pelacakan...</p>
+            </div>
+        );
+    }
+
     return (
         <MapContainer
+            key="tumbasna-logistik-map-root"
             center={center}
             zoom={9}
             maxBounds={[[-12.0, 94.0], [8.0, 142.5]]}
@@ -302,8 +362,9 @@ export default function LogistikMapLeaflet({ armadaData, selectedId, onSelect }:
             zoomControl={true}
         >
             <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://maps.google.com">Google Maps</a> Satellite'
+                url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
+                maxZoom={20}
             />
 
             <PanToSelectedTruck armadaData={armadaData} selectedId={selectedId} routePaths={routePaths} coordsCache={coordsCache} />
@@ -312,21 +373,25 @@ export default function LogistikMapLeaflet({ armadaData, selectedId, onSelect }:
                 const origin = a.supplierCoords || coordsCache[a.supplierLocation || a.rute.dari] || coordsCache[a.rute.dari];
                 const dest = a.buyerCoords || coordsCache[a.buyerAddress || a.rute.ke] || coordsCache[a.rute.ke];
 
-                if (!origin || !dest) return null;
+                if (!origin || !dest || isNaN(origin[0]) || isNaN(origin[1]) || isNaN(dest[0]) || isNaN(dest[1])) return null;
 
                 const path = routePaths[a.id];
                 const hasRoadPath = path && path.length > 0;
 
-                // Calculate exact position along the road network or fallback to straight line
+                // Calculate 10-second animated position (Full 0% -> 100% journey to destination)
+                const animatedProgress = animProgress;
+
                 let currentPos: [number, number];
                 if (hasRoadPath) {
-                    currentPos = getPositionAlongPath(path, a.progress);
+                    currentPos = getPositionAlongPath(path, animatedProgress);
                 } else {
-                    const fraction = a.progress / 100;
+                    const fraction = animatedProgress / 100;
                     const currentLat = origin[0] + (dest[0] - origin[0]) * fraction;
                     const currentLng = origin[1] + (dest[1] - origin[1]) * fraction;
                     currentPos = [currentLat, currentLng];
                 }
+
+                if (!currentPos || isNaN(currentPos[0]) || isNaN(currentPos[1])) return null;
 
                 const isSelected = selectedId === a.id;
                 const truckColor = a.status === 'selesai' ? '#10B981' : a.status === 'masalah' ? '#EF4444' : '#059669';
@@ -403,4 +468,4 @@ export default function LogistikMapLeaflet({ armadaData, selectedId, onSelect }:
             })}
         </MapContainer>
     );
-}
+});

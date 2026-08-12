@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
     Truck,
     MapPin,
@@ -20,6 +20,7 @@ import {
     ExternalLink,
     Eye,
     X,
+    DollarSign,
 } from 'lucide-react';
 
 // ─── Dynamic Import for Leaflet Map ──────────────────────────
@@ -39,66 +40,40 @@ const armadaData = [
         id: 'ARM-001',
         driver: 'Budi Santoso',
         plat: 'R 1234 AB',
-        rute: { dari: 'Banyumas', ke: 'Cilacap' },
-        muatan: 'Beras Premium — 3.2 ton',
+        rute: { dari: 'Purwokerto', ke: 'Banyumas' },
+        muatan: 'Beras Premium — 50 kg',
         status: 'jalan',
         progress: 68,
-        estimasi: '45 menit',
-        jarak: '87 km',
-        bahan_bakar: '82%',
-        suhu: '24°C',
+        estimasi: '25 menit',
+        jarak: '15 km',
+        ongkirFormatted: 'Rp 37.500',
+        tarifLabel: 'Rp 2.500/km',
     },
     {
         id: 'ARM-002',
         driver: 'Agus Prasetyo',
         plat: 'R 5678 CD',
-        rute: { dari: 'Cilacap', ke: 'Kebumen' },
-        muatan: 'Cabai Merah — 1.5 ton',
+        rute: { dari: 'Purwokerto', ke: 'Purbalingga' },
+        muatan: 'Cabai Merah — 25 kg',
         status: 'jalan',
         progress: 35,
-        estimasi: '1 jam 20 menit',
-        jarak: '112 km',
-        bahan_bakar: '65%',
-        suhu: '22°C',
+        estimasi: '30 menit',
+        jarak: '18 km',
+        ongkirFormatted: 'Rp 45.000',
+        tarifLabel: 'Rp 2.500/km',
     },
     {
         id: 'ARM-003',
         driver: 'Rudi Hartono',
         plat: 'R 9012 EF',
         rute: { dari: 'Purbalingga', ke: 'Banyumas' },
-        muatan: 'Kopi — 2.1 ton',
+        muatan: 'Kopi — 15 kg',
         status: 'selesai',
         progress: 100,
         estimasi: 'Selesai',
-        jarak: '45 km',
-        bahan_bakar: '91%',
-        suhu: '26°C',
-    },
-    {
-        id: 'ARM-004',
-        driver: 'Hendra Wijaya',
-        plat: 'R 3456 GH',
-        rute: { dari: 'Banjarnegara', ke: 'Purbalingga' },
-        muatan: 'Kentang — 0.8 ton',
-        status: 'standby',
-        progress: 0,
-        estimasi: 'Belum berangkat',
-        jarak: '38 km',
-        bahan_bakar: '100%',
-        suhu: '—',
-    },
-    {
-        id: 'ARM-005',
-        driver: 'Slamet Riyadi',
-        plat: 'R 7890 IJ',
-        rute: { dari: 'Kebumen', ke: 'Cilacap' },
-        muatan: 'Gula Pasir — 4.0 ton',
-        status: 'masalah',
-        progress: 52,
-        estimasi: 'Tertunda',
-        jarak: '78 km',
-        bahan_bakar: '45%',
-        suhu: '28°C',
+        jarak: '20 km',
+        ongkirFormatted: 'Rp 50.000',
+        tarifLabel: 'Rp 2.500/km',
     },
 ];
 
@@ -189,6 +164,64 @@ function findClosestCity(lat: number, lng: number): string | null {
     return closestCity;
 }
 
+function getDistanceKm(dari: string, ke: string, supplierCoords?: [number, number] | null, buyerCoords?: [number, number] | null): number {
+    if (supplierCoords && buyerCoords) {
+        const R = 6371;
+        const dLat = (buyerCoords[0] - supplierCoords[0]) * Math.PI / 180;
+        const dLng = (buyerCoords[1] - supplierCoords[1]) * Math.PI / 180;
+        const a = 
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(supplierCoords[0] * Math.PI / 180) * Math.cos(buyerCoords[0] * Math.PI / 180) * 
+            Math.sin(dLng / 2) * Math.sin(dLng / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const dist = Math.round(R * c);
+        if (dist > 0) return dist;
+    }
+
+    const distMap: Record<string, number> = {
+        'purwokerto-banyumas': 15,
+        'banyumas-purwokerto': 15,
+        'purwokerto-purwokerto': 10,
+        'purwokerto-purbalingga': 18,
+        'purbalingga-purwokerto': 18,
+        'purwokerto-cilacap': 45,
+        'cilacap-purwokerto': 45,
+        'purwokerto-banjarnegara': 52,
+        'banjarnegara-purwokerto': 52,
+        'purwokerto-kebumen': 70,
+        'kebumen-purwokerto': 70,
+        'banyumas-cilacap': 42,
+        'cilacap-banyumas': 42,
+        'banyumas-purbalingga': 20,
+        'purbalingga-banyumas': 20,
+        'banyumas-banjarnegara': 45,
+        'banjarnegara-banyumas': 45,
+        'banyumas-kebumen': 65,
+        'kebumen-banyumas': 65,
+        'cilacap-kebumen': 85,
+        'kebumen-cilacap': 85,
+        'purbalingga-banjarnegara': 35,
+        'banjarnegara-purbalingga': 35,
+        'kebumen-purbalingga': 60,
+        'purbalingga-kebumen': 60,
+        'banyumas-banyumas': 12,
+        'cilacap-cilacap': 15,
+        'purbalingga-purbalingga': 10,
+        'banjarnegara-banjarnegara': 14,
+        'kebumen-kebumen': 15,
+    };
+
+    const dClean = dari.toLowerCase();
+    const kClean = ke.toLowerCase();
+
+    if (dClean.includes('purwokerto') && kClean.includes('banyumas')) return 15;
+    if (dClean.includes('banyumas') && kClean.includes('purwokerto')) return 15;
+    if (dClean.includes('purwokerto') && kClean.includes('purwokerto')) return 10;
+
+    const key = `${dClean.split(',')[0].trim()}-${kClean.split(',')[0].trim()}`;
+    return distMap[key] || 15;
+}
+
 // ─── Main Logistik Page ───────────────────────────────────────
 export default function LogistikPage() {
     const [orders, setOrders] = useState<any[]>([]);
@@ -228,26 +261,22 @@ export default function LogistikPage() {
     });
 
     const dbArmada = filteredOrders.map((o: any) => {
-        let status = 'standby';
-        let progress = 0;
-        let estimasi = 'Belum berangkat';
+        let status = 'jalan';
+        let progress = 30;
+        let estimasi = 'Kurir menjemput barang di supplier';
         
         if (o.status === 'DIKIRIM') {
             status = 'jalan';
             progress = 65;
-            estimasi = '40 menit';
+            estimasi = '40 menit lagi sampai';
         } else if (o.status === 'SELESAI') {
             status = 'selesai';
             progress = 100;
-            estimasi = 'Selesai';
+            estimasi = 'Selesai diterima';
         } else if (o.status === 'DIBATALKAN') {
             status = 'masalah';
-            progress = 30;
-            estimasi = 'Tertunda';
-        } else if (o.status === 'DIPROSES') {
-            status = 'standby';
             progress = 0;
-            estimasi = 'Menyiapkan barang';
+            estimasi = 'Pesanan dibatalkan';
         }
 
         let waybillNumber = null;
@@ -334,21 +363,36 @@ export default function LogistikPage() {
             if (closest) ke = closest;
         }
 
-        const qtyNum = o.items?.[0]?.quantity || 100;
+        const qtyNum = o.items?.[0]?.quantity || 10;
         const prodName = o.items?.[0]?.product?.name || 'Komoditas';
+        const distKm = getDistanceKm(dari, ke, supplierCoords, buyerCoords);
+        const totalOngkir = o.shippingCost || (distKm * 2500);
+        const ongkirFormatted = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(totalOngkir);
+
+        // Driver name clean up (don't use payment methods like cod/qris as driver name)
+        const rawCourier = o.courier ? String(o.courier).trim() : '';
+        const isPaymentMethod = ['cod', 'qris', 'transfer', 'tunai', 'gopay'].includes(rawCourier.toLowerCase());
+        const cleanDriver = (rawCourier && !isPaymentMethod) ? rawCourier : 'Kurir Logistik Tumbasna';
+
+        // Deterministic Plat Number based on Order ID hash
+        let hash = 0;
+        const strId = String(o.id || 'TMB');
+        for (let i = 0; i < strId.length; i++) hash = (hash * 31 + strId.charCodeAt(i)) % 8999;
+        const platNo = `R ${1000 + Math.abs(hash)} TMB`;
 
         return {
             id: o.id,
-            driver: o.courier || 'Kurir Lokal',
-            plat: `R ${Math.floor(1000 + Math.random() * 9000)} TMB`,
+            driver: cleanDriver,
+            plat: platNo,
             rute: { dari, ke },
             muatan: `${prodName} — ${qtyNum} kg`,
             status,
             progress,
             estimasi,
-            jarak: '42 km',
-            bahan_bakar: '85%',
-            suhu: '24°C',
+            jarak: `${distKm} km`,
+            ongkir: totalOngkir,
+            ongkirFormatted: ongkirFormatted,
+            tarifLabel: 'Rp 2.500/km',
             waybillNumber,
             waybillCourier,
             waybillImageUrl,
@@ -360,14 +404,14 @@ export default function LogistikPage() {
         };
     });
 
-    const unfilteredCombined = [...dbArmada, ...armadaData];
+    const unfilteredCombined = dbArmada.length > 0 ? dbArmada : armadaData;
 
     // Reset selectedArmada if it gets filtered out
     useEffect(() => {
         if (selectedArmada) {
             const stillExists = unfilteredCombined.some(a => {
                 if (filterActiveOnly) {
-                    return a.id === selectedArmada.id && (a.status === 'jalan' || a.status === 'standby' || a.status === 'masalah');
+                    return a.id === selectedArmada.id && (a.status === 'jalan' || a.status === 'masalah');
                 }
                 return a.id === selectedArmada.id;
             });
@@ -377,17 +421,63 @@ export default function LogistikPage() {
         }
     }, [filterActiveOnly, filterTime, orders, selectedArmada]);
 
-    // Active only filter
+    // Active only filter (hanya armada yang sedang dikirim)
     const combinedArmada = filterActiveOnly 
-        ? unfilteredCombined.filter(a => a.status === 'jalan' || a.status === 'standby' || a.status === 'masalah')
+        ? unfilteredCombined.filter(a => a.status === 'jalan' || a.status === 'masalah')
         : unfilteredCombined;
 
-    const activeArmada = selectedArmada || combinedArmada[0] || armadaData[0];
+    const activeArmada = (selectedArmada && combinedArmada.some(a => a.id === selectedArmada.id))
+        ? selectedArmada 
+        : (combinedArmada[0] || dbArmada[0] || armadaData[0]);
 
     const jalans = unfilteredCombined.filter(a => a.status === 'jalan').length;
     const selesai = unfilteredCombined.filter(a => a.status === 'selesai').length;
     const standbys = unfilteredCombined.filter(a => a.status === 'standby').length;
     const masalahs = unfilteredCombined.filter(a => a.status === 'masalah').length;
+
+    const dynamicRouteStats = useMemo(() => {
+        const source = unfilteredCombined;
+        if (!source || source.length === 0) return [];
+
+        const map: Record<string, { rute: string; frekuensi: number; totalKg: number }> = {};
+        for (const a of source) {
+            const ruteStr = `${a.rute.dari} → ${a.rute.ke}`;
+            let kg = 25;
+            if (a.muatan) {
+                const match = a.muatan.match(/(\d+(?:\.\d+)?)\s*(ton|kg)/i);
+                if (match) {
+                    const val = parseFloat(match[1]);
+                    const unit = match[2].toLowerCase();
+                    kg = unit === 'ton' ? val * 1000 : val;
+                }
+            }
+
+            if (!map[ruteStr]) {
+                map[ruteStr] = { rute: ruteStr, frekuensi: 0, totalKg: 0 };
+            }
+            map[ruteStr].frekuensi += 1;
+            map[ruteStr].totalKg += kg;
+        }
+
+        const maxFreq = Math.max(...Object.values(map).map(m => m.frekuensi), 1);
+
+        return Object.values(map).map(item => {
+            const utilitas = Math.round((item.frekuensi / maxFreq) * 100);
+            const totalDisplay = item.totalKg >= 1000 
+                ? `${(item.totalKg / 1000).toFixed(1)} ton`
+                : `${item.totalKg} kg`;
+            return {
+                rute: item.rute,
+                frekuensi: item.frekuensi,
+                totalDisplay,
+                utilitas,
+            };
+        }).sort((a, b) => b.frekuensi - a.frekuensi);
+    }, [unfilteredCombined]);
+
+    const backhaulPercent = unfilteredCombined.length > 0 
+        ? Math.min(100, Math.round(((jalans + selesai) / unfilteredCombined.length) * 100))
+        : 100;
 
     return (
         <div className="p-8 space-y-8 bg-[#F8FAFC]">
@@ -561,7 +651,7 @@ export default function LogistikPage() {
                                             <ProgressBar value={a.progress} status={a.status} />
                                             <div className="flex items-center justify-between text-[10px] text-slate-400 font-semibold pt-1">
                                                 <span>ETA: {a.estimasi}</span>
-                                                <span>BBM: {a.bahan_bakar}</span>
+                                                <span className="text-emerald-600 font-bold">Ongkir: {a.ongkirFormatted || 'Rp 105.000'}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -601,7 +691,7 @@ export default function LogistikPage() {
                             {[
                                 { label: 'Rute', value: `${activeArmada.rute.dari} → ${activeArmada.rute.ke}`, icon: Route, color: '#10B981' },
                                 { label: 'Jarak', value: activeArmada.jarak, icon: Navigation, color: '#10B981' },
-                                { label: 'BBM', value: activeArmada.bahan_bakar, icon: Fuel, color: '#F59E0B' },
+                                { label: 'Tarif Ongkir', value: `${activeArmada.ongkirFormatted || 'Rp 105.000'} (Rp 2.500/km)`, icon: DollarSign, color: '#10B981' },
                                 { label: 'Muatan', value: activeArmada.muatan.split('—')[1]?.trim() ?? '—', icon: Weight, color: '#64748B' },
                             ].map(item => (
                                 <div key={item.label} className="rounded-xl p-3 bg-slate-50 border border-slate-100 flex flex-col justify-between">
@@ -666,24 +756,28 @@ export default function LogistikPage() {
                     <div className="bg-white rounded-2xl p-6 border border-slate-200/60 shadow-sm">
                         <div className="flex items-center gap-2 mb-5">
                             <BarChart3 className="w-4 h-4 text-emerald-600" />
-                            <h2 className="text-base font-bold text-slate-900 tracking-tight">Analitik Rute</h2>
+                            <h2 className="text-base font-bold text-slate-900 tracking-tight">Analitik Rute Real-Time</h2>
                         </div>
                         <div className="space-y-4">
-                            {routeStats.map((r) => (
-                                <div key={r.rute} className="space-y-1.5">
-                                    <div className="flex items-center justify-between text-xs">
-                                        <span className="font-bold text-slate-700 truncate">{r.rute}</span>
-                                        <span className="font-bold text-slate-400 ml-2">{r.frekuensi}x</span>
+                            {dynamicRouteStats.length === 0 ? (
+                                <p className="text-xs text-slate-400 font-semibold py-4 text-center">Belum ada aktivitas pengiriman aktif</p>
+                            ) : (
+                                dynamicRouteStats.map((r) => (
+                                    <div key={r.rute} className="space-y-1.5">
+                                        <div className="flex items-center justify-between text-xs">
+                                            <span className="font-bold text-slate-700 truncate">{r.rute}</span>
+                                            <span className="font-bold text-slate-400 ml-2">{r.frekuensi}x pengiriman</span>
+                                        </div>
+                                        <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                                            <div className="h-full rounded-full bg-emerald-500 transition-all duration-500" style={{ width: `${r.utilitas}%` }} />
+                                        </div>
+                                        <div className="flex items-center justify-between text-[10px] text-slate-400 font-semibold pt-0.5">
+                                            <span>{r.totalDisplay} komoditas</span>
+                                            <span>{r.utilitas}% intensitas</span>
+                                        </div>
                                     </div>
-                                    <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                                        <div className="h-full rounded-full bg-emerald-500" style={{ width: `${r.utilitas}%` }} />
-                                    </div>
-                                    <div className="flex items-center justify-between text-[10px] text-slate-400 font-semibold pt-0.5">
-                                        <span>{r.total_ton} ton dikirim</span>
-                                        <span>{r.utilitas}% utilitas</span>
-                                    </div>
-                                </div>
-                            ))}
+                                ))
+                            )}
                         </div>
                     </div>
 
@@ -691,13 +785,13 @@ export default function LogistikPage() {
                     <div className="bg-white rounded-2xl p-6 border border-slate-200/60 shadow-sm flex flex-col justify-between">
                         <div className="flex items-center gap-2 mb-4">
                             <TrendingUp className="w-4 h-4 text-emerald-600" />
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Efisiensi Backhaul</p>
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Efisiensi Armada & Backhaul</p>
                         </div>
                         <div>
-                            <p className="text-3xl font-extrabold text-slate-900 tracking-tight">78.4%</p>
-                            <p className="text-[10px] text-slate-400 font-medium mt-1">Penghematan rute truk pulang kosong</p>
+                            <p className="text-3xl font-extrabold text-slate-900 tracking-tight">{backhaulPercent}%</p>
+                            <p className="text-[10px] text-slate-400 font-medium mt-1">Tingkat efisiensi rute pengiriman komoditas aktif</p>
                             <div className="mt-4 h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                                <div className="h-full rounded-full bg-emerald-500" style={{ width: '78.4%' }} />
+                                <div className="h-full rounded-full bg-emerald-500 transition-all duration-500" style={{ width: `${backhaulPercent}%` }} />
                             </div>
                         </div>
                     </div>
