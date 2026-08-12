@@ -25,6 +25,21 @@ import {
 // --- Wilayah Data (Base structure, stats updated via real DB API) ----------------
 const baseWilayahData = [
     {
+        id: 'banyumas',
+        name: 'Banyumas',
+        status: 'tinggi',
+        supplier: 0,
+        buyer: 0,
+        komoditas: ['Beras IR64', 'Getuk Goreng', 'Gula Merah', 'Cabai Merah'],
+        stok: '0 ton',
+        hargaRataRata: 'Rp 12.800/kg',
+        transaksi: 0,
+        lat: -7.5151,
+        lng: 109.2941,
+        luas: 1327,
+        radius: 18000,
+    },
+    {
         id: 'purbalingga',
         name: 'Purbalingga',
         status: 'tinggi',
@@ -38,7 +53,97 @@ const baseWilayahData = [
         lng: 109.3641,
         luas: 778,
         radius: 13000,
-    }
+    },
+    {
+        id: 'banjarnegara',
+        name: 'Banjarnegara',
+        status: 'rendah',
+        supplier: 0,
+        buyer: 0,
+        komoditas: ['Salak Pondoh', 'Kopi Arabika Dieng', 'Kentang Super'],
+        stok: '0 ton',
+        hargaRataRata: 'Rp 14.200/kg',
+        transaksi: 0,
+        lat: -7.3884,
+        lng: 109.6939,
+        luas: 1069,
+        radius: 15000,
+    },
+    {
+        id: 'cilacap',
+        name: 'Cilacap',
+        status: 'tinggi',
+        supplier: 0,
+        buyer: 0,
+        komoditas: ['Ikan Tenggiri', 'Udang Rebon', 'Beras Sidareja', 'Kelapa'],
+        stok: '0 ton',
+        hargaRataRata: 'Rp 10.900/kg',
+        transaksi: 0,
+        lat: -7.7150,
+        lng: 108.9767,
+        luas: 2138,
+        radius: 22000,
+    },
+    {
+        id: 'kebumen',
+        name: 'Kebumen',
+        status: 'rendah',
+        supplier: 0,
+        buyer: 0,
+        komoditas: ['Beras', 'Gula Kelapa', 'Cabai Rawit', 'Tomat'],
+        stok: '0 ton',
+        hargaRataRata: 'Rp 13.400/kg',
+        transaksi: 0,
+        lat: -7.6701,
+        lng: 109.6524,
+        luas: 1281,
+        radius: 16000,
+    },
+    {
+        id: 'tegal',
+        name: 'Tegal',
+        status: 'tinggi',
+        supplier: 0,
+        buyer: 0,
+        komoditas: ['Bawang Merah', 'Teh Slawi', 'Cabai Rawit'],
+        stok: '0 ton',
+        hargaRataRata: 'Rp 26.000/kg',
+        transaksi: 0,
+        lat: -6.8676,
+        lng: 109.1384,
+        luas: 879,
+        radius: 14000,
+    },
+    {
+        id: 'pemalang',
+        name: 'Pemalang',
+        status: 'tinggi',
+        supplier: 0,
+        buyer: 0,
+        komoditas: ['Nanas Madu Belik', 'Beras Premium'],
+        stok: '0 ton',
+        hargaRataRata: 'Rp 12.000/kg',
+        transaksi: 0,
+        lat: -6.8900,
+        lng: 109.3800,
+        luas: 1115,
+        radius: 15000,
+    },
+    {
+        id: 'brebes',
+        name: 'Brebes',
+        status: 'tinggi',
+        supplier: 0,
+        buyer: 0,
+        komoditas: ['Bawang Merah Super', 'Telur Asin'],
+        stok: '0 ton',
+        hargaRataRata: 'Rp 28.500/kg',
+        transaksi: 0,
+        lat: -6.8700,
+        lng: 108.9800,
+        luas: 1662,
+        radius: 17000,
+    },
 ];
 
 // --- Dynamic Leaflet Map (client-only) ------------------------------------
@@ -300,9 +405,9 @@ export default function PetaPage() {
                 <div>
                     <h1 className="text-base font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
                         <MapPin className="w-4 h-4 text-emerald-600" />
-                        Peta Monitoring Zona QRIS
+                        Zona QRIS Banyumas Raya
                     </h1>
-                    <p className="text-[11px] text-slate-500 font-medium mt-0.5">Sebaran transaksi & neraca komoditas wilayah Purbalingga & Sekitarnya</p>
+                    <p className="text-[11px] text-slate-500 font-medium mt-0.5">Batas administratif kabupaten & sebaran potensi transaksi QRIS komoditas pangan</p>
                 </div>
 
                 <div className="flex items-center gap-2.5">
