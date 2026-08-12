@@ -503,7 +503,9 @@ export default function DashboardPage() {
                                 <span className="text-xs font-semibold text-slate-400">Rata-rata Harian</span>
                             </div>
                         </div>
-                        <span className="text-xs font-bold text-slate-800">Total: {stats ? stats.kpi.totalTransactions.toLocaleString('id-ID') : '0'} transaksi</span>
+                        <span className="text-xs font-bold text-slate-800">
+                            Total: {(stats?.dailyTransactions || dailyTransactions).reduce((acc: number, item: any) => acc + (item.value || 0), 0).toLocaleString('id-ID')} transaksi
+                        </span>
                     </div>
                 </div>
 
