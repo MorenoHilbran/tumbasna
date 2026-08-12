@@ -19,6 +19,8 @@ model User {
   businessType String?        @map("business_type")
   bankName     String?        @map("bank_name")
   bankAccount  String?        @map("bank_account")
+  nibUrl       String?        @map("nib_url")
+  verificationStatus String   @default("APPROVED") @map("verification_status") @db.VarChar(50)
   balance      Decimal        @default(0) @db.Decimal(15, 2)
   createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt    DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)

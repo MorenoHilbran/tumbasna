@@ -16,7 +16,13 @@ import {
   ShoppingCart,
   DollarSign,
   Trash2,
-  Loader2
+  Loader2,
+  ShieldCheck,
+  FileText,
+  XCircle,
+  CheckCircle2,
+  ExternalLink,
+  X
 } from 'lucide-react';
 
 interface UserCount {
@@ -35,6 +41,8 @@ interface User {
   businessType: string | null;
   bankName: string | null;
   bankAccount: string | null;
+  nibUrl: string | null;
+  verificationStatus: 'PENDING' | 'APPROVED' | 'REJECTED' | null;
   balance: string;
   createdAt: string;
   _count: UserCount;
@@ -56,12 +64,35 @@ export default function PenggunaPage() {
   const [suppliers, setSuppliers] = useState<User[]>([]);
   const [buyers, setBuyers] = useState<User[]>([]);
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
+  const [selectedNibUser, setSelectedNibUser] = useState<User | null>(null);
+  const [verifyLoading, setVerifyLoading] = useState(false);
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
     totalSuppliers: 0,
     totalBuyers: 0,
     totalAdmins: 0
   });
+
+  const handleVerifySupplier = async (userId: string, status: 'APPROVED' | 'REJECTED') => {
+    try {
+      setVerifyLoading(true);
+      const res = await fetch('/api/admin/verify-supplier', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, status })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Gagal memproses verifikasi NIB');
+      }
+      setSelectedNibUser(null);
+      fetchUsers();
+    } catch (err: any) {
+      alert(`Error: ${err.message}`);
+    } finally {
+      setVerifyLoading(false);
+    }
+  };
 
   const handleDeleteUser = async (id: string, nameOrPhone: string) => {
     const confirmDelete = window.confirm(`Apakah Anda yakin ingin menghapus pengguna "${nameOrPhone}" beserta seluruh produk, transaksi, dan riwayat chat bot AI mereka secara permanen?`);
@@ -254,6 +285,7 @@ export default function PenggunaPage() {
                   <th className="px-6 py-4">Profil & Usaha</th>
                   <th className="px-6 py-4">Kontak</th>
                   <th className="px-6 py-4">Alamat Usaha</th>
+                  <th className="px-6 py-4">Status QC / NIB</th>
                   <th className="px-6 py-4">Informasi Rekening</th>
                   <th className="px-6 py-4 text-center">
                     {activeTab === 'supplier' ? 'Total Listing' : 'Total Transaksi'}
@@ -323,6 +355,36 @@ export default function PenggunaPage() {
                       </p>
                     </td>
 
+                    {/* Status QC / NIB */}
+                    <td className="px-6 py-4">
+                      {user.role === 'PETANI' ? (
+                        <button
+                          onClick={() => setSelectedNibUser(user)}
+                          className="inline-flex items-center gap-1.5 transition-all text-xs font-semibold cursor-pointer group"
+                          title="Klik untuk verifikasi NIB & Quality Control"
+                        >
+                          {user.verificationStatus === 'APPROVED' ? (
+                            <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg group-hover:bg-emerald-100">
+                              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                              Approved
+                            </span>
+                          ) : user.verificationStatus === 'REJECTED' ? (
+                            <span className="bg-rose-50 text-rose-700 border border-rose-200 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg group-hover:bg-rose-100">
+                              <XCircle className="w-3.5 h-3.5 text-rose-600" />
+                              Ditolak
+                            </span>
+                          ) : (
+                            <span className="bg-amber-50 text-amber-700 border border-amber-200 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg group-hover:bg-amber-100">
+                              <FileText className="w-3.5 h-3.5 text-amber-600" />
+                              Pending Review
+                            </span>
+                          )}
+                        </button>
+                      ) : (
+                        <span className="text-slate-400 font-normal italic">-</span>
+                      )}
+                    </td>
+
                     {/* Informasi Rekening */}
                     <td className="px-6 py-4">
                       {user.bankName && user.bankAccount ? (
@@ -388,6 +450,105 @@ export default function PenggunaPage() {
           </div>
         )}
       </div>
+
+      {/* Modal Verifikasi NIB / Quality Control */}
+      {selectedNibUser && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-lg rounded-2xl shadow-xl overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
+            {/* Modal Header */}
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm">Verifikasi Dokumen NIB (Quality Control)</h3>
+                  <p className="text-[11px] text-slate-500">{selectedNibUser.businessName || selectedNibUser.name}</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setSelectedNibUser(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body: Foto NIB Preview */}
+            <div className="p-5 space-y-4">
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/80">
+                <p className="text-xs font-semibold text-slate-700 mb-2 flex items-center gap-1.5">
+                  <FileText className="w-4 h-4 text-slate-500" />
+                  Foto Dokumen NIB yang Diunggah via WhatsApp:
+                </p>
+                {selectedNibUser.nibUrl ? (
+                  <div className="relative rounded-lg overflow-hidden border border-slate-200 bg-slate-900 max-h-64 flex items-center justify-center">
+                    <img 
+                      src={selectedNibUser.nibUrl} 
+                      alt="Dokumen NIB Supplier"
+                      className="max-h-64 object-contain"
+                    />
+                    <a 
+                      href={selectedNibUser.nibUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="absolute bottom-2 right-2 p-2 bg-slate-900/80 hover:bg-slate-900 text-white rounded-lg text-xs font-medium flex items-center gap-1 transition-all"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      Buka Gambar Asli
+                    </a>
+                  </div>
+                ) : (
+                  <div className="p-8 text-center bg-amber-50/50 rounded-lg border border-dashed border-amber-200 text-amber-800">
+                    <FileText className="w-8 h-8 text-amber-500 mx-auto mb-2" />
+                    <p className="text-xs font-bold">Dokumen NIB Dummy / Belum Diunggah</p>
+                    <p className="text-[11px] text-amber-600 mt-1">Supplier mendaftar tanpa lampiran gambar, atau mengunggah sampel dummy untuk pengujian.</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 text-xs bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <div>
+                  <span className="text-slate-400 font-medium">Pemilik:</span>
+                  <p className="font-semibold text-slate-800">{selectedNibUser.name || '-'}</p>
+                </div>
+                <div>
+                  <span className="text-slate-400 font-medium">Nomor WhatsApp:</span>
+                  <p className="font-semibold text-slate-800">+{selectedNibUser.phoneNumber}</p>
+                </div>
+                <div>
+                  <span className="text-slate-400 font-medium">Alamat Kebun/Gudang:</span>
+                  <p className="font-semibold text-slate-800 truncate">{selectedNibUser.address || '-'}</p>
+                </div>
+                <div>
+                  <span className="text-slate-400 font-medium">Status Saat Ini:</span>
+                  <p className="font-bold text-slate-900">{selectedNibUser.verificationStatus || 'APPROVED'}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer: Action Buttons */}
+            <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-end gap-2">
+              <button
+                onClick={() => handleVerifySupplier(selectedNibUser.id, 'REJECTED')}
+                disabled={verifyLoading}
+                className="px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition-all flex items-center gap-1.5 disabled:opacity-50"
+              >
+                {verifyLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
+                Tolak Supplier
+              </button>
+              <button
+                onClick={() => handleVerifySupplier(selectedNibUser.id, 'APPROVED')}
+                disabled={verifyLoading}
+                className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 disabled:opacity-50"
+              >
+                {verifyLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                Setujui Supplier (Kirim WA)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

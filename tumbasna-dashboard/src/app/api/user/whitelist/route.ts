@@ -38,7 +38,9 @@ export async function GET(req: Request) {
                 bankAccount: true,
                 address: true,
                 businessName: true,
-                businessType: true
+                businessType: true,
+                nibUrl: true,
+                verificationStatus: true
             }
         });
 
@@ -102,7 +104,9 @@ export async function GET(req: Request) {
                 bankAccount: user.bankAccount,
                 address: user.address,
                 businessName: user.businessName,
-                businessType: user.businessType
+                businessType: user.businessType,
+                nibUrl: user.nibUrl || null,
+                verificationStatus: user.verificationStatus || 'APPROVED'
             });
         }
 

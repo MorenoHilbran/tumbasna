@@ -16,7 +16,7 @@ function normalizePhone(raw: string): string {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { ownerName, businessName, phone, email, address, businessType, bankName, bankAccount } = body;
+    const { ownerName, businessName, phone, email, address, businessType, bankName, bankAccount, nibUrl, verificationStatus } = body;
 
     if (!ownerName || !phone) {
       return NextResponse.json({ error: 'Nama dan nomor HP wajib diisi' }, { status: 400 });
@@ -24,6 +24,8 @@ export async function POST(req: Request) {
 
     // Normalize phone: format seragam 62xxx
     const normalizedPhone = normalizePhone(phone);
+    const targetRole = body.role || 'PEDAGANG';
+    const targetStatus = verificationStatus || (targetRole === 'PETANI' ? 'PENDING' : 'APPROVED');
 
     // Cek apakah nama usaha sudah terdaftar oleh pengguna lain
     if (businessName) {
@@ -53,13 +55,15 @@ export async function POST(req: Request) {
         data: {
           name: ownerName,
           email: email || null,
-          role: body.role || 'PEDAGANG',
+          role: targetRole,
           address: address || null,
           businessName: businessName || null,
           businessType: businessType || null,
           bankName: bankName || null,
           bankAccount: bankAccount || null,
-        },
+          nibUrl: nibUrl || null,
+          verificationStatus: targetStatus,
+        } as any,
       });
 
       return NextResponse.json({
@@ -75,6 +79,8 @@ export async function POST(req: Request) {
           businessType: updatedUser.businessType,
           bankName: updatedUser.bankName,
           bankAccount: updatedUser.bankAccount,
+          nibUrl: (updatedUser as any).nibUrl || null,
+          verificationStatus: (updatedUser as any).verificationStatus || 'APPROVED',
           balance: Number(updatedUser.balance),
         }
       }, { status: 200 });
@@ -86,14 +92,16 @@ export async function POST(req: Request) {
         phoneNumber: normalizedPhone,
         name: ownerName,
         email: email || null,
-        role: body.role || 'PEDAGANG',
+        role: targetRole,
         address: address || null,
         businessName: businessName || null,
         businessType: businessType || null,
         bankName: bankName || null,
         bankAccount: bankAccount || null,
+        nibUrl: nibUrl || null,
+        verificationStatus: targetStatus,
         balance: 0,
-      },
+      } as any,
     });
 
     return NextResponse.json({
@@ -109,6 +117,8 @@ export async function POST(req: Request) {
         businessType: user.businessType,
         bankName: user.bankName,
         bankAccount: user.bankAccount,
+        nibUrl: (user as any).nibUrl || null,
+        verificationStatus: (user as any).verificationStatus || 'APPROVED',
         balance: Number(user.balance),
       },
     }, { status: 201 });

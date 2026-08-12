@@ -23,7 +23,7 @@ interface ChatViewState {
 
 // State pendaftaran hardcoded (tidak bergantung AI) agar contoh jawaban selalu konsisten
 interface RegisterState {
-    step: 1 | 2 | 3 | 4; // 1=nama, 2=lokasi, 3=rekening, 4=nomor HP
+    step: 1 | 2 | 3 | 4 | 5; // 1=nama, 2=lokasi, 3=rekening, 4=nomor HP, 5=foto NIB
     name?: string;
     businessName?: string;
     location?: string;
@@ -31,6 +31,8 @@ interface RegisterState {
     lng?: number;
     bankName?: string;
     bankAccount?: string;
+    phone?: string;
+    nibUrl?: string;
     expiresAt: number;
 }
 
@@ -41,7 +43,7 @@ const registerStateMap = new Map<string, RegisterState>();
 
 // Pesan hardcoded untuk tiap langkah pendaftaran
 const REGISTER_STEP_1 = 
-    `*Langkah 1 dari 4 — Nama*\n\n` +
+    `*Langkah 1 dari 5 — Nama*\n\n` +
     `Siapa nama lengkap Anda dan nama usaha/kebun Anda?\n\n` +
     `📝 Contoh jawaban:\n` +
     `_Pak Sugeng — Kebun Makmur Wonosobo_\n` +
@@ -49,7 +51,7 @@ const REGISTER_STEP_1 =
     `_Alfaen — Kebun Alfaen Banyumas_`;
 
 const REGISTER_STEP_2 =
-    `*Langkah 2 dari 4 — Lokasi Kebun/Gudang*\n\n` +
+    `*Langkah 2 dari 5 — Lokasi Kebun/Gudang*\n\n` +
     `Kirim titik lokasi kebun atau gudang Anda menggunakan fitur *Share Location* WhatsApp:\n\n` +
     `1️⃣ Tekan ikon 📎 *(Lampiran)* di bawah layar\n` +
     `2️⃣ Pilih *Lokasi*\n` +
@@ -65,7 +67,7 @@ const REGISTER_STEP_2_RETRY =
     `Koordinat GPS dibutuhkan agar kebun/gudang Anda tampil di peta aplikasi Tumbasna.`;
 
 const REGISTER_STEP_3 =
-    `*Langkah 3 dari 4 — Rekening Bank*\n\n` +
+    `*Langkah 3 dari 5 — Rekening Bank*\n\n` +
     `Untuk pencairan dana hasil penjualan QRIS, kirimkan informasi rekening bank Anda.\n\n` +
     `📝 Format: *[Nama Bank] [Nomor Rekening]*\n\n` +
     `Contoh jawaban:\n` +
@@ -75,13 +77,22 @@ const REGISTER_STEP_3 =
     `_BSI 7123456789_`;
 
 const REGISTER_STEP_4 =
-    `*Langkah 4 dari 4 — Nomor WhatsApp* (Terakhir!)\n\n` +
+    `*Langkah 4 dari 5 — Nomor WhatsApp*\n\n` +
     `Ketik nomor WhatsApp aktif Anda untuk dihubungi oleh pembeli dari aplikasi Tumbasna.\n\n` +
     `📝 Format: awali dengan *08* atau *628*\n\n` +
     `Contoh jawaban:\n` +
     `_085869236023_\n` +
     `_6285869236023_\n\n` +
     `_(Nomor ini yang akan tampil ke pembeli di aplikasi Tumbasna)_`;
+
+const REGISTER_STEP_5 =
+    `*Langkah 5 dari 5 — Upload Foto NIB (Quality Control)* (Terakhir!)\n\n` +
+    `Kirimkan *Foto Dokumen NIB (Nomor Induk Berusaha)* usaha Anda untuk verifikasi Quality Control oleh Admin Tumbasna.\n\n` +
+    `📷 *Cara Mengirim Foto:*\n` +
+    `1️⃣ Tekan ikon 📎 *(Lampiran)* atau 📷 *(Kamera)* di bawah layar\n` +
+    `2️⃣ Pilih foto dokumen NIB (atau gambar sampel untuk testing)\n` +
+    `3️⃣ Kirimkan gambar ke chat ini\n\n` +
+    `⚠️ _Dokumen NIB akan ditinjau secara manual oleh Admin sebelum akun Anda diaktifkan._`;
 
 
 export async function processIncomingMessage(
@@ -114,6 +125,39 @@ export async function processIncomingMessage(
         // Tetap lanjut — bot harus selalu membalas meskipun dashboard offline
     }
     console.log(`✅ [WHITELIST DONE] isRegistered=${isRegistered}`);
+
+    // 1.1 Cek status verifikasi NIB untuk user terdaftar (role PETANI / Supplier)
+    if (isRegistered && userInfo?.role === 'PETANI') {
+        const vStatus = userInfo.verificationStatus || 'APPROVED';
+        if (vStatus === 'PENDING') {
+            await sendMessage(sender, {
+                text: `⌛ *AKUN DALAM PENINJAUAN ADMIN*\n\n` +
+                      `Halo, *${userInfo.name || 'Juragan'}*!\n` +
+                      `Dokumen NIB dan pendaftaran akun Supplier Anda saat ini masih dalam proses peninjauan (Quality Control) oleh Admin Tumbasna.\n\n` +
+                      `Kami akan mengirimkan notifikasi instan di WhatsApp ini begitu pendaftaran Anda disetujui oleh Admin. Terima kasih atas kesabaran Juragan!`
+            });
+            return;
+        } else if (vStatus === 'REJECTED') {
+            // Jika ditolak, beri tahu dan izinkan kirim ulang foto NIB
+            const hasRegState = registerStateMap.has(phoneNumber);
+            if (!hasRegState) {
+                registerStateMap.set(phoneNumber, {
+                    step: 5,
+                    name: userInfo.name,
+                    businessName: userInfo.businessName,
+                    phone: phoneNumber,
+                    expiresAt: Date.now() + 30 * 60 * 1000
+                });
+                await sendMessage(sender, {
+                    text: `⚠️ *VERIFIKASI NIB BELUM DISETUJUI*\n\n` +
+                          `Halo, *${userInfo.name || 'Juragan'}*.\n` +
+                          `Mohon maaf, peninjauan dokumen NIB Anda sebelumnya belum berhasil disetujui oleh Admin Tumbasna.\n\n` +
+                          `Silakan kirimkan kembali foto NIB yang jelas di chat ini untuk diverifikasi ulang oleh Admin.`
+                });
+                return;
+            }
+        }
+    }
 
     // 1.2. Cek pembatalan alur penghapusan akun atau produk
     if (cleanText === 'batal') {
@@ -290,7 +334,7 @@ export async function processIncomingMessage(
                 return;
             }
 
-            // STEP 4: Menerima nomor HP → daftarkan ke API
+            // STEP 4: Menerima nomor HP → lanjut ke Step 5 (Upload Foto NIB)
             if (regState.step === 4) {
                 if (isLocationMsg) {
                     await sendMessage(sender, { text: REGISTER_STEP_4 });
@@ -311,65 +355,91 @@ export async function processIncomingMessage(
                     return;
                 }
 
-                // Semua data lengkap → daftarkan ke API
+                // Pindah ke Step 5: Upload Foto NIB
+                registerStateMap.set(phoneNumber, {
+                    ...regState,
+                    step: 5,
+                    phone: finalPhone,
+                    expiresAt: Date.now() + 30 * 60 * 1000
+                });
+                const displayPhone = '0' + finalPhone.replace(/^62/, '');
+                const step5Text =
+                    `✅ Nomor HP tercatat: *${displayPhone}*\n\n` +
+                    `━━━━━━━━━━━━━━━\n\n` +
+                    REGISTER_STEP_5;
+                await sendMessage(sender, { text: step5Text });
+                return;
+            }
+
+            // STEP 5: Menerima Foto NIB → daftarkan ke API dengan status PENDING_VERIFICATION
+            if (regState.step === 5) {
+                let nibImageUrl: string | null = null;
+
+                // Cek apakah pesan mengandung URL foto yang diformat dari baileys.ts
+                if (text.includes('URL Foto:')) {
+                    const match = text.match(/URL Foto:\s*([^\s|]+)/);
+                    if (match) nibImageUrl = match[1];
+                } else if (text.includes('URL Foto Resi:')) {
+                    const match = text.match(/URL Foto Resi:\s*([^\s|]+)/);
+                    if (match) nibImageUrl = match[1];
+                }
+
+                // Ambil foto terakhir dari session memory jika ada foto diunggah
+                if (!nibImageUrl) {
+                    const { getLastImageUrl } = await import('../ai/memory');
+                    nibImageUrl = await getLastImageUrl(sender);
+                }
+
+                const targetPhone = regState.phone || phoneNumber;
+
+                // Daftarkan ke API Backend dengan nibUrl
                 registerStateMap.delete(phoneNumber);
                 try {
                     await apiService.registerSupplier({
-                        phone: finalPhone,
+                        phone: targetPhone,
                         name: regState.name || pushName,
                         businessName: regState.businessName || regState.name || pushName,
                         location: regState.location || '',
                         bankName: regState.bankName || '',
                         bankAccount: regState.bankAccount || '',
                         lat: regState.lat ?? null,
-                        lng: regState.lng ?? null
+                        lng: regState.lng ?? null,
+                        nibUrl: nibImageUrl || null
                     });
 
                     // Jika nomor WA (sender) berbeda dengan nomor yang diinput, simpan mapping
-                    if (finalPhone !== phoneNumber) {
+                    if (targetPhone !== phoneNumber) {
                         const { saveMetadata } = await import('../ai/memory');
-                        await saveMetadata(sender, { mappedPhone: finalPhone });
+                        await saveMetadata(sender, { mappedPhone: targetPhone });
                     }
 
-                    const displayPhone = '0' + finalPhone.replace(/^62/, '');
-                    const menuText =
-                        `*MENU UTAMA MITRA TUMBASNA* 🌾\n\n` +
-                        `Halo Bpk/Ibu *${regState.name}*, akun Anda sudah aktif! Ketik kode angka berikut:\n\n` +
-                        `*1* 👤 Lihat Profil & Rekening Bank\n` +
-                        `*2* 💰 Lihat Saldo Escrow QRIS\n` +
-                        `*3* 📦 Lihat Daftar Listing Produk Aktif\n` +
-                        `*4* 🛒 Lihat Pesanan Masuk (Order)\n` +
-                        `*5* ✍️ Cara Jual / Daftarkan Komoditas\n` +
-                        `*6* 📞 Hubungi Bantuan / CS\n` +
-                        `*7* ✏️ Edit Profil / Rekening Bank\n` +
-                        `*8* 🗑️ Hapus Akun & Data Saya\n` +
-                        `*9* 💬 Inbox Chat Pembeli\n\n` +
-                        `💡 _Atau Juragan bisa langsung mengetik pesan teks bebas untuk menawarkan hasil tani Juragan secara otomatis._`;
-
-                    const successText =
-                        `🎉 *PENDAFTARAN BERHASIL!*\n\n` +
-                        `Selamat bergabung, *${regState.name}*!\n\n` +
-                        `Data tersimpan:\n` +
+                    const displayPhone = '0' + targetPhone.replace(/^62/, '');
+                    const pendingText =
+                        `📋 *PENDAFTARAN MITRA SUPPLIER DITERIMA!*\n\n` +
+                        `Terima kasih, *${regState.name}*!\n\n` +
+                        `Data pendaftaran tersimpan:\n` +
                         `📞 No. HP: ${displayPhone}\n` +
-                        `📍 Lokasi: ${regState.location}\n` +
-                        `🏦 Bank: ${regState.bankName}\n` +
-                        `💳 No. Rek: ${regState.bankAccount}\n\n` +
-                        `✅ Akun Anda sudah aktif!`;
+                        `📍 Lokasi: ${regState.location || '-'}\n` +
+                        `🏦 Bank: ${regState.bankName || '-'}\n` +
+                        `💳 No. Rek: ${regState.bankAccount || '-'}\n` +
+                        `📑 NIB: ${nibImageUrl ? 'Terlampir' : 'Sampel/Dummy'}\n\n` +
+                        `🔍 *STATUS: PENDING VERIFICATION*\n` +
+                        `Dokumen NIB dan data usaha Anda saat ini sedang ditinjau secara manual oleh Admin Tumbasna untuk Quality Control (QC).\n\n` +
+                        `⏱️ Kami akan mengirimkan notifikasi via WhatsApp ini segera setelah Admin menyetujui pendaftaran Anda.`;
 
-                    await sendMessage(sender, { text: successText });
-                    await sendMessage(sender, { text: menuText });
-                    console.log(`✅ [REGISTER HARDCODED] ${regState.name} (${finalPhone}) berhasil didaftarkan`);
+                    await sendMessage(sender, { text: pendingText });
+                    console.log(`✅ [REGISTER NIB STEP 5 SUCCESS] ${regState.name} (${targetPhone}) terdaftar dengan status PENDING`);
                 } catch (err: any) {
                     if (err?.response?.status === 409) {
                         await sendMessage(sender, {
-                            text: `ℹ️ Nomor ${finalPhone} sudah terdaftar sebelumnya.\n\nKetik *MENU* untuk melihat menu utama.`
+                            text: `ℹ️ Nomor ${targetPhone} sudah terdaftar sebelumnya.\n\nJika pendaftaran Anda sedang ditinjau, silakan tunggu notifikasi dari Admin Tumbasna.`
                         });
                     } else {
                         console.error(`❌ [REGISTER HARDCODED ERROR]`, err.message);
                         await sendMessage(sender, {
                             text: `❌ Maaf, terjadi kesalahan saat mendaftarkan akun Anda.\n\nSilakan coba lagi atau hubungi CS kami.`
                         });
-                        registerStateMap.set(phoneNumber, { ...regState, step: 4 });
+                        registerStateMap.set(phoneNumber, { ...regState, step: 5 });
                     }
                 }
                 return;

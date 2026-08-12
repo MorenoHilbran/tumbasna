@@ -178,4 +178,60 @@ router.post('/api/send', authMiddleware, async (req: Request, res: Response) => 
     }
 });
 
+// Endpoint notifikasi hasil verifikasi NIB oleh Admin
+router.post('/api/notify-verification', async (req: Request, res: Response) => {
+    const { phone, status, name, notes } = req.body;
+    const sock = getSock();
+
+    if (!sock) {
+        return res.status(503).json({ success: false, error: 'WhatsApp bot is not ready' });
+    }
+
+    if (!phone || !status) {
+        return res.status(400).json({ success: false, error: 'Phone and status are required' });
+    }
+
+    try {
+        const cleanPhone = phone.split('@')[0].trim().replace(/\D/g, '');
+        let formattedPhone = cleanPhone;
+        if (cleanPhone.startsWith('0')) {
+            formattedPhone = '62' + cleanPhone.substring(1);
+        } else if (!cleanPhone.startsWith('62')) {
+            formattedPhone = '62' + cleanPhone;
+        }
+
+        let jid = `${formattedPhone}@s.whatsapp.net`;
+        try {
+            const [onWa] = await sock.onWhatsApp(formattedPhone);
+            if (onWa && onWa.jid) jid = onWa.jid;
+        } catch (e) {
+            console.warn('[WA JID LOOKUP] Using default JID:', jid);
+        }
+
+        let notificationMsg = '';
+        if (status === 'APPROVED') {
+            notificationMsg =
+                `*PENDAFTARAN SUPPLIER DISETUJUI*\n\n` +
+                `Selamat, *${name || 'Juragan'}*!\n` +
+                `Dokumen NIB dan akun Supplier Anda di Tumbasna telah DITERIMA oleh Admin.\n\n` +
+                `✅ Akun Anda sudah AKTIF sepenuhnya.\n\n` +
+                `Ketik *MENU* untuk mulai mengelola stok dan menerima pesanan bahan baku dari pedagang!`;
+        } else {
+            notificationMsg =
+                `*VERIFIKASI SUPPLIER BELUM DISETUJUI*\n\n` +
+                `Halo, *${name || 'Juragan'}*.\n` +
+                `Mohon maaf, peninjauan dokumen NIB Anda belum disetujui oleh Admin.\n` +
+                `${notes ? `Catatan Admin: ${notes}\n\n` : '\n'}` +
+                `Silakan kirimkan kembali foto NIB yang jelas di chat ini untuk diverifikasi ulang oleh Admin Tumbasna.`;
+        }
+
+        await sock.sendMessage(jid, { text: notificationMsg });
+        console.log(`✅ [NOTIFY VERIFICATION SUCCESS] Sent to ${jid} (${status})`);
+        res.json({ success: true, message: 'Notifikasi verifikasi terkirim', targetJid: jid });
+    } catch (error: any) {
+        console.error('❌ [NOTIFY VERIFICATION ERROR]', error.message);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 export default router;
