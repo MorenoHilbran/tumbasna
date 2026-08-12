@@ -82,6 +82,21 @@ export async function DELETE(req: Request) {
     const phone = user.phoneNumber;
     const userNames = [user.name, user.businessName].filter(Boolean) as string[];
 
+    // Delete orders/transactions associated with this user (as buyer or supplier)
+    try {
+      await prisma.order.deleteMany({
+        where: {
+          OR: [
+            { buyerUserId: id },
+            ...(phone ? [{ buyerPhone: phone }] : []),
+            ...(userNames.length > 0 ? [{ supplierName: { in: userNames } }] : [])
+          ]
+        }
+      });
+    } catch (orderErr: any) {
+      console.warn('[DELETE USER] Warning deleting orders:', orderErr.message);
+    }
+
     // Delete reviews associated with this user (as buyer or supplier)
     try {
       await prisma.review.deleteMany({

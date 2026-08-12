@@ -98,18 +98,17 @@ export async function GET() {
                 return buyerReg === rName || suppReg === rName;
             }).length;
 
-            // Status is melimpah if stock is high, else menipis
-            const status = totalStockKg > 2000 ? 'melimpah' : 'menipis';
+            // Status berdasarkan aktivitas transaksi real: 'tinggi' (ramai) vs 'rendah' (sepi)
+            const status = transactionsCount >= 5 || totalStockKg >= 1000 ? 'tinggi' : 'rendah';
 
-            // Return stats with fallback mock data so the map always looks beautifully populated
             regionStats[r] = {
                 status,
-                supplier: suppliersCount || Math.floor(25 + Math.random() * 20),
-                buyer: buyersCount || Math.floor(75 + Math.random() * 40),
-                stok: totalStockKg > 0 ? `${(totalStockKg / 1000).toFixed(1)} ton` : `${(1 + Math.random() * 2).toFixed(1)} ton`,
-                hargaRataRata: avgPrice > 0 ? `Rp ${avgPrice.toLocaleString('id-ID')}/kg` : `Rp ${Math.floor(11000 + Math.random() * 3000).toLocaleString('id-ID')}/kg`,
-                transaksi: transactionsCount || Math.floor(10 + Math.random() * 15),
-                komoditas: commodities.length > 0 ? commodities : ['Beras', 'Sayuran', 'Cabai Rawit']
+                supplier: suppliersCount,
+                buyer: buyersCount,
+                stok: totalStockKg > 0 ? `${(totalStockKg / 1000).toFixed(1)} ton` : '0 ton',
+                hargaRataRata: avgPrice > 0 ? `Rp ${avgPrice.toLocaleString('id-ID')}/kg` : 'Rp 0/kg',
+                transaksi: transactionsCount,
+                komoditas: commodities.length > 0 ? commodities : []
             };
         }
 

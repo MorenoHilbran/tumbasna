@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
+import React, { useEffect, useMemo, useState, memo } from 'react';
+import { MapContainer, TileLayer, CircleMarker, Marker, Popup, Tooltip, useMap } from 'react-leaflet';
+import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 // ─── Types ────────────────────────────────────────────────────
@@ -42,22 +43,61 @@ interface PetaMapLeafletProps {
 function PanToSelected({ wilayahData, selected }: { wilayahData: WilayahItem[]; selected: string | null }) {
     const map = useMap();
     useEffect(() => {
-        if (!selected) return;
+        if (!selected || !map) return;
         const w = wilayahData.find(x => x.id === selected);
         if (w) {
-            map.flyTo([w.lat, w.lng], 10, { duration: 1.2 });
+            const timer = setTimeout(() => {
+                try {
+                    if (map && (map as any)._loaded && map.getContainer()) {
+                        map.flyTo([w.lat, w.lng], 10, { duration: 1.2 });
+                    }
+                } catch (e) {
+                    console.warn('PanToSelected flyTo warning:', e);
+                }
+            }, 150);
+            return () => clearTimeout(timer);
         }
     }, [selected, wilayahData, map]);
     return null;
 }
 
+// ─── Helper: Create Leaflet Pin Icon ─────────────────────────
+function getPinIcon(color: string) {
+    if (typeof window === 'undefined' || !L || !L.divIcon) return undefined;
+    return L.divIcon({
+        className: 'custom-leaflet-pin-icon',
+        html: `<div style="position:relative;width:30px;height:42px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0px 3px 5px rgba(0,0,0,0.3));"><svg width="30" height="42" viewBox="0 0 30 42" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15 0C6.71573 0 0 6.71573 0 15C0 26.25 15 42 15 42C15 42 30 26.25 30 15C30 6.71573 23.2843 0 15 0Z" fill="${color}"/><circle cx="15" cy="14" r="5" fill="white"/></svg></div>`,
+        iconSize: [30, 42],
+        iconAnchor: [15, 42],
+        popupAnchor: [0, -38],
+    });
+}
+
 // ─── Main Map Component ───────────────────────────────────────
-export default function PetaMapLeaflet({ wilayahData, selected, onSelect, productPoints }: PetaMapLeafletProps) {
+export default memo(function PetaMapLeaflet({ wilayahData, selected, onSelect, productPoints }: PetaMapLeafletProps) {
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
     // Center: tengah Barlingmascakeb & Tegal
     const center: [number, number] = [-7.25, 109.30];
 
+    const supplyPinIcon = useMemo(() => getPinIcon('#48BB78'), [mounted]);
+    const demandPinIcon = useMemo(() => getPinIcon('#3182CE'), [mounted]);
+
+    if (!mounted) {
+        return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 border-r border-slate-200/65">
+                <p className="text-xs font-semibold text-slate-400">Memuat peta interaktif...</p>
+            </div>
+        );
+    }
+
     return (
         <MapContainer
+            key="tumbasna-leaflet-map-root"
             center={center}
             zoom={8}
             maxBounds={[[-12.0, 94.0], [8.0, 142.5]]}
@@ -78,17 +118,17 @@ export default function PetaMapLeaflet({ wilayahData, selected, onSelect, produc
 
             {/* Markers per wilayah */}
             {wilayahData.map((w) => {
-                const melimpah = w.status === 'melimpah';
+                const isTinggi = w.status === 'tinggi' || w.status === 'melimpah';
                 const isSelected = selected === w.id;
-                const fillColor = melimpah ? '#7FBB54' : '#EF4444';
-                const fillOpacity = isSelected ? 0.75 : 0.45;
-                const strokeColor = melimpah ? '#5E9C36' : '#DC2626';
+                const fillColor = isTinggi ? '#10B981' : '#F43F5E';
+                const fillOpacity = isSelected ? 0.8 : 0.5;
+                const strokeColor = isTinggi ? '#059669' : '#E11D48';
 
                 return (
                     <CircleMarker
                         key={w.id}
                         center={[w.lat, w.lng]}
-                        radius={isSelected ? 36 : 28}
+                        radius={isSelected ? 32 : 24}
                         pathOptions={{
                             color: isSelected ? strokeColor : 'white',
                             weight: isSelected ? 3 : 2,
@@ -99,112 +139,56 @@ export default function PetaMapLeaflet({ wilayahData, selected, onSelect, produc
                             click: () => onSelect(w.id),
                         }}
                     >
-                        <Popup
-                            offset={[0, -10]}
-                        >
-                            <div style={{ fontFamily: 'Poppins, sans-serif', minWidth: '180px', padding: '4px' }}>
-                                {/* Header popup */}
-                                <div style={{
-                                    display: 'flex', alignItems: 'center', gap: '6px',
-                                    marginBottom: '8px', paddingBottom: '8px',
-                                    borderBottom: '1px solid #DDE5D8'
-                                }}>
-                                    <div style={{
-                                        width: 10, height: 10, borderRadius: '50%',
-                                        background: fillColor, flexShrink: 0
-                                    }} />
-                                    <span style={{ fontWeight: 700, fontSize: 14, color: '#1F3826' }}>{w.name}</span>
-                                </div>
-
-                                {/* Status badge */}
-                                <div style={{
-                                    display: 'inline-block',
-                                    background: melimpah ? 'rgba(127,187,84,0.12)' : 'rgba(239,68,68,0.10)',
-                                    color: melimpah ? '#5E9C36' : '#DC2626',
-                                    fontSize: 10, fontWeight: 700,
-                                    padding: '2px 8px', borderRadius: 20,
-                                    marginBottom: 8
-                                }}>
-                                    Stok {w.status}
-                                </div>
-
-                                {/* Stats grid */}
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 8 }}>
-                                    {[
-                                        { label: 'Supplier', value: w.supplier },
-                                        { label: 'Buyer', value: w.buyer },
-                                        { label: 'Total Stok', value: w.stok },
-                                        { label: 'Transaksi', value: w.transaksi },
-                                    ].map(s => (
-                                        <div key={s.label} style={{ background: '#F4F7F2', borderRadius: 8, padding: '6px 8px' }}>
-                                            <p style={{ fontSize: 9, color: '#8DA88F', margin: 0, fontWeight: 500 }}>{s.label}</p>
-                                            <p style={{ fontSize: 12, color: '#1F3826', margin: 0, fontWeight: 700 }}>{s.value}</p>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                {/* Komoditas */}
-                                <p style={{ fontSize: 10, color: '#1F3826', fontWeight: 600, marginBottom: 4 }}>Komoditas:</p>
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                                    {w.komoditas.slice(0, 4).map(k => (
-                                        <span key={k} style={{
-                                            fontSize: 9, fontWeight: 600,
-                                            background: 'rgba(127,187,84,0.12)', color: '#3A7A28',
-                                            border: '1px solid rgba(127,187,84,0.3)',
-                                            padding: '2px 6px', borderRadius: 20
-                                        }}>{k}</span>
-                                    ))}
-                                </div>
+                        <Tooltip direction="top" offset={[0, -10]} opacity={0.95}>
+                            <div style={{ fontFamily: 'Poppins, sans-serif', padding: '2px 4px' }}>
+                                <p style={{ fontWeight: 700, fontSize: '12px', margin: 0, color: '#0F172A' }}>{w.name}</p>
+                                <p style={{ fontSize: '10px', margin: 0, color: isTinggi ? '#059669' : '#E11D48', fontWeight: 600 }}>
+                                    {isTinggi ? 'Transaksi Tinggi' : 'Transaksi Rendah'}
+                                </p>
                             </div>
-                        </Popup>
+                        </Tooltip>
                     </CircleMarker>
                 );
             })}
 
-            {/* Markers/Pins untuk tiap produk di database */}
+            {/* Markers/Pins Teardrop untuk tiap produk di database (Matching Gambar 2) */}
             {productPoints?.map((p) => {
                 const isSupply = p.type === 'SUPPLY';
-                const fillColor = isSupply ? '#10B981' : '#3B82F6'; // Emerald for supply, Blue for demand
-                const strokeColor = isSupply ? '#047857' : '#1D4ED8';
-                
+                const pinIcon = isSupply ? supplyPinIcon : demandPinIcon;
+                if (!pinIcon) return null;
+
                 return (
-                    <CircleMarker
+                    <Marker
                         key={`prod-${p.id}`}
-                        center={[p.lat, p.lng]}
-                        radius={10}
-                        pathOptions={{
-                            color: strokeColor,
-                            weight: 2,
-                            fillColor,
-                            fillOpacity: 0.9,
-                        }}
+                        position={[p.lat, p.lng]}
+                        icon={pinIcon}
                     >
-                        <Popup offset={[0, -5]}>
-                            <div style={{ fontFamily: 'Poppins, sans-serif', minWidth: '150px', padding: '4px' }}>
-                                <div style={{ fontWeight: 700, fontSize: 13, color: '#1F3826', marginBottom: 4 }}>
+                        <Popup offset={[0, -36]}>
+                            <div style={{ fontFamily: 'Poppins, sans-serif', minWidth: '160px', padding: '4px' }}>
+                                <div style={{ fontWeight: 700, fontSize: 13, color: '#0F172A', marginBottom: 4 }}>
                                     {p.commodity}
                                 </div>
                                 <div style={{
                                     display: 'inline-block',
-                                    background: isSupply ? 'rgba(16,185,129,0.12)' : 'rgba(59,130,246,0.12)',
-                                    color: isSupply ? '#059669' : '#2563EB',
+                                    background: isSupply ? 'rgba(72,187,120,0.12)' : 'rgba(49,130,206,0.12)',
+                                    color: isSupply ? '#2F855A' : '#2B6CB0',
                                     fontSize: 9, fontWeight: 700,
-                                    padding: '1px 6px', borderRadius: 20,
+                                    padding: '2px 8px', borderRadius: 20,
                                     marginBottom: 6
                                 }}>
-                                    {isSupply ? 'PENAWARAN (SUPPLY)' : 'PERMINTAAN (DEMAND)'}
+                                    {isSupply ? 'STOK SUPPLIER (PETANI)' : 'PERMINTAAN BUYER (PEDAGANG)'}
                                 </div>
-                                <div style={{ fontSize: 11, color: '#4B5563', margin: '2px 0' }}>
+                                <div style={{ fontSize: 11, color: '#475569', margin: '3px 0' }}>
                                     <strong>Volume:</strong> {p.qty} kg
                                 </div>
-                                <div style={{ fontSize: 11, color: '#4B5563', margin: '2px 0' }}>
+                                <div style={{ fontSize: 11, color: '#475569', margin: '3px 0' }}>
                                     <strong>Lokasi:</strong> {p.location}
                                 </div>
                             </div>
                         </Popup>
-                    </CircleMarker>
+                    </Marker>
                 );
             })}
         </MapContainer>
     );
-}
+});
