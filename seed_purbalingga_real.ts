@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from './tumbasna-dashboard/node_modules/@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
@@ -260,7 +260,7 @@ async function main() {
       buyerIndex: 2,    // Pasar Bobotsari Purbalingga
       productIndex: 5,  // Duku Padamara
       qty: 400,
-      status: 'DIKIRIM',
+      status: 'DIPROSES',
       courier: 'Hendra Wijaya (R 3456 GH)',
       shippingCost: 31000,
       notes: JSON.stringify({

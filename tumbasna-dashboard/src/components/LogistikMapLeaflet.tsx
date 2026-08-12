@@ -247,7 +247,7 @@ export default memo(function LogistikMapLeaflet({ armadaData, selectedId, onSele
         };
     }, [mounted]);
 
-    const center: [number, number] = [-7.55, 109.25]; // Center of Barlingmascakeb
+    const center: [number, number] = [-7.3884, 109.3641]; // Center of Kabupaten Purbalingga
     const [routePaths, setRoutePaths] = useState<Record<string, [number, number][]>>({});
     const [coordsCache, setCoordsCache] = useState<Record<string, [number, number]>>(coordsMap);
 
@@ -353,7 +353,7 @@ export default memo(function LogistikMapLeaflet({ armadaData, selectedId, onSele
         <MapContainer
             key="tumbasna-logistik-map-root"
             center={center}
-            zoom={9}
+            zoom={11}
             maxBounds={[[-12.0, 94.0], [8.0, 142.5]]}
             maxBoundsViscosity={1.0}
             minZoom={5}

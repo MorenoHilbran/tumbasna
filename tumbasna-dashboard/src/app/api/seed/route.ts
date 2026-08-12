@@ -2,166 +2,336 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
 export async function GET() {
-    try {
-        // 1. Hapus data transaksi dan produk terlebih dahulu untuk menghindari constraint foreign key
-        await prisma.match.deleteMany({});
-        await prisma.orderItem.deleteMany({});
-        await prisma.payment.deleteMany({});
-        await prisma.order.deleteMany({});
-        await prisma.notificationQueue.deleteMany({});
-        await prisma.paymentGroup.deleteMany({});
-        await prisma.productEntry.deleteMany({});
+  try {
+    // 1. Bersihkan data transaksi dan produk lama untuk menghindari constraint foreign key
+    await prisma.match.deleteMany({});
+    await prisma.orderItem.deleteMany({});
+    await prisma.payment.deleteMany({});
+    await prisma.order.deleteMany({});
+    await prisma.notificationQueue.deleteMany({});
+    await prisma.paymentGroup.deleteMany({});
+    await prisma.productEntry.deleteMany({});
 
-        // 2. Definisikan Wilayah Barlingmascakeb
-        const regions = [
-            { id: 'banyumas', name: 'Banyumas', lat: -7.5151, lng: 109.2941 },
-            { id: 'purbalingga', name: 'Purbalingga', lat: -7.3884, lng: 109.3641 },
-            { id: 'cilacap', name: 'Cilacap', lat: -7.7150, lng: 108.9767 },
-            { id: 'banjarnegara', name: 'Banjarnegara', lat: -7.3884, lng: 109.6939 },
-            { id: 'kebumen', name: 'Kebumen', lat: -7.6701, lng: 109.6524 }
-        ];
+    // 2. Daftar Supplier & UMKM Asli Purbalingga & Sekitarnya
+    const suppliersData = [
+      {
+        name: 'Gacorian.id',
+        phone: '6285869236023',
+        businessName: 'Gacorian.id (Kalimanah Purbalingga)',
+        address: 'Jl. Raya Kalimanah, Kec. Kalimanah, Kabupaten Purbalingga, Jawa Tengah',
+        lat: -7.4125,
+        lng: 109.3385,
+        products: [
+          { commodity: 'beras pandan wangi', price: 15500, qty: 1500 },
+          { commodity: 'beras premium ir64', price: 14200, qty: 2000 },
+        ]
+      },
+      {
+        name: 'Bu Sari',
+        phone: '6281390124857',
+        businessName: 'UD Sari Tani Purbalingga',
+        address: 'Desa Karangbanjar, Kec. Bojongsari, Kabupaten Purbalingga, Jawa Tengah',
+        lat: -7.3620,
+        lng: 109.3580,
+        products: [
+          { commodity: 'cabai rawit merah', price: 42000, qty: 350 },
+          { commodity: 'cabai merah keriting', price: 35000, qty: 500 },
+        ]
+      },
+      {
+        name: 'Pak Haryanto',
+        phone: '6281903847201',
+        businessName: 'Kelompok Tani Nanas Siwarak',
+        address: 'Desa Siwarak, Kec. Karangreja, Kabupaten Purbalingga, Jawa Tengah',
+        lat: -7.2950,
+        lng: 109.3600,
+        products: [
+          { commodity: 'nanas madu karangreja', price: 8500, qty: 2500 },
+        ]
+      },
+      {
+        name: 'Pak Bambang',
+        phone: '6285747391029',
+        businessName: 'Koperasi Tani Duku & Durian Padamara',
+        address: 'Kec. Padamara, Kabupaten Purbalingga, Jawa Tengah',
+        lat: -7.3850,
+        lng: 109.3120,
+        products: [
+          { commodity: 'duku padamara', price: 18000, qty: 800 },
+          { commodity: 'durian lokal purbalingga', price: 45000, qty: 400 },
+        ]
+      },
+      {
+        name: 'Bulog Sub-Drivre Sokaraja',
+        phone: '6281227849102',
+        businessName: 'Gudang Bulog Sokaraja',
+        address: 'Bulog Sokaraja, Desa Klahang, Kec. Sokaraja, Kabupaten Banyumas',
+        lat: -7.4470,
+        lng: 109.3134,
+        products: [
+          { commodity: 'beras medium sphp', price: 12500, qty: 5000 },
+          { commodity: 'gula pasir maniskita', price: 16500, qty: 3000 },
+        ]
+      },
+      {
+        name: 'Kelompok Tani Dieng',
+        phone: '6285291038472',
+        businessName: 'Koperasi Kopi Batur Dieng',
+        address: 'Kec. Batur, Kabupaten Banjarnegara, Jawa Tengah',
+        lat: -7.2075,
+        lng: 109.8285,
+        products: [
+          { commodity: 'kopi arabika dieng', price: 95000, qty: 600 },
+          { commodity: 'kentang dieng super', price: 17500, qty: 1200 },
+        ]
+      }
+    ];
 
-        // 3. Buat/perbarui pengguna (Petani & Pedagang)
-        const farmers = [];
-        const merchants = [];
+    const buyersData = [
+      {
+        name: 'Pasar Segamas Purbalingga',
+        phone: '6285100000001',
+        businessName: 'Pedagang Pasar Segamas Purbalingga',
+        address: 'Pasar SegaMas, Planjan, Kalikabong, Kec. Purbalingga, Kabupaten Purbalingga',
+        lat: -7.3999,
+        lng: 109.3490,
+      },
+      {
+        name: 'Pasar Bukateja Purbalingga',
+        phone: '6285100000002',
+        businessName: 'Koperasi Pasar Bukateja',
+        address: 'Jl. Raya Bukateja, Kec. Bukateja, Kabupaten Purbalingga',
+        lat: -7.4420,
+        lng: 109.4280,
+      },
+      {
+        name: 'Pasar Bobotsari Purbalingga',
+        phone: '6285100000003',
+        businessName: 'Paguyuban Pedagang Pasar Bobotsari',
+        address: 'Jl. Raya Bobotsari, Kec. Bobotsari, Kabupaten Purbalingga',
+        lat: -7.2480,
+        lng: 109.3080,
+      },
+      {
+        name: 'Pasar Wage Purwokerto',
+        phone: '6285100000004',
+        businessName: 'Toko Kelontong Berkah Wage',
+        address: 'Pasar Wage, Mangunjaya, Purwokerto Timur, Kabupaten Banyumas',
+        lat: -7.4266,
+        lng: 109.2492,
+      },
+      {
+        name: 'Sentra Getuk Goreng H. Tohirin',
+        phone: '6285100000005',
+        businessName: 'Getuk Goreng H. Tohirin Sokaraja',
+        address: 'Jl. Jend. Soedirman No. 16, Sokaraja Tengah, Kabupaten Banyumas',
+        lat: -7.4589,
+        lng: 109.2965,
+      }
+    ];
 
-        const farmerNames = ['Pak Sugeng', 'Pak Slamet', 'Bu Yati', 'Pak Bambang', 'Bu Sari'];
-        for (let i = 0; i < regions.length; i++) {
-            const region = regions[i];
-            const phone = `628100000000${i + 1}`;
-            const user = await prisma.user.upsert({
-                where: { phoneNumber: phone },
-                update: {
-                    name: farmerNames[i],
-                    address: `Desa Makmur RT 01/01, ${region.name}`,
-                    businessName: `Tani Makmur ${region.name}`,
-                    businessType: 'PETANI',
-                    role: 'PETANI',
-                    balance: 0
-                },
-                create: {
-                    phoneNumber: phone,
-                    name: farmerNames[i],
-                    address: `Desa Makmur RT 01/01, ${region.name}`,
-                    businessName: `Tani Makmur ${region.name}`,
-                    businessType: 'PETANI',
-                    role: 'PETANI',
-                    balance: 0
-                }
-            });
-            farmers.push({ user, region });
+    // 3. Upsert Users & Product Entries
+    const createdSuppliers = [];
+    const createdProducts = [];
+
+    for (const s of suppliersData) {
+      const user = await prisma.user.upsert({
+        where: { phoneNumber: s.phone },
+        update: {
+          name: s.name,
+          businessName: s.businessName,
+          address: s.address,
+          businessType: 'PETANI',
+          role: 'PETANI',
+        },
+        create: {
+          phoneNumber: s.phone,
+          name: s.name,
+          businessName: s.businessName,
+          address: s.address,
+          businessType: 'PETANI',
+          role: 'PETANI',
         }
+      });
+      createdSuppliers.push({ user, data: s });
 
-        const merchantNames = ['CV Berkah Tani', 'UD Sumber Makmur', 'Pasar Rakyat Jaya', 'Koperasi Tani Maju', 'UD Rejeki Lancar'];
-        for (let i = 0; i < regions.length; i++) {
-            const region = regions[i];
-            const phone = `628500000000${i + 1}`;
-            const user = await prisma.user.upsert({
-                where: { phoneNumber: phone },
-                update: {
-                    name: merchantNames[i],
-                    address: `Pasar Utama RT 02/03, ${region.name}`,
-                    businessName: merchantNames[i],
-                    businessType: 'PEDAGANG',
-                    role: 'PEDAGANG',
-                    balance: 1000000
-                },
-                create: {
-                    phoneNumber: phone,
-                    name: merchantNames[i],
-                    address: `Pasar Utama RT 02/03, ${region.name}`,
-                    businessName: merchantNames[i],
-                    businessType: 'PEDAGANG',
-                    role: 'PEDAGANG',
-                    balance: 1000000
-                }
-            });
-            merchants.push({ user, region });
-        }
-
-        // 4. Seed Product Entries (SUPPLY)
-        const suppliesData = [
-            { commodity: 'beras premium', price: 14500, qty: 1000, farmerIndex: 0 },
-            { commodity: 'beras pandan wangi', price: 16000, qty: 800, farmerIndex: 0 },
-            { commodity: 'cabai merah keriting', price: 34000, qty: 150, farmerIndex: 1 },
-            { commodity: 'cabai rawit merah', price: 42000, qty: 120, farmerIndex: 1 },
-            { commodity: 'bawang merah super', price: 28000, qty: 400, farmerIndex: 2 },
-            { commodity: 'bawang putih kating', price: 36000, qty: 300, farmerIndex: 3 },
-            { commodity: 'kentang dieng', price: 18000, qty: 500, farmerIndex: 3 },
-            { commodity: 'jagung manis', price: 9000, qty: 600, farmerIndex: 4 },
-            { commodity: 'jahe gajah', price: 22000, qty: 250, farmerIndex: 0 },
-            { commodity: 'tomat buah', price: 12000, qty: 350, farmerIndex: 4 }
-        ];
-
-        const createdSupplies = [];
-        for (const s of suppliesData) {
-            const { user, region } = farmers[s.farmerIndex];
-            const latOffset = (Math.random() - 0.5) * 0.04;
-            const lngOffset = (Math.random() - 0.5) * 0.04;
-
-            const entry = await prisma.productEntry.create({
-                data: {
-                    userId: user.id,
-                    type: 'SUPPLY',
-                    commodity: s.commodity,
-                    qty: s.qty,
-                    price: s.price,
-                    location: region.name + ', Jawa Tengah',
-                    lat: region.lat + latOffset,
-                    lng: region.lng + lngOffset,
-                    status: 'ACTIVE'
-                }
-            });
-            createdSupplies.push(entry);
-        }
-
-        // 5. Seed Product Entries (DEMAND)
-        const demandsData = [
-            { commodity: 'beras premium', price: 14700, qty: 500, merchantIndex: 0 },
-            { commodity: 'cabai rawit merah', price: 43500, qty: 100, merchantIndex: 1 },
-            { commodity: 'bawang merah super', price: 29000, qty: 200, merchantIndex: 2 },
-            { commodity: 'kentang dieng', price: 18500, qty: 300, merchantIndex: 3 },
-            { commodity: 'jagung manis', price: 9500, qty: 400, merchantIndex: 4 }
-        ];
-
-        const createdDemands = [];
-        for (const d of demandsData) {
-            const { user, region } = merchants[d.merchantIndex];
-            const latOffset = (Math.random() - 0.5) * 0.04;
-            const lngOffset = (Math.random() - 0.5) * 0.04;
-
-            const entry = await prisma.productEntry.create({
-                data: {
-                    userId: user.id,
-                    type: 'DEMAND',
-                    commodity: d.commodity,
-                    qty: d.qty,
-                    price: d.price,
-                    location: 'Pasar ' + region.name + ', Jawa Tengah',
-                    lat: region.lat + latOffset,
-                    lng: region.lng + lngOffset,
-                    status: 'ACTIVE'
-                }
-            });
-            createdDemands.push(entry);
-        }
-
-        return NextResponse.json({
-            success: true,
-            message: "Database berhasil dibersihkan dan di-seed khusus Barlingmascakeb!",
-            data: {
-                farmersCount: farmers.length,
-                merchantsCount: merchants.length,
-                suppliesCount: createdSupplies.length,
-                demandsCount: createdDemands.length
-            }
+      for (const p of s.products) {
+        const prod = await prisma.productEntry.create({
+          data: {
+            userId: user.id,
+            type: 'SUPPLY',
+            commodity: p.commodity,
+            price: p.price,
+            qty: p.qty,
+            location: s.address,
+            lat: s.lat + (Math.random() - 0.5) * 0.005,
+            lng: s.lng + (Math.random() - 0.5) * 0.005,
+            status: 'ACTIVE'
+          }
         });
-    } catch (error: any) {
-        console.error("Gagal melakukan seeding data:", error);
-        return NextResponse.json({
-            success: false,
-            error: "Gagal membuat data dummy",
-            details: error.message
-        }, { status: 500 });
+        createdProducts.push({ prod, supplierUser: user, supplierData: s });
+      }
     }
+
+    const createdBuyers = [];
+    for (const b of buyersData) {
+      const user = await prisma.user.upsert({
+        where: { phoneNumber: b.phone },
+        update: {
+          name: b.name,
+          businessName: b.businessName,
+          address: b.address,
+          businessType: 'PEDAGANG',
+          role: 'PEDAGANG',
+        },
+        create: {
+          phoneNumber: b.phone,
+          name: b.name,
+          businessName: b.businessName,
+          address: b.address,
+          businessType: 'PEDAGANG',
+          role: 'PEDAGANG',
+        }
+      });
+      createdBuyers.push({ user, data: b });
+    }
+
+    // 4. Seed Orders (Rute Logistik Purbalingga Real-Time)
+    const mockOrders = [
+      {
+        id: 'ORD-PBG-001',
+        supplierIndex: 0, // Gacorian.id Kalimanah Purbalingga
+        buyerIndex: 3,    // Pasar Wage Purwokerto
+        productIndex: 0,  // Beras Pandan Wangi
+        qty: 500,
+        status: 'DIKIRIM',
+        courier: 'Budi Santoso (R 1234 AB)',
+        shippingCost: 28500,
+        notes: JSON.stringify({
+          waybillNumber: 'TMB-PBG-9021',
+          waybillCourier: 'Kurir TumbasNa Purbalingga',
+          supplierAddress: 'Kalimanah, Purbalingga',
+          buyerAddress: 'Pasar Wage, Purwokerto',
+          supplierCoords: [-7.4125, 109.3385],
+          buyerCoords: [-7.4266, 109.2492],
+        })
+      },
+      {
+        id: 'ORD-PBG-002',
+        supplierIndex: 1, // UD Sari Tani Bojongsari Purbalingga
+        buyerIndex: 0,    // Pasar Segamas Purbalingga
+        productIndex: 2,  // Cabai Rawit Merah
+        qty: 150,
+        status: 'DIKIRIM',
+        courier: 'Slamet Subagyo (R 4821 AA)',
+        shippingCost: 17500,
+        notes: JSON.stringify({
+          waybillNumber: 'TMB-PBG-9022',
+          waybillCourier: 'Kurir TumbasNa Purbalingga',
+          supplierAddress: 'Bojongsari, Purbalingga',
+          buyerAddress: 'Pasar Segamas, Purbalingga',
+          supplierCoords: [-7.3620, 109.3580],
+          buyerCoords: [-7.3999, 109.3490],
+        })
+      },
+      {
+        id: 'ORD-PBG-003',
+        supplierIndex: 2, // Kelompok Tani Nanas Siwarak Karangreja Purbalingga
+        buyerIndex: 1,    // Pasar Bukateja Purbalingga
+        productIndex: 4,  // Nanas Madu
+        qty: 1200,
+        status: 'SELESAI',
+        courier: 'Agus Prasetyo (R 5678 CD)',
+        shippingCost: 42000,
+        notes: JSON.stringify({
+          waybillNumber: 'TMB-PBG-9023',
+          waybillCourier: 'Kurir TumbasNa Purbalingga',
+          supplierAddress: 'Karangreja, Purbalingga',
+          buyerAddress: 'Bukateja, Purbalingga',
+          supplierCoords: [-7.2950, 109.3600],
+          buyerCoords: [-7.4420, 109.4280],
+        })
+      },
+      {
+        id: 'ORD-PBG-004',
+        supplierIndex: 3, // Koperasi Duku Padamara Purbalingga
+        buyerIndex: 2,    // Pasar Bobotsari Purbalingga
+        productIndex: 5,  // Duku Padamara
+        qty: 400,
+        status: 'DIKIRIM',
+        courier: 'Hendra Wijaya (R 3456 GH)',
+        shippingCost: 31000,
+        notes: JSON.stringify({
+          supplierAddress: 'Padamara, Purbalingga',
+          buyerAddress: 'Bobotsari, Purbalingga',
+          supplierCoords: [-7.3850, 109.3120],
+          buyerCoords: [-7.2480, 109.3080],
+        })
+      },
+      {
+        id: 'ORD-PBG-005',
+        supplierIndex: 4, // Gudang Bulog Sokaraja
+        buyerIndex: 0,    // Pasar Segamas Purbalingga
+        productIndex: 7,  // Gula Pasir
+        qty: 2000,
+        status: 'DIBATALKAN',
+        courier: 'Slamet Riyadi (R 7890 IJ)',
+        shippingCost: 35000,
+        notes: JSON.stringify({
+          supplierAddress: 'Sokaraja, Banyumas',
+          buyerAddress: 'Pasar Segamas, Purbalingga',
+          supplierCoords: [-7.4470, 109.3134],
+          buyerCoords: [-7.3999, 109.3490],
+        })
+      }
+    ];
+
+    for (const o of mockOrders) {
+      const supp = createdSuppliers[o.supplierIndex];
+      const buy  = createdBuyers[o.buyerIndex];
+      const prod = createdProducts[o.productIndex];
+
+      const totalAmt = Number(prod.prod.price) * o.qty + o.shippingCost;
+
+      await prisma.order.create({
+        data: {
+          id: o.id,
+          buyerUserId: buy.user.id,
+          supplierName: supp.data.businessName,
+          supplierLocation: supp.data.address,
+          courier: o.courier,
+          shippingCost: o.shippingCost,
+          totalAmount: totalAmt,
+          status: o.status as any,
+          fundsReleased: o.status === 'SELESAI',
+          notes: o.notes,
+          items: {
+            create: [
+              {
+                productEntryId: prod.prod.id,
+                commodity: prod.prod.commodity,
+                price: prod.prod.price,
+                qty: o.qty,
+                supplierName: supp.data.businessName,
+              }
+            ]
+          }
+        }
+      });
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Seeding data asli Purbalingga & Barlingmascakeb berhasil di-eksekusi!',
+      summary: {
+        suppliersCount: createdSuppliers.length,
+        buyersCount: createdBuyers.length,
+        productsCount: createdProducts.length,
+        ordersCount: mockOrders.length,
+      }
+    });
+  } catch (error: any) {
+    console.error('[API SEED ERROR]', error.message);
+    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+  }
 }

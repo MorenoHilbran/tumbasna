@@ -366,7 +366,7 @@ export default function LogistikPage() {
         const qtyNum = o.items?.[0]?.quantity || 10;
         const prodName = o.items?.[0]?.product?.name || 'Komoditas';
         const distKm = getDistanceKm(dari, ke, supplierCoords, buyerCoords);
-        const totalOngkir = o.shippingCost || (distKm * 2500);
+        const totalOngkir = distKm * 2500;
         const ongkirFormatted = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(totalOngkir);
 
         // Driver name clean up (don't use payment methods like cod/qris as driver name)

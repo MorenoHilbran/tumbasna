@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState, memo } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Marker, Popup, Tooltip, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -81,8 +81,8 @@ export default memo(function PetaMapLeaflet({ wilayahData, selected, onSelect, p
         setMounted(true);
     }, []);
 
-    // Center: tengah Barlingmascakeb & Tegal
-    const center: [number, number] = [-7.25, 109.30];
+    // Center: Kabupaten Purbalingga
+    const center: [number, number] = [-7.3884, 109.3641];
 
     const supplyPinIcon = useMemo(() => getPinIcon('#48BB78'), [mounted]);
     const demandPinIcon = useMemo(() => getPinIcon('#3182CE'), [mounted]);
@@ -99,7 +99,7 @@ export default memo(function PetaMapLeaflet({ wilayahData, selected, onSelect, p
         <MapContainer
             key="tumbasna-leaflet-map-root"
             center={center}
-            zoom={8}
+            zoom={11}
             maxBounds={[[-12.0, 94.0], [8.0, 142.5]]}
             maxBoundsViscosity={1.0}
             minZoom={5}
@@ -117,52 +117,7 @@ export default memo(function PetaMapLeaflet({ wilayahData, selected, onSelect, p
             {/* Auto-pan saat marker dipilih dari footer */}
             <PanToSelected wilayahData={wilayahData} selected={selected} />
 
-            {/* Markers per wilayah (Ukuran lingkaran proporsional dengan Luas Wilayah km²) */}
-            {wilayahData.map((w) => {
-                const isTinggi = w.status === 'tinggi' || w.status === 'melimpah';
-                const isSelected = selected === w.id;
-                const fillColor = isTinggi ? '#10B981' : '#F43F5E';
-                const fillOpacity = isSelected ? 0.8 : 0.5;
-                const strokeColor = isTinggi ? '#059669' : '#E11D48';
 
-                // Hitung radius proporsional berdasarkan Luas Wilayah (700 km² - 2200 km²)
-                const minLuas = 700;
-                const maxLuas = 2200;
-                const minR = 18;
-                const maxR = 38;
-                const luasVal = w.luas || 1000;
-                const computedR = Math.round(minR + Math.min(Math.max((luasVal - minLuas) / (maxLuas - minLuas), 0), 1) * (maxR - minR));
-                const dynamicRadius = isSelected ? computedR + 8 : computedR;
-
-                return (
-                    <CircleMarker
-                        key={w.id}
-                        center={[w.lat, w.lng]}
-                        radius={dynamicRadius}
-                        pathOptions={{
-                            color: isSelected ? strokeColor : 'white',
-                            weight: isSelected ? 3 : 2,
-                            fillColor,
-                            fillOpacity,
-                        }}
-                        eventHandlers={{
-                            click: () => onSelect(w.id),
-                        }}
-                    >
-                        <Tooltip direction="top" offset={[0, -10]} opacity={0.95}>
-                            <div style={{ fontFamily: 'Poppins, sans-serif', padding: '2px 4px' }}>
-                                <p style={{ fontWeight: 700, fontSize: '12px', margin: 0, color: '#0F172A' }}>{w.name}</p>
-                                <p style={{ fontSize: '10px', margin: 0, color: isTinggi ? '#059669' : '#E11D48', fontWeight: 600 }}>
-                                    {isTinggi ? 'Transaksi Tinggi' : 'Transaksi Rendah'}
-                                </p>
-                                <p style={{ fontSize: '9px', margin: 0, color: '#64748B', fontWeight: 500 }}>
-                                    Luas: {w.luas.toLocaleString('id-ID')} km²
-                                </p>
-                            </div>
-                        </Tooltip>
-                    </CircleMarker>
-                );
-            })}
 
             {/* Markers/Pins Teardrop untuk tiap produk di database (Matching Gambar 2) */}
             {productPoints?.map((p) => {

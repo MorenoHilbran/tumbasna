@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
     MapPin,
     Package,
@@ -25,80 +25,20 @@ import {
 // --- Wilayah Data (Base structure, stats updated via real DB API) ----------------
 const baseWilayahData = [
     {
-        id: 'banyumas',
-        name: 'Banyumas',
-        status: 'tinggi',
-        supplier: 0,
-        buyer: 0,
-        komoditas: ['Beras', 'Jagung', 'Kedelai', 'Cabai Merah', 'Bawang Merah'],
-        stok: '0 ton',
-        hargaRataRata: 'Rp 12.800/kg',
-        transaksi: 0,
-        lat: -7.5151,
-        lng: 109.2941,
-        luas: 1327,
-        radius: 18000,
-    },
-    {
         id: 'purbalingga',
         name: 'Purbalingga',
         status: 'tinggi',
-        supplier: 0,
-        buyer: 0,
-        komoditas: ['Beras', 'Kopi', 'Tembakau', 'Singkong', 'Ubi Jalar'],
-        stok: '0 ton',
-        hargaRataRata: 'Rp 11.500/kg',
-        transaksi: 0,
+        supplier: 4,
+        buyer: 3,
+        komoditas: ['Beras Pandan Wangi', 'Cabai Rawit Merah', 'Nanas Madu', 'Duku Padamara'],
+        stok: '5.6 ton',
+        hargaRataRata: 'Rp 15.500/kg',
+        transaksi: 4,
         lat: -7.3884,
         lng: 109.3641,
         luas: 778,
         radius: 13000,
-    },
-    {
-        id: 'banjarnegara',
-        name: 'Banjarnegara',
-        status: 'rendah',
-        supplier: 0,
-        buyer: 0,
-        komoditas: ['Sayuran', 'Kentang', 'Wortel', 'Kol'],
-        stok: '0 ton',
-        hargaRataRata: 'Rp 14.200/kg',
-        transaksi: 0,
-        lat: -7.3884,
-        lng: 109.6939,
-        luas: 1069,
-        radius: 15000,
-    },
-    {
-        id: 'cilacap',
-        name: 'Cilacap',
-        status: 'tinggi',
-        supplier: 0,
-        buyer: 0,
-        komoditas: ['Beras', 'Ikan', 'Kelapa', 'Udang', 'Garam'],
-        stok: '0 ton',
-        hargaRataRata: 'Rp 10.900/kg',
-        transaksi: 0,
-        lat: -7.7150,
-        lng: 108.9767,
-        luas: 2138,
-        radius: 22000,
-    },
-    {
-        id: 'kebumen',
-        name: 'Kebumen',
-        status: 'rendah',
-        supplier: 0,
-        buyer: 0,
-        komoditas: ['Beras', 'Gula', 'Cabai', 'Tomat'],
-        stok: '0 ton',
-        hargaRataRata: 'Rp 13.400/kg',
-        transaksi: 0,
-        lat: -7.6701,
-        lng: 109.6524,
-        luas: 1281,
-        radius: 16000,
-    },
+    }
 ];
 
 // --- Dynamic Leaflet Map (client-only) ------------------------------------
@@ -280,9 +220,15 @@ export default function PetaPage() {
     const [loading, setLoading] = useState(true);
     const [showSelector, setShowSelector] = useState(false);
 
-    const selectedData = selected ? regions.find((r) => r.id === selected) : null;
-    const tinggiCount = regions.filter((r) => r.status === 'tinggi' || r.status === 'melimpah').length;
-    const rendahCount = regions.filter((r) => r.status === 'rendah' || r.status === 'menipis').length;
+    // Filter regions to only show active regions with seed data (e.g. Purbalingga & Banyumas)
+    const displayRegions = useMemo(() => {
+        const active = regions.filter((r) => r.supplier > 0 || r.buyer > 0 || r.transaksi > 0);
+        return active.length > 0 ? active : regions.filter(r => r.id === 'purbalingga');
+    }, [regions]);
+
+    const selectedData = selected ? displayRegions.find((r) => r.id === selected) : null;
+    const tinggiCount = displayRegions.filter((r) => r.status === 'tinggi' || r.status === 'melimpah').length;
+    const rendahCount = displayRegions.filter((r) => r.status === 'rendah' || r.status === 'menipis').length;
 
     // Fetch real data from API
     useEffect(() => {
@@ -356,7 +302,7 @@ export default function PetaPage() {
                         <MapPin className="w-4 h-4 text-emerald-600" />
                         Peta Monitoring Zona QRIS
                     </h1>
-                    <p className="text-[11px] text-slate-500 font-medium mt-0.5">Sebaran transaksi & neraca komoditas wilayah Barlingmascakeb</p>
+                    <p className="text-[11px] text-slate-500 font-medium mt-0.5">Sebaran transaksi & neraca komoditas wilayah Purbalingga & Sekitarnya</p>
                 </div>
 
                 <div className="flex items-center gap-2.5">
@@ -364,10 +310,12 @@ export default function PetaPage() {
                         <CheckCircle2 className="w-3.5 h-3.5" />
                         {tinggiCount} Transaksi Tinggi
                     </div>
-                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-600 border border-rose-100/50">
-                        <AlertTriangle className="w-3.5 h-3.5" />
-                        {rendahCount} Transaksi Rendah
-                    </div>
+                    {rendahCount > 0 && (
+                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-600 border border-rose-100/50">
+                            <AlertTriangle className="w-3.5 h-3.5" />
+                            {rendahCount} Transaksi Rendah
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -375,7 +323,7 @@ export default function PetaPage() {
             <div className="relative flex-1 w-full h-full overflow-hidden">
                 <div className="absolute inset-0">
                     <LeafletPetaMap
-                        wilayahData={regions}
+                        wilayahData={displayRegions}
                         selected={selected}
                         onSelect={setSelected}
                         productPoints={points}
@@ -397,7 +345,7 @@ export default function PetaPage() {
                         title="Buka Pilihan Wilayah"
                     >
                         <MapPin className="w-4 h-4 text-emerald-600" />
-                        <span>Pilihan Wilayah ({regions.length})</span>
+                        <span>Pilihan Wilayah ({displayRegions.length})</span>
                         <ChevronUp className="w-3.5 h-3.5 text-slate-400 ml-0.5" />
                     </button>
                 ) : (
@@ -408,7 +356,7 @@ export default function PetaPage() {
                         </span>
 
                         <div className="flex flex-wrap items-center gap-1.5">
-                            {regions.map((w) => {
+                            {displayRegions.map((w) => {
                                 const isSel = selected === w.id;
                                 const isTinggi = w.status === 'tinggi' || w.status === 'melimpah';
                                 return (
@@ -420,10 +368,8 @@ export default function PetaPage() {
                                                 : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
                                             }`}
                                     >
-                                        <span className={`w-1.5 h-1.5 rounded-full ${isTinggi ? (isSel ? 'bg-white' : 'bg-emerald-500') : (isSel ? 'bg-white' : 'bg-rose-500')
-                                            }`} />
                                         <span className="text-xs font-bold">{w.name}</span>
-                                        <span className={`text-[9px] font-medium opacity-70 ${isSel ? 'text-white' : 'text-slate-400'}`}>{w.stok}</span>
+                                        <span className={`w-1.5 h-1.5 rounded-full ${isTinggi ? 'bg-emerald-400' : 'bg-rose-400'}`} />
                                     </button>
                                 );
                             })}
