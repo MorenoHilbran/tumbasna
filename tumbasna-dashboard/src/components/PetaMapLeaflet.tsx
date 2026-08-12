@@ -107,16 +107,17 @@ export default memo(function PetaMapLeaflet({ wilayahData, selected, onSelect, p
             scrollWheelZoom={true}
             zoomControl={true}
         >
-            {/* Tile Layer — OpenStreetMap */}
+            {/* Tile Layer — Google Satellite Hybrid */}
             <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://maps.google.com">Google Maps</a> Satellite'
+                url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
+                maxZoom={20}
             />
 
             {/* Auto-pan saat marker dipilih dari footer */}
             <PanToSelected wilayahData={wilayahData} selected={selected} />
 
-            {/* Markers per wilayah */}
+            {/* Markers per wilayah (Ukuran lingkaran proporsional dengan Luas Wilayah km²) */}
             {wilayahData.map((w) => {
                 const isTinggi = w.status === 'tinggi' || w.status === 'melimpah';
                 const isSelected = selected === w.id;
@@ -124,11 +125,20 @@ export default memo(function PetaMapLeaflet({ wilayahData, selected, onSelect, p
                 const fillOpacity = isSelected ? 0.8 : 0.5;
                 const strokeColor = isTinggi ? '#059669' : '#E11D48';
 
+                // Hitung radius proporsional berdasarkan Luas Wilayah (700 km² - 2200 km²)
+                const minLuas = 700;
+                const maxLuas = 2200;
+                const minR = 18;
+                const maxR = 38;
+                const luasVal = w.luas || 1000;
+                const computedR = Math.round(minR + Math.min(Math.max((luasVal - minLuas) / (maxLuas - minLuas), 0), 1) * (maxR - minR));
+                const dynamicRadius = isSelected ? computedR + 8 : computedR;
+
                 return (
                     <CircleMarker
                         key={w.id}
                         center={[w.lat, w.lng]}
-                        radius={isSelected ? 32 : 24}
+                        radius={dynamicRadius}
                         pathOptions={{
                             color: isSelected ? strokeColor : 'white',
                             weight: isSelected ? 3 : 2,
@@ -144,6 +154,9 @@ export default memo(function PetaMapLeaflet({ wilayahData, selected, onSelect, p
                                 <p style={{ fontWeight: 700, fontSize: '12px', margin: 0, color: '#0F172A' }}>{w.name}</p>
                                 <p style={{ fontSize: '10px', margin: 0, color: isTinggi ? '#059669' : '#E11D48', fontWeight: 600 }}>
                                     {isTinggi ? 'Transaksi Tinggi' : 'Transaksi Rendah'}
+                                </p>
+                                <p style={{ fontSize: '9px', margin: 0, color: '#64748B', fontWeight: 500 }}>
+                                    Luas: {w.luas.toLocaleString('id-ID')} km²
                                 </p>
                             </div>
                         </Tooltip>

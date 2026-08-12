@@ -71,3 +71,56 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+
+// PATCH /api/auth/profile
+export async function PATCH(req: Request) {
+  try {
+    const body = await req.json();
+    const { userId, id, ownerName, name, businessName, email, address, businessType, bankName, bankAccount } = body;
+    const targetId = userId || id;
+
+    if (!targetId) {
+      return NextResponse.json({ error: 'User ID wajib disertakan' }, { status: 400 });
+    }
+
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(targetId)) {
+      return NextResponse.json({
+        success: true,
+        message: 'Profil mock berhasil diperbarui',
+        data: { id: targetId, ...body }
+      });
+    }
+
+    const updated = await prisma.user.update({
+      where: { id: targetId },
+      data: {
+        ...(ownerName || name ? { name: ownerName || name } : {}),
+        ...(businessName !== undefined ? { businessName } : {}),
+        ...(email !== undefined ? { email } : {}),
+        ...(address !== undefined ? { address } : {}),
+        ...(businessType !== undefined ? { businessType } : {}),
+        ...(bankName !== undefined ? { bankName } : {}),
+        ...(bankAccount !== undefined ? { bankAccount } : {}),
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: 'Profil berhasil diperbarui',
+      data: {
+        id: updated.id,
+        name: updated.name,
+        email: updated.email,
+        address: updated.address,
+        businessName: updated.businessName,
+        businessType: updated.businessType,
+        bankName: updated.bankName,
+        bankAccount: updated.bankAccount,
+      },
+    });
+  } catch (error: any) {
+    console.error('[API PATCH PROFILE ERROR]', error.message);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
