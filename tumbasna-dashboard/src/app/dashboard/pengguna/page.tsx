@@ -81,11 +81,18 @@ export default function PenggunaPage() {
 
   const handleVerifySupplier = async (userId: string, status: 'APPROVED' | 'REJECTED') => {
     try {
+      let notes = '';
+      if (status === 'REJECTED') {
+        const inputNotes = window.prompt('Alasan penolakan / catatan untuk supplier (opsional):');
+        if (inputNotes === null) return; // Admin membatalkan
+        notes = inputNotes.trim();
+      }
+
       setVerifyLoading(true);
       const res = await fetch('/api/admin/verify-supplier', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, status })
+        body: JSON.stringify({ userId, status, notes })
       });
       const data = await res.json();
       if (!res.ok || !data.success) {

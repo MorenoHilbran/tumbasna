@@ -80,7 +80,7 @@ export async function POST(req: Request) {
           bankName: updatedUser.bankName,
           bankAccount: updatedUser.bankAccount,
           nibUrl: (updatedUser as any).nibUrl || null,
-          verificationStatus: (updatedUser as any).verificationStatus || 'APPROVED',
+          verificationStatus: (updatedUser as any).verificationStatus || (targetRole === 'PETANI' ? 'PENDING' : 'APPROVED'),
           balance: Number(updatedUser.balance),
         }
       }, { status: 200 });
@@ -118,7 +118,7 @@ export async function POST(req: Request) {
         bankName: user.bankName,
         bankAccount: user.bankAccount,
         nibUrl: (user as any).nibUrl || null,
-        verificationStatus: (user as any).verificationStatus || 'APPROVED',
+        verificationStatus: (user as any).verificationStatus || (targetRole === 'PETANI' ? 'PENDING' : 'APPROVED'),
         balance: Number(user.balance),
       },
     }, { status: 201 });

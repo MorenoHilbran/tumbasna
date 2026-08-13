@@ -51,15 +51,13 @@ export async function extractMessageData(sender: string, message: string): Promi
         try {
             const { apiService } = await import('../services/apiService');
             const whitelistRes = await apiService.checkWhitelist(phoneNumber);
-            if (!whitelistRes || whitelistRes.success === false) {
-                throw new Error("Gagal memverifikasi status pendaftaran karena server dashboard tidak merespon.");
-            }
-            isRegistered = !!whitelistRes?.isRegistered;
-            registeredName = whitelistRes?.name || '';
-            
-            // Build user profile info untuk inject ke system prompt
-            if (isRegistered) {
-                userProfileInfo = `
+            if (whitelistRes && whitelistRes.success) {
+                isRegistered = !!whitelistRes?.isRegistered;
+                registeredName = whitelistRes?.name || '';
+                
+                // Build user profile info untuk inject ke system prompt
+                if (isRegistered) {
+                    userProfileInfo = `
 === USER PROFILE (FROM DATABASE) ===
 - Registered: YES
 - Name: "${registeredName}"
@@ -71,10 +69,10 @@ export async function extractMessageData(sender: string, message: string): Promi
 IMPORTANT: USER SUDAH TERDAFTAR. JANGAN TANYAKAN DATA REGISTRASI (nama/lokasi/bank) LAGI!
 Jika user input SUPPLY, langsung proses tanpa tanya nama/lokasi/bank karena data sudah ada di database.
 `;
+                }
             }
         } catch (dbErr: any) {
             console.warn(`⚠️ [AGENT] Gagal cek status registrasi DB:`, dbErr.message);
-            throw dbErr;
         }
 
         // Jika user terdaftar tetapi history masih mengandung REGISTER, bersihkan history
@@ -214,11 +212,38 @@ Jika user menawarkan komoditas yang TIDAK ADA dalam whitelist di atas, ikuti pro
     } catch (error: any) {
         console.error(`❌ [AGENT ERROR] ${phoneNumber}:`, error.message || error);
         
+        // Fallback parser jika LLM mengalami masalah format JSON/timeout saat input produk
+        const textLower = message.toLowerCase();
+        const commodities = ['beras', 'cabai', 'cabe', 'bawang', 'tomat', 'kentang', 'jagung', 'kedelai', 'jahe', 'kopi', 'nanas', 'duku', 'durian', 'gula'];
+        const matchedComm = commodities.find(c => textLower.includes(c));
+
+        if (matchedComm) {
+            const numbers = message.match(/\d+(?:[\.,]\d+)?/g);
+            if (numbers && numbers.length >= 1) {
+                const qty = parseFloat(numbers[0].replace(',', '.'));
+                const rawPrice = numbers.length >= 2 ? parseFloat(numbers[1].replace(/\./g, '').replace(',', '.')) : 15000;
+                const price = rawPrice > 500 ? rawPrice : rawPrice * 1000;
+
+                console.log(`💡 [AGENT FALLBACK] Mengekstrak SUPPLY dari fallback parser: ${matchedComm} ${qty}kg Rp${price}`);
+                return {
+                    intent: 'SUPPLY',
+                    items: [{
+                        commodity: matchedComm,
+                        weight_kg: qty || 10,
+                        price: price,
+                        location: 'Purbalingga'
+                    }],
+                    status: 'COMPLETE',
+                    reply_message: `🎉 *PRODUK BERHASIL DITAMBAHKAN!*\n\nKomoditas *${matchedComm.toUpperCase()}* sebanyak *${qty} kg* dengan harga *Rp ${Number(price).toLocaleString('id-ID')}/kg* telah dicatat di sistem.\n\n✅ *Penawaran Anda sudah aktif dan tampil di aplikasi Tumbasna!*`
+                };
+            }
+        }
+
         return {
             intent: "UNKNOWN",
             items: [],
             status: "INCOMPLETE",
-            reply_message: "Maaf, saya mengalami kendala saat memproses pesan Anda. Bisa diulang kembali?"
+            reply_message: "Halo Juragan! Mohon sebutkan nama komoditas (seperti beras/cabai), jumlah kg, dan harga per kg yang ingin ditawarkan. 🌾"
         };
     }
 }

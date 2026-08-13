@@ -220,18 +220,18 @@ router.post('/api/notify-verification', async (req: Request, res: Response) => {
         let notificationMsg = '';
         if (status === 'APPROVED') {
             notificationMsg =
-                `*PENDAFTARAN SUPPLIER DISETUJUI*\n\n` +
+                `🎉 *VERIFIKASI SUPPLIER DISETUJUI*\n\n` +
                 `Selamat, *${name || 'Juragan'}*!\n` +
-                `Dokumen NIB dan akun Supplier Anda di Tumbasna telah DITERIMA oleh Admin.\n\n` +
-                `✅ Akun Anda sudah AKTIF sepenuhnya.\n\n` +
-                `Ketik *MENU* untuk mulai mengelola stok dan menerima pesanan bahan baku dari pedagang!`;
+                `Dokumen NIB dan pendaftaran akun Supplier Anda di Tumbasna telah *DITERIMA & DISETUJUI* oleh Admin.\n\n` +
+                `✅ *Akun Anda sudah AKTIF sepenuhnya.*\n\n` +
+                `Ketik *MENU* di WhatsApp ini untuk mulai mengelola stok dan menerima pesanan bahan baku dari pedagang!`;
         } else {
             notificationMsg =
-                `*VERIFIKASI SUPPLIER BELUM DISETUJUI*\n\n` +
+                `⚠️ *VERIFIKASI SUPPLIER BELUM DISETUJUI*\n\n` +
                 `Halo, *${name || 'Juragan'}*.\n` +
-                `Mohon maaf, peninjauan dokumen NIB Anda belum disetujui oleh Admin.\n` +
-                `${notes ? `Catatan Admin: ${notes}\n\n` : '\n'}` +
-                `Silakan kirimkan kembali foto NIB yang jelas di chat ini untuk diverifikasi ulang oleh Admin Tumbasna.`;
+                `Mohon maaf, dokumen NIB / peninjauan pendaftaran akun Supplier Anda *BELUM DISETUJUI* oleh Admin Tumbasna.\n` +
+                `${notes ? `\n📝 *Catatan Admin:* ${notes}\n` : ''}\n` +
+                `Silakan kirimkan kembali foto NIB yang jelas di WhatsApp ini untuk diverifikasi ulang oleh Admin. Terima kasih!`;
         }
 
         await sock.sendMessage(jid, { text: notificationMsg });

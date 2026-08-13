@@ -28,24 +28,11 @@ export async function GET(req: Request) {
                     { phoneNumber: altPhone },
                     { phoneNumber: phone.replace('+', '') }
                 ]
-            },
-            select: { 
-                id: true, 
-                name: true, 
-                balance: true, 
-                role: true,
-                bankName: true,
-                bankAccount: true,
-                address: true,
-                businessName: true,
-                businessType: true,
-                nibUrl: true,
-                verificationStatus: true
             }
-        });
+        }) as any;
 
         if (user) {
-            let currentBalance = Number(user.balance);
+            let currentBalance = Number(user.balance || 0);
 
             // Auto-sync saldo untuk supplier jika ada pesanan SELESAI / Dana Dicaikan yang belum masuk ke balance
             if (user.role === 'PETANI') {
@@ -106,7 +93,7 @@ export async function GET(req: Request) {
                 businessName: user.businessName,
                 businessType: user.businessType,
                 nibUrl: user.nibUrl || null,
-                verificationStatus: user.verificationStatus || 'APPROVED'
+                verificationStatus: user.verificationStatus || (user.role === 'PETANI' ? 'PENDING' : 'APPROVED')
             });
         }
 

@@ -1226,6 +1226,12 @@ export async function processIncomingMessage(
                     let apiResult;
                     if (parsedData.intent === 'SUPPLY') {
                         apiResult = await apiService.sendSupply(payload);
+                        if (apiResult && (apiResult.success !== false || apiResult.data)) {
+                            parsedData.reply_message =
+                                `🎉 *PRODUK BERHASIL DITAMBAHKAN!*\n\n` +
+                                `Komoditas *${item.commodity.toUpperCase()}* sebanyak *${item.weight_kg} kg* dengan harga *Rp ${Number(item.price).toLocaleString('id-ID')}/kg* telah berhasil dicatat di sistem Tumbasna.\n\n` +
+                                `✅ *Penawaran Anda sudah aktif dan langsung tampil di Pasar Mobile Apps!*`;
+                        }
                     } else {
                         apiResult = await apiService.sendDemand(payload);
                     }
