@@ -449,8 +449,14 @@ export async function processIncomingMessage(
 
     // 1.3. Cek jika pesan adalah balasan supplier untuk buyer
     // Pattern: Supplier membalas pesan yang mengandung info buyer dari Tumbasna
-    const explicitMenuKeywords = ['menu', 'help', 'bantuan', 'batal', 'keluar'];
-    const botNumberKeywords = ['1', '2', '3', '4', '5', '6', '7', '8', 'profil', 'rekening', 'saldo', 'listing', 'produk', 'pesanan', 'order', 'jual', 'tambah', 'cs', 'edit', 'ubah', 'hapus akun', 'hapus data'];
+    const explicitMenuKeywords = [
+        'menu', 'help', 'bantuan', 'batal', 'keluar', 'start', 'halo', 'hallo', 'p',
+        '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
+        'profil', 'rekening', 'saldo', 'listing', 'produk', 'pesanan', 'order',
+        'jual', 'tambah', 'cs', 'edit', 'ubah', 'hapus', 'hapus akun', 'hapus data',
+        'chat', 'inbox', 'lihat profil', 'lihat saldo', 'daftar listing', 'pesanan masuk',
+        'cara jual', 'hubungi bantuan', 'edit profil', 'hapus akun & data saya', 'inbox chat'
+    ];
     // Pesan sistem relay dari Tumbasna — jangan diproses sebagai supplier reply
     const isTumbasnaSystemMessage = text.includes('Pesan dari Pembeli Tumbasna') || text.includes('tumbasna-rahasia') || text.startsWith('✅ Pesan Anda telah terkirim');
 
@@ -468,7 +474,12 @@ export async function processIncomingMessage(
                 const lastChat = recentChats[0];
                 const buyerPhone = lastChat.buyerPhone;
                 
-                const isExplicitMenuCommand = explicitMenuKeywords.includes(cleanText) || cleanText.startsWith('jual ') || cleanText.startsWith('ubah ');
+                const isExplicitMenuCommand = explicitMenuKeywords.includes(cleanText) || 
+                                              cleanText.startsWith('jual ') || 
+                                              cleanText.startsWith('ubah ') ||
+                                              cleanText.startsWith('kirim ') ||
+                                              cleanText.startsWith('hapus ') ||
+                                              cleanText.startsWith('batal ');
 
                 // Jika supplier membalas pesan (quote notifikasi ATAU percakapan biasa) dan bukan command menu bot
                 if (buyerPhone && text.trim().length > 0 && !isExplicitMenuCommand) {
