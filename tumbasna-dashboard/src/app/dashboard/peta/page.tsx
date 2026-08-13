@@ -178,21 +178,40 @@ function StatusBadge({ status }: { status: string }) {
 
 // --- Detail Panel ----------------------------------------------------------
 function DetailPanel({ w, transactions, onClose }: { w: typeof baseWilayahData[0]; transactions: any[]; onClose: () => void }) {
+    const hasData = w.supplier > 0 || w.buyer > 0 || w.transaksi > 0;
     const isTinggi = w.status === 'tinggi' || w.status === 'melimpah';
+
+    let headerBg = 'bg-slate-100/90 border-slate-200';
+    let dotColor = 'bg-slate-400';
+    let textColor = 'text-slate-600';
+    let statusText = 'Belum Ada Data Transaksi';
+
+    if (hasData) {
+        if (isTinggi) {
+            headerBg = 'bg-emerald-50/70 border-emerald-100/50';
+            dotColor = 'bg-emerald-500';
+            textColor = 'text-emerald-600';
+            statusText = 'Transaksi Tinggi';
+        } else {
+            headerBg = 'bg-rose-50/70 border-rose-100/50';
+            dotColor = 'bg-rose-500';
+            textColor = 'text-rose-600';
+            statusText = 'Transaksi Rendah';
+        }
+    }
     
     return (
         <div className="flex flex-col text-slate-800">
             {/* Header */}
-            <div className={`p-3 rounded-xl mb-3 border ${isTinggi ? 'bg-emerald-50/70 border-emerald-100/50' : 'bg-rose-50/70 border-rose-100/50'
-                }`}>
+            <div className={`p-3 rounded-xl mb-3 border ${headerBg}`}>
                 <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-1.5">
-                        <div className={`w-2 h-2 rounded-full ${isTinggi ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                        <span className={`text-[9px] font-bold uppercase tracking-wider ${isTinggi ? 'text-emerald-600' : 'text-rose-600'}`}>
-                            {isTinggi ? 'Transaksi Tinggi' : 'Transaksi Rendah'}
+                        <div className={`w-2 h-2 rounded-full ${dotColor}`} />
+                        <span className={`text-[9px] font-bold uppercase tracking-wider ${textColor}`}>
+                            {statusText}
                         </span>
                     </div>
-                    <button onClick={onClose} className="p-1 hover:bg-white/50 rounded-lg transition-colors">
+                    <button onClick={onClose} className="p-1 hover:bg-white/50 rounded-lg transition-colors cursor-pointer">
                         <X className="w-3.5 h-3.5 text-slate-400" />
                     </button>
                 </div>
@@ -325,15 +344,13 @@ export default function PetaPage() {
     const [loading, setLoading] = useState(true);
     const [showSelector, setShowSelector] = useState(false);
 
-    // Filter regions to only show active regions with seed data (e.g. Purbalingga & Banyumas)
-    const displayRegions = useMemo(() => {
-        const active = regions.filter((r) => r.supplier > 0 || r.buyer > 0 || r.transaksi > 0);
-        return active.length > 0 ? active : regions.filter(r => r.id === 'purbalingga');
-    }, [regions]);
+    // Display all 8 regions fixed on the map (Banyumas, Purbalingga, Banjarnegara, Cilacap, Kebumen, Tegal, Pemalang, Brebes)
+    const displayRegions = useMemo(() => regions, [regions]);
 
-    const selectedData = selected ? displayRegions.find((r) => r.id === selected) : null;
-    const tinggiCount = displayRegions.filter((r) => r.status === 'tinggi' || r.status === 'melimpah').length;
-    const rendahCount = displayRegions.filter((r) => r.status === 'rendah' || r.status === 'menipis').length;
+    const selectedData = selected ? displayRegions.find((r) => r.id.toLowerCase() === selected.toLowerCase()) : null;
+    const tinggiCount = displayRegions.filter((r) => (r.supplier > 0 || r.buyer > 0 || r.transaksi > 0) && (r.status === 'tinggi' || r.status === 'melimpah')).length;
+    const rendahCount = displayRegions.filter((r) => (r.supplier > 0 || r.buyer > 0 || r.transaksi > 0) && (r.status === 'rendah' || r.status === 'menipis')).length;
+    const kosongCount = displayRegions.filter((r) => r.supplier === 0 && r.buyer === 0 && r.transaksi === 0).length;
 
     // Fetch real data from API
     useEffect(() => {
@@ -419,6 +436,12 @@ export default function PetaPage() {
                         <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-600 border border-rose-100/50">
                             <AlertTriangle className="w-3.5 h-3.5" />
                             {rendahCount} Transaksi Rendah
+                        </div>
+                    )}
+                    {kosongCount > 0 && (
+                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200/60">
+                            <Info className="w-3.5 h-3.5 text-slate-400" />
+                            {kosongCount} Belum Ada Data
                         </div>
                     )}
                 </div>

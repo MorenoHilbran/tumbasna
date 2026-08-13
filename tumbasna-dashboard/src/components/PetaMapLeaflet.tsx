@@ -63,22 +63,53 @@ function PanToSelected({ wilayahData, selected }: { wilayahData: WilayahItem[]; 
 }
 
 // ─── Helper: Leaflet Pin Icons ────────────────────────────────
-function getPinIcon(color: string) {
+function getPinIcon(color: string, type: 'supplier' | 'buyer') {
     if (typeof window === 'undefined' || !L || !L.divIcon) return undefined;
+    const isSupplier = type === 'supplier';
+    const bgGrad = isSupplier ? '#F97316' : '#3B82F6'; // Warm Orange vs Royal Blue
+    const darkBg = isSupplier ? '#EA580C' : '#2563EB';
+    const symbol = isSupplier ? '🌾' : '🛒';
+
     return L.divIcon({
         className: 'custom-leaflet-pin-icon',
-        html: `<div style="position:relative;width:30px;height:42px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0px 3px 5px rgba(0,0,0,0.3));"><svg width="30" height="42" viewBox="0 0 30 42" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15 0C6.71573 0 0 6.71573 0 15C0 26.25 15 42 15 42C15 42 30 26.25 30 15C30 6.71573 23.2843 0 15 0Z" fill="${color}"/><circle cx="15" cy="14" r="5" fill="white"/></svg></div>`,
-        iconSize: [30, 42],
-        iconAnchor: [15, 42],
-        popupAnchor: [0, -38],
+        html: `
+        <div style="position:relative;width:34px;height:46px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0px 4px 7px rgba(0,0,0,0.35));">
+            <svg width="34" height="46" viewBox="0 0 30 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M15 0C6.71573 0 0 6.71573 0 15C0 26.25 15 42 15 42C15 42 30 26.25 30 15C30 6.71573 23.2843 0 15 0Z" fill="${bgGrad}" stroke="#FFFFFF" stroke-width="1.5"/>
+                <circle cx="15" cy="14" r="8.5" fill="${darkBg}"/>
+            </svg>
+            <div style="position:absolute;top:7px;left:0;right:0;text-align:center;font-size:11px;line-height:1;">
+                ${symbol}
+            </div>
+        </div>`,
+        iconSize: [34, 46],
+        iconAnchor: [17, 46],
+        popupAnchor: [0, -42],
     });
 }
 
-function getRegionBadgeIcon(name: string, transaksi: number, isSelected: boolean, isTinggi: boolean) {
+function getRegionBadgeIcon(name: string, transaksi: number, isSelected: boolean, isTinggi: boolean, hasData: boolean) {
     if (typeof window === 'undefined' || !L || !L.divIcon) return undefined;
-    const bg = isSelected ? (isTinggi ? '#047857' : '#B91C1C') : (isTinggi ? '#10B981' : '#EF4444');
-    const border = isSelected ? (isTinggi ? '#34D399' : '#FCA5A5') : '#FFFFFF';
-    const dotColor = isTinggi ? '#6EE7B7' : '#FECDD3';
+
+    let bg = '#64748B'; // Default Grey for No Data
+    let border = '#FFFFFF';
+    let dotColor = '#CBD5E1';
+
+    if (hasData) {
+        if (isTinggi) {
+            bg = isSelected ? '#047857' : '#10B981';
+            border = isSelected ? '#34D399' : '#FFFFFF';
+            dotColor = '#6EE7B7';
+        } else {
+            bg = isSelected ? '#B91C1C' : '#EF4444';
+            border = isSelected ? '#FCA5A5' : '#FFFFFF';
+            dotColor = '#FECDD3';
+        }
+    } else {
+        bg = isSelected ? '#334155' : '#64748B';
+        border = isSelected ? '#94A3B8' : '#FFFFFF';
+        dotColor = '#CBD5E1';
+    }
 
     return L.divIcon({
         className: 'custom-region-badge-icon',
@@ -119,24 +150,41 @@ export default memo(function PetaMapLeaflet({ wilayahData, selected, onSelect, p
     // Initial Center & Zoom: Focused directly on Central Java / Barlingmascakeb (Zoom 9)
     const center: [number, number] = [-7.45, 109.35];
 
-    const supplyPinIcon = useMemo(() => getPinIcon('#10B981'), [mounted]);
-    const demandPinIcon = useMemo(() => getPinIcon('#3B82F6'), [mounted]);
+    const supplyPinIcon = useMemo(() => getPinIcon('#F97316', 'supplier'), [mounted]);
+    const demandPinIcon = useMemo(() => getPinIcon('#3B82F6', 'buyer'), [mounted]);
 
     const geoJsonStyle = (feature: any) => {
         const name = feature?.properties?.name || '';
         const id = feature?.properties?.id || name.toLowerCase();
         const w = wilayahData.find(x => x.id.toLowerCase() === id.toLowerCase());
-        const isTinggi = w ? (w.status === 'tinggi' || w.status === 'melimpah') : true;
-        const isSelected = selected && selected.toLowerCase() === id.toLowerCase();
-        const baseColor = isTinggi ? '#10B981' : '#EF4444';
+        
+        const hasData = Boolean(w && (w.supplier > 0 || w.buyer > 0 || w.transaksi > 0));
+        const isTinggi = Boolean(w && (w.status === 'tinggi' || w.status === 'melimpah'));
+        const isSelected = Boolean(selected && selected.toLowerCase() === id.toLowerCase());
+
+        let baseColor = '#94A3B8'; // Grey for no data
+        let selColor = '#334155';
+        let strokeColor = '#FFFFFF';
+
+        if (hasData) {
+            if (isTinggi) {
+                baseColor = '#10B981';
+                selColor = '#047857';
+                strokeColor = isSelected ? '#34D399' : '#FFFFFF';
+            } else {
+                baseColor = '#EF4444';
+                selColor = '#B91C1C';
+                strokeColor = isSelected ? '#FCA5A5' : '#FFFFFF';
+            }
+        }
 
         return {
-            fillColor: isSelected ? (isTinggi ? '#047857' : '#B91C1C') : baseColor,
+            fillColor: isSelected ? selColor : baseColor,
             weight: isSelected ? 3.5 : 2,
             opacity: 0.95,
-            color: isSelected ? (isTinggi ? '#34D399' : '#FCA5A5') : '#FFFFFF',
-            fillOpacity: isSelected ? 0.65 : 0.4,
-            dashArray: isSelected ? '' : '3',
+            color: strokeColor,
+            fillOpacity: isSelected ? 0.65 : (hasData ? 0.4 : 0.25),
+            dashArray: isSelected ? '' : (hasData ? '3' : '5'),
         };
     };
 
@@ -222,7 +270,8 @@ export default memo(function PetaMapLeaflet({ wilayahData, selected, onSelect, p
             {wilayahData.map((w) => {
                 const isSelected = selected?.toLowerCase() === w.id.toLowerCase();
                 const isTinggi = w.status === 'tinggi' || w.status === 'melimpah';
-                const badgeIcon = getRegionBadgeIcon(w.name, w.transaksi, isSelected, isTinggi);
+                const hasData = w.supplier > 0 || w.buyer > 0 || w.transaksi > 0;
+                const badgeIcon = getRegionBadgeIcon(w.name, w.transaksi, isSelected, isTinggi, hasData);
                 if (!badgeIcon) return null;
 
                 return (
@@ -266,13 +315,13 @@ export default memo(function PetaMapLeaflet({ wilayahData, selected, onSelect, p
                                 </div>
                                 <div style={{
                                     display: 'inline-block',
-                                    background: isSupply ? 'rgba(16,185,129,0.12)' : 'rgba(59,130,246,0.12)',
-                                    color: isSupply ? '#059669' : '#2563EB',
+                                    background: isSupply ? 'rgba(249,115,22,0.12)' : 'rgba(59,130,246,0.12)',
+                                    color: isSupply ? '#C2410C' : '#2563EB',
                                     fontSize: 9, fontWeight: 700,
                                     padding: '2px 8px', borderRadius: 20,
                                     marginBottom: 6
                                 }}>
-                                    {isSupply ? 'SUPPLY PETANI (QRIS)' : 'DEMAND PEDAGANG (QRIS)'}
+                                    {isSupply ? '🌾 SUPPLY PETANI (PRODUSEN)' : '🛒 DEMAND PEDAGANG (BUYER)'}
                                 </div>
                                 <div style={{ fontSize: 11, color: '#475569', margin: '3px 0' }}>
                                     <strong>Volume:</strong> {p.qty} kg

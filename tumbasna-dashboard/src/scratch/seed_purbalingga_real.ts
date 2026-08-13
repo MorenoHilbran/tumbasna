@@ -194,6 +194,27 @@ async function main() {
       }
     });
     createdBuyers.push({ user, data: b });
+
+    // Seed DEMAND ProductEntries for buyers so blue markers show up on the map
+    const buyerDemands = [
+      { commodity: 'Beras IR64 / Pandan Wangi', price: 15000, qty: 800 },
+      { commodity: 'Cabai Rawit Merah', price: 40000, qty: 250 },
+    ];
+    for (const d of buyerDemands) {
+      await prisma.productEntry.create({
+        data: {
+          userId: user.id,
+          type: 'DEMAND',
+          commodity: d.commodity,
+          price: d.price,
+          qty: d.qty,
+          location: b.address,
+          lat: b.lat + (Math.random() - 0.5) * 0.004,
+          lng: b.lng + (Math.random() - 0.5) * 0.004,
+          status: 'ACTIVE'
+        }
+      });
+    }
   }
 
   // 4. Seed Orders (Rute Logistik Purbalingga Real-Time)
