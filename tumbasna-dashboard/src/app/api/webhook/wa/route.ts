@@ -335,8 +335,20 @@ untuk mengonfirmasi penghapusan data profil Anda.
       orderBy: { createdAt: 'desc' }
     });
 
-    // Jika pesan tidak mengandung kata kunci komoditas (JUAL/BELI/PANEN) dan ada histori chat dari buyer
-    const isCommodityMsg = message.toLowerCase().includes('jual') || message.toLowerCase().includes('beli') || message.toLowerCase().includes('panen');
+    // Jika pesan tidak mengandung kata kunci komoditas (JUAL/BELI/PANEN/HARGA/STOK) dan ada histori chat dari buyer
+    const lowerMessage = message.toLowerCase();
+    const isCommodityMsg = lowerMessage.includes('jual') || 
+                           lowerMessage.includes('beli') || 
+                           lowerMessage.includes('panen') ||
+                           lowerMessage.includes('tawar') ||
+                           lowerMessage.includes('harga') ||
+                           lowerMessage.includes('kg') ||
+                           lowerMessage.includes('ton') ||
+                           lowerMessage.includes('stok') ||
+                           lowerMessage.includes('bawang') ||
+                           lowerMessage.includes('cabai') ||
+                           lowerMessage.includes('cabe') ||
+                           lowerMessage.includes('beras');
     if (!isCommodityMsg && lastChatFromBuyer && lastChatFromBuyer.buyerUserId) {
       // Simpan balasan supplier ke tabel chat_messages
       const supplierReply = await prisma.chatMessage.create({

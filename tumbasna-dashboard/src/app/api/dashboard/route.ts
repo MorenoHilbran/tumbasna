@@ -8,13 +8,13 @@ function resolveRegency(address: string): string | null {
     if (addr.includes('banyumas') || addr.includes('pekuncen') || addr.includes('sokaraja') || addr.includes('purwokerto') || addr.includes('baturraden')) {
         return 'Banyumas';
     }
-    if (addr.includes('cilacap') || addr.includes('majenang') || addr.includes('sidareja') || addr.includes('kroya')) {
+    if (addr.includes('cilacap') || addr.includes('majenang') || addr.includes('sidareja') || addr.includes('kroya') || addr.includes('adipala')) {
         return 'Cilacap';
     }
-    if (addr.includes('purbalingga') || addr.includes('bobotsari') || addr.includes('bukateja')) {
+    if (addr.includes('purbalingga') || addr.includes('bobotsari') || addr.includes('bukateja') || addr.includes('kemangkon')) {
         return 'Purbalingga';
     }
-    if (addr.includes('banjarnegara') || addr.includes('dieng') || addr.includes('klampok')) {
+    if (addr.includes('banjarnegara') || addr.includes('dieng') || addr.includes('klampok') || addr.includes('purwonegoro')) {
         return 'Banjarnegara';
     }
     if (addr.includes('kebumen') || addr.includes('gombong') || addr.includes('karanganyar')) {
@@ -22,6 +22,12 @@ function resolveRegency(address: string): string | null {
     }
     if (addr.includes('tegal') || addr.includes('slawi') || addr.includes('aderna')) {
         return 'Tegal';
+    }
+    if (addr.includes('pemalang') || addr.includes('belik')) {
+        return 'Pemalang';
+    }
+    if (addr.includes('brebes')) {
+        return 'Brebes';
     }
     return null;
 }
@@ -70,7 +76,7 @@ export async function GET() {
             include: { buyer: true }
         });
 
-        const regions = ['banyumas', 'purbalingga', 'banjarnegara', 'cilacap', 'kebumen', 'tegal'];
+        const regions = ['banyumas', 'purbalingga', 'banjarnegara', 'cilacap', 'kebumen', 'tegal', 'pemalang', 'brebes'];
         const regionStats: Record<string, any> = {};
 
         for (const r of regions) {
@@ -93,13 +99,13 @@ export async function GET() {
 
             // Count orders/transactions in region
             const transactionsCount = allOrders.filter(o => {
-                const buyerReg = resolveRegency(o.buyer?.address || '');
-                const suppReg = resolveRegency(o.supplierLocation || '');
+                const buyerReg = resolveRegency(o.buyerAddress || o.buyerCity || o.buyer?.address || '');
+                const suppReg = resolveRegency(o.supplierLocation || o.supplierCity || '');
                 return buyerReg === rName || suppReg === rName;
             }).length;
 
-            // Status berdasarkan aktivitas transaksi real: 'tinggi' (ramai) vs 'rendah' (sepi)
-            const status = transactionsCount >= 5 || totalStockKg >= 1000 ? 'tinggi' : 'rendah';
+            // Status berdasarkan aktivitas transaksi real: 'tinggi' (>= 5) vs 'rendah' (< 5)
+            const status = transactionsCount >= 5 ? 'tinggi' : 'rendah';
 
             regionStats[r] = {
                 status,
