@@ -894,7 +894,9 @@ export async function processIncomingMessage(
                     if (result.success && result.data.length > 0) {
                         let statusText = `*DAFTAR PESANAN MASUK JURAGAN* 🛒\n\n`;
                         result.data.forEach((order: any, index: number) => {
-                            const itemsText = order.items.map((it: any) => `  - ${it.product.name} (x${it.quantity})`).join('\n');
+                            const itemsText = order.items.map((it: any) =>
+                                `  - ${it.commodity || it.productEntry?.commodity || 'Komoditas'} (${Number(it.qty || it.quantity || 1)} kg)`
+                            ).join('\n');
                             
                             const escrowStatus = order.status === 'SELESAI' 
                                 ? 'Escrow Cair (Masuk Saldo)' 
@@ -1360,7 +1362,9 @@ export async function processIncomingMessage(
                     if (result.success && result.data.length > 0) {
                         let statusText = `*DAFTAR PESANAN MASUK JURAGAN*\n\n`;
                         result.data.forEach((order: any, index: number) => {
-                            const itemsText = order.items.map((it: any) => `  - ${it.product.name} (x${it.quantity})`).join('\n');
+                            const itemsText = order.items.map((it: any) =>
+                                `  - ${it.commodity || it.productEntry?.commodity || 'Komoditas'} (${Number(it.qty || it.quantity || 1)} kg)`
+                            ).join('\n');
                             
                             const escrowStatus = order.status === 'SELESAI' 
                                 ? 'Escrow Cair (Masuk Saldo)' 

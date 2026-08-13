@@ -49,11 +49,14 @@ export async function GET(req: Request) {
       }
     } else if (phone) {
       const normalizedPhone = phone.replace(/^\+/, '').replace(/^0/, '62');
+      const altPhone = phone.startsWith('62') ? '0' + phone.slice(2) : phone;
+
       const user = await prisma.user.findFirst({
         where: {
           OR: [
             { phoneNumber: normalizedPhone },
             { phoneNumber: phone },
+            { phoneNumber: altPhone },
           ]
         }
       });
@@ -62,10 +65,27 @@ export async function GET(req: Request) {
         return NextResponse.json({ success: true, data: [] });
       }
 
+      const uName = (user.name || '').trim();
+      const bName = (user.businessName || '').trim();
+
+      // Extract key tokens (e.g. "Sari", "Tani", "Gacorian", "Alfaen")
+      const tokens = Array.from(new Set(
+        `${uName} ${bName}`.split(/\s+/).filter(t => t.length > 2)
+      ));
+
       whereClause = {
         OR: [
-          { supplierName: user.name || '' },
-          ...(user.businessName ? [{ supplierName: user.businessName }] : [])
+          ...(uName ? [
+            { supplierName: { equals: uName, mode: 'insensitive' } },
+            { supplierName: { contains: uName, mode: 'insensitive' } }
+          ] : []),
+          ...(bName ? [
+            { supplierName: { equals: bName, mode: 'insensitive' } },
+            { supplierName: { contains: bName, mode: 'insensitive' } }
+          ] : []),
+          { items: { some: { productEntry: { userId: user.id } } } },
+          ...tokens.map(tok => ({ supplierName: { contains: tok, mode: 'insensitive' } })),
+          ...tokens.map(tok => ({ items: { some: { supplierName: { contains: tok, mode: 'insensitive' } } } })),
         ]
       };
     }
