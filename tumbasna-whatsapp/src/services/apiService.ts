@@ -202,6 +202,15 @@ export const apiService = {
             return error.response?.data || { success: false, error: error.message };
         }
     },
+    async updateCommodityImage(entryId: string, image: string) {
+        try {
+            const response = await apiClient.patch(`${API_URL}/api/entries`, { entryId, image });
+            return response.data;
+        } catch (error: any) {
+            console.error(`[API ERROR] Gagal update commodity image:`, error.message);
+            return { success: false };
+        }
+    },
 };
 
 

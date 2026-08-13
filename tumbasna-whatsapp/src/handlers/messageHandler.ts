@@ -41,6 +41,19 @@ const deleteProductStateMap = new Map<string, DeleteProductState>();
 const chatViewStateMap = new Map<string, ChatViewState>();
 const registerStateMap = new Map<string, RegisterState>();
 
+function isVerifiedFoodCommodity(commodity: string): boolean {
+    if (!commodity) return false;
+    const name = commodity.toLowerCase().trim();
+    const validKeywords = [
+        'beras', 'cabai', 'cabe', 'bawang', 'kentang', 'tomat', 'jagung', 'jahe', 
+        'kunyit', 'lengkuas', 'kencur', 'serai', 'durian', 'duku', 'salak', 'nanas', 
+        'kopi', 'kelapa', 'gula', 'ikan', 'udang', 'daging', 'ayam', 'telur', 
+        'minyak', 'melon', 'semangka', 'wortel', 'singkong', 'pisang', 'jeruk', 
+        'alpukat', 'pepaya', 'mangga', 'getuk'
+    ];
+    return validKeywords.some(k => name.includes(k));
+}
+
 // Pesan hardcoded untuk tiap langkah pendaftaran
 const REGISTER_STEP_1 = 
     `*Langkah 1 dari 5 — Nama*\n\n` +
@@ -184,6 +197,56 @@ export async function processIncomingMessage(
                 text: `❌ *PENGHAPUSAN DIBATALKAN*\n\nProses penghapusan telah dibatalkan. Data Juragan tetap aman di Tumbasna. 🌾\n\n💡 Ketik *MENU* untuk kembali ke menu utama.`
             });
             return;
+        }
+    }
+
+    // 1.2.3. Handle Image Message Attachment Flow (Flow A: Photo+Caption & Flow B: Text-then-Photo)
+    if (isRegistered && text.includes('[FOTO_PRODUK_DITERIMA]')) {
+        let extractedImgUrl: string | null = null;
+        const imgMatch = text.match(/URL Foto:\s*(https?:\/\/\S+)/i);
+        if (imgMatch) extractedImgUrl = imgMatch[1];
+
+        if (!extractedImgUrl) {
+            extractedImgUrl = await getLastImageUrl(sender);
+        }
+
+        // Extract caption text if photo sent with caption
+        let captionText = '';
+        const capMatch = text.match(/Keterangan:\s*([^|]+)/i);
+        if (capMatch) captionText = capMatch[1].trim();
+
+        const lowerCap = captionText.toLowerCase();
+        const hasCommodityDetail = lowerCap.includes('jual') || lowerCap.includes('panen') || lowerCap.includes('beli') || lowerCap.includes('harga') || lowerCap.includes('kg') || lowerCap.includes('bawang') || lowerCap.includes('cabai') || lowerCap.includes('beras');
+
+        if (hasCommodityDetail) {
+            // Flow A: Single message (Photo + Caption) -> clean text and let AI extract details + attach image
+            text = captionText;
+            if (extractedImgUrl) {
+                await saveMetadata(sender, { lastImageUrl: extractedImgUrl });
+            }
+        } else if (extractedImgUrl) {
+            // Flow B: Photo sent without new commodity caption -> attach to latest active/pending commodity entry
+            try {
+                const userEntriesRes = await apiService.getUserEntries(phoneNumber);
+                if (userEntriesRes && userEntriesRes.success && userEntriesRes.data && userEntriesRes.data.length > 0) {
+                    const latestEntry = userEntriesRes.data[0];
+                    if (!latestEntry.image || latestEntry.image.includes('placeholder')) {
+                        await apiService.updateCommodityImage(latestEntry.id, extractedImgUrl);
+                        await saveMetadata(sender, { lastImageUrl: null });
+                        
+                        const photoConfirmText = 
+                            `📸 *FOTO PRODUK BERHASIL DILAMPIRKAN!* 🌾\n\n` +
+                            `Foto produk telah berhasil ditambahkan ke listing komoditas *${latestEntry.commodity.toUpperCase()}* (${latestEntry.remainingQty || latestEntry.originalQty} kg).\n\n` +
+                            `✅ Penawaran Juragan kini tampil semakin menarik bagi pembeli di aplikasi Tumbasna!\n\n` +
+                            `💡 Ketik *MENU* untuk kembali ke menu utama.`;
+
+                        await sendMessage(sender, { text: photoConfirmText });
+                        return;
+                    }
+                }
+            } catch (imgAttachErr: any) {
+                console.warn(`⚠️ [IMAGE ATTACH] Gagal lampirkan foto ke listing terbaru:`, imgAttachErr.message);
+            }
         }
     }
 
@@ -1241,15 +1304,17 @@ export async function processIncomingMessage(
                     rawImgUrl = rawImgUrl.replace(/^(URL Foto:\s*|url foto:\s*)/i, '').trim();
                 }
 
+                const isFoodVerified = isVerifiedFoodCommodity(item.commodity);
                 const payload = {
                     phone: cleanContactPhone || phoneNumber,
                     commodity: item.commodity,
                     volume: item.weight_kg,
                     price: item.price,
-                    location: item.location,
+                    location: item.location || userInfo?.address || 'Banyumas',
                     image: rawImgUrl,
                     lat: embeddedLat,
                     lng: embeddedLng,
+                    status: isFoodVerified ? 'ACTIVE' : 'PENDING_VERIFICATION',
                 };
 
                 try {
@@ -1257,10 +1322,24 @@ export async function processIncomingMessage(
                     if (parsedData.intent === 'SUPPLY') {
                         apiResult = await apiService.sendSupply(payload);
                         if (apiResult && (apiResult.success !== false || apiResult.data)) {
-                            parsedData.reply_message =
-                                `🎉 *PRODUK BERHASIL DITAMBAHKAN!*\n\n` +
-                                `Komoditas *${item.commodity.toUpperCase()}* sebanyak *${item.weight_kg} kg* dengan harga *Rp ${Number(item.price).toLocaleString('id-ID')}/kg* telah berhasil dicatat di sistem Tumbasna.\n\n` +
-                                `✅ *Penawaran Anda sudah aktif dan langsung tampil di Pasar Mobile Apps!*`;
+                            if (isFoodVerified) {
+                                parsedData.reply_message =
+                                    `✅ *KOMODITAS RESMI TERCATAT!* 🌾\n\n` +
+                                    `• Komoditas: *${item.commodity.toUpperCase()}* (Terverifikasi Pangan Tumbasna)\n` +
+                                    `• Jumlah/Stok: *${item.weight_kg} kg*\n` +
+                                    `• Harga: *Rp ${Number(item.price).toLocaleString('id-ID')}/kg*\n` +
+                                    `• Lokasi: *${item.location || userInfo?.address || 'Banyumas'}*\n\n` +
+                                    (rawImgUrl ? `📸 *Foto Produk:* Terlampir\n\n` : `📸 _Kirimkan foto produk sekarang agar penawaran Juragan makin menarik pembeli di aplikasi Tumbasna!_\n\n`) +
+                                    `💡 Ketik *MENU* untuk kembali ke menu utama.`;
+                            } else {
+                                parsedData.reply_message =
+                                    `⚠️ *KOMODITAS PERLU VERIFIKASI ADMIN* ⚠️\n\n` +
+                                    `Produk *${item.commodity.toUpperCase()}* (Stok: ${item.weight_kg} kg, Rp ${Number(item.price).toLocaleString('id-ID')}/kg) telah tersimpan di sistem Tumbasna.\n\n` +
+                                    `📋 *STATUS: PENDING VERIFIKASI ADMIN*\n` +
+                                    `Komoditas ini belum termasuk dalam daftar komoditas pangan resmi Tumbasna. Admin Tumbasna akan meninjau & memverifikasi komoditas ini sebelum tampil di aplikasi marketplace.\n\n` +
+                                    (rawImgUrl ? `📸 *Foto Produk:* Terlampir\n\n` : `📸 _Juragan dapat mengirimkan foto produk untuk melengkapi peninjauan Admin._\n\n`) +
+                                    `💡 Ketik *MENU* untuk kembali ke menu utama.`;
+                            }
                         }
                     } else {
                         apiResult = await apiService.sendDemand(payload);
