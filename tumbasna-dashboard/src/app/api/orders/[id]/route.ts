@@ -6,70 +6,111 @@ type Params = { params: Promise<{ id: string }> };
 
 // Helper untuk kirim notifikasi via WhatsApp bot
 async function sendWANotification(phone: string, message: string) {
-  const waUrl = process.env.WHATSAPP_BOT_URL || 'http://127.0.0.1:3002';
+  const botUrls = Array.from(new Set([
+    process.env.WHATSAPP_BOT_URL,
+    process.env.WA_BOT_URL,
+    'http://127.0.0.1:3002',
+    'http://localhost:3002',
+    'http://127.0.0.1:3001',
+    'http://localhost:3001',
+    'http://whatsapp-bot:3002'
+  ].filter(Boolean))) as string[];
+
   const waApiKey = process.env.WHATSAPP_API_KEY || process.env.TUMBASNA_SECRET_KEY || 'tumbasna-rahasia-banget';
-  try {
-    const res = await fetch(`${waUrl}/api/send`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-secret-key': waApiKey
-      },
-      body: JSON.stringify({ phone, message })
-    });
-    if (res.ok) {
-      console.log(`💬 [WA NOTIFICATION] Berhasil kirim ke ${phone}`);
-    } else {
-      console.warn(`⚠️ [WA NOTIFICATION WARN] status=${res.status} untuk ${phone}`);
+
+  for (const botUrl of botUrls) {
+    try {
+      const res = await fetch(`${botUrl}/api/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-secret-key': waApiKey
+        },
+        body: JSON.stringify({ phone, message }),
+        signal: AbortSignal.timeout(4000)
+      });
+      if (res.ok) {
+        console.log(`💬 [WA NOTIFICATION] Berhasil kirim via ${botUrl} ke ${phone}`);
+        return true;
+      }
+    } catch (err: any) {
+      console.warn(`⚠️ [WA NOTIFICATION WARN] Gagal via ${botUrl} ke ${phone}:`, err.message);
     }
-  } catch (err: any) {
-    console.warn(`❌ [WA NOTIFICATION FAILED] Gagal kirim ke ${phone}:`, err.message);
   }
+  return false;
 }
 
-// Helper untuk mencari supplier secara fleksibel (exact, case-insensitive, atau partial match)
-async function findSupplierUser(supplierName: string) {
-  if (!supplierName) return null;
+// Helper untuk mencari supplier secara fleksibel (exact, case-insensitive, partial, atau commodity match)
+async function findSupplierUser(supplierName: string, items?: any[]) {
+  // 1. Try matching productEntryId or id from items
+  for (const item of (items || [])) {
+    const targetId = item.productEntryId || item.id;
+    if (targetId && typeof targetId === 'string' && !targetId.startsWith('prod-')) {
+      try {
+        const pEntry = await prisma.productEntry.findUnique({
+          where: { id: targetId },
+          include: { user: true }
+        });
+        if (pEntry?.user) return pEntry.user;
+      } catch {}
+    }
+  }
+
+  // 2. Try matching commodity name from items in ProductEntry table
+  for (const item of (items || [])) {
+    if (item.commodity) {
+      const commLower = item.commodity.toLowerCase().trim();
+      try {
+        const pEntry = await prisma.productEntry.findFirst({
+          where: {
+            commodity: { contains: commLower, mode: 'insensitive' }
+          },
+          include: { user: true }
+        });
+        if (pEntry?.user) return pEntry.user;
+      } catch {}
+    }
+  }
+
+  if (!supplierName) return await prisma.user.findFirst({ where: { role: 'PETANI' } });
   const cleanName = supplierName.trim();
 
-  // 1. Exact match
+  // 3. Exact / mode insensitive / contains match
   let user = await prisma.user.findFirst({
     where: {
       OR: [
-        { name: cleanName },
-        { businessName: cleanName }
-      ]
-    }
-  });
-  if (user) return user;
-
-  // 2. Case-insensitive match
-  user = await prisma.user.findFirst({
-    where: {
-      OR: [
         { name: { equals: cleanName, mode: 'insensitive' } },
-        { businessName: { equals: cleanName, mode: 'insensitive' } }
+        { businessName: { equals: cleanName, mode: 'insensitive' } },
+        { name: { contains: cleanName, mode: 'insensitive' } },
+        { businessName: { contains: cleanName, mode: 'insensitive' } }
       ]
     }
   });
   if (user) return user;
 
-  // 3. Partial match (misal "Gacorian77" vs "Gacorian")
-  const allSuppliers = await prisma.user.findMany({
-    where: { role: 'PETANI' }
-  });
+  // 4. Word token overlap search across all users
+  const allUsers = await prisma.user.findMany({});
+  const targetLower = cleanName.toLowerCase();
+  
+  user = allUsers.find(u => {
+    const uName = (u.name || '').toLowerCase();
+    const bName = (u.businessName || '').toLowerCase();
+    if (!uName && !bName) return false;
 
-  const target = cleanName.toLowerCase();
-  user = allSuppliers.find(s => {
-    const sName = (s.name || '').toLowerCase();
-    const bName = (s.businessName || '').toLowerCase();
-    return (
-      (sName && (target.includes(sName) || sName.includes(target))) ||
-      (bName && (target.includes(bName) || bName.includes(target)))
-    );
+    if (uName && (targetLower.includes(uName) || uName.includes(targetLower))) return true;
+    if (bName && (targetLower.includes(bName) || bName.includes(targetLower))) return true;
+
+    const tokens = targetLower.split(/\s+/).filter(t => t.length > 2);
+    for (const tok of tokens) {
+      if ((uName && uName.includes(tok)) || (bName && bName.includes(tok))) return true;
+    }
+    return false;
   }) || null;
 
-  return user;
+  if (user) return user;
+
+  // 5. Ultimate fallback: Return first supplier user (PETANI) in database
+  return await prisma.user.findFirst({ where: { role: 'PETANI' } });
 }
 
 // PATCH /api/orders/[id]  — update status pesanan (bayar, konfirmasi terima)
@@ -137,7 +178,7 @@ export async function PATCH(req: Request, { params }: Params) {
 
       const releaseAmount = commodityTotal > 0 ? commodityTotal : Number(existingOrder.totalAmount);
 
-      supplierUser = await findSupplierUser(existingOrder.supplierName);
+      supplierUser = await findSupplierUser(existingOrder.supplierName, existingOrder.items);
 
       if (supplierUser && releaseAmount > 0) {
         await prisma.user.update({
@@ -162,7 +203,7 @@ export async function PATCH(req: Request, { params }: Params) {
         }) : null;
 
         // Cari supplier jika belum dicari di atas
-        const supplier = supplierUser || await findSupplierUser(existingOrder.supplierName);
+        const supplier = supplierUser || await findSupplierUser(existingOrder.supplierName, existingOrder.items);
 
         const itemsDescription = existingOrder.items.map(it => `${it.commodity.toUpperCase()} (${Number(it.qty)} kg)`).join(', ');
         const formattedTotal = Number(existingOrder.totalAmount).toLocaleString('id-ID');

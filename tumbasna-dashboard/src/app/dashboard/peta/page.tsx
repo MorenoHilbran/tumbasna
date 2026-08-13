@@ -16,7 +16,6 @@ import {
     X,
     ShoppingCart,
     Clock,
-    DollarSign,
     ChevronDown,
     ChevronUp,
 } from 'lucide-react';
@@ -318,7 +317,6 @@ function DetailPanel({ w, transactions, onClose }: { w: typeof baseWilayahData[0
                                         <span>{trx.qty}</span>
                                     </div>
                                     <div className="flex items-center gap-1 text-emerald-600 font-bold">
-                                        <DollarSign className="w-3 h-3" />
                                         <span>{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(trx.nilai)}</span>
                                     </div>
                                 </div>

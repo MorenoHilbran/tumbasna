@@ -685,10 +685,10 @@ export async function processIncomingMessage(
     const rawKirimText = isResiFoto
         ? text.replace(/^\[RESI FOTO\]\s*/i, '').trim()
         : text.trim();
-    const kirimMatch = rawKirimText.match(/^kirim\s+(TRX-\S+)(?:\s+(\S+))?/i);
+    const kirimMatch = rawKirimText.match(/^kirim\s+([A-Z0-9_-]+)(?:\s+(\S+))?/i);
 
     if (kirimMatch) {
-        const trxId = kirimMatch[1].toUpperCase(); // misal: TRX-987654
+        const trxId = kirimMatch[1].toUpperCase(); // misal: ORD-PBG-001 atau ORD-178655 atau TRX-987654
         const parsedResi = kirimMatch[2] || null;   // misal: JNE1234567890 atau null
 
         // Ekstrak URL foto resi jika ada (dari caption foto)

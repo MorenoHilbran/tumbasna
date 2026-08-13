@@ -200,15 +200,94 @@ export async function POST(req: Request) {
 
     // Kirim notifikasi WA ke supplier bahwa ada pesanan baru masuk
     try {
-      const waUrl = process.env.WHATSAPP_BOT_URL || 'http://127.0.0.1:3002';
-      const waApiKey = process.env.WHATSAPP_API_KEY || process.env.TUMBASNA_SECRET_KEY || 'tumbasna-rahasia-banget';
+      let supplierUser: any = null;
 
-      // Cari supplier untuk mendapatkan nomor telepon & nama lengkap
-      const supplierUser = await prisma.user.findFirst({
-        where: { OR: [{ name: supplierName }, { businessName: supplierName }] }
-      });
+      // 1. Multi-stage Supplier Lookup: productEntryId/id -> commodity -> supplierName -> token match -> default PETANI
+      for (const item of (items || [])) {
+        const targetId = item.productEntryId || item.id;
+        if (targetId && typeof targetId === 'string' && !targetId.startsWith('prod-')) {
+          try {
+            const pEntry = await prisma.productEntry.findUnique({
+              where: { id: targetId },
+              include: { user: true }
+            });
+            if (pEntry?.user) {
+              supplierUser = pEntry.user;
+              break;
+            }
+          } catch {}
+        }
+      }
 
-      // Ambil info pembeli jika ada
+      if (!supplierUser) {
+        for (const item of (items || [])) {
+          if (item.commodity) {
+            const commLower = item.commodity.toLowerCase().trim();
+            try {
+              const pEntry = await prisma.productEntry.findFirst({
+                where: {
+                  commodity: { contains: commLower, mode: 'insensitive' }
+                },
+                include: { user: true }
+              });
+              if (pEntry?.user) {
+                supplierUser = pEntry.user;
+                break;
+              }
+            } catch {}
+          }
+        }
+      }
+
+      if (!supplierUser) {
+        const searchNames = Array.from(new Set([
+          supplierName,
+          items?.[0]?.supplierName,
+        ].filter(Boolean))) as string[];
+
+        for (const rawName of searchNames) {
+          const cleanName = rawName.trim();
+          if (!cleanName) continue;
+
+          supplierUser = await prisma.user.findFirst({
+            where: {
+              OR: [
+                { name: { equals: cleanName, mode: 'insensitive' } },
+                { businessName: { equals: cleanName, mode: 'insensitive' } },
+                { name: { contains: cleanName, mode: 'insensitive' } },
+                { businessName: { contains: cleanName, mode: 'insensitive' } },
+              ]
+            }
+          });
+          if (supplierUser) break;
+
+          const allUsers = await prisma.user.findMany({});
+          const targetLower = cleanName.toLowerCase();
+
+          supplierUser = allUsers.find(u => {
+            const uName = (u.name || '').toLowerCase();
+            const bName = (u.businessName || '').toLowerCase();
+            if (!uName && !bName) return false;
+
+            if (uName && (targetLower.includes(uName) || uName.includes(targetLower))) return true;
+            if (bName && (targetLower.includes(bName) || bName.includes(targetLower))) return true;
+
+            const tokens = targetLower.split(/\s+/).filter(t => t.length > 2);
+            for (const tok of tokens) {
+              if ((uName && uName.includes(tok)) || (bName && bName.includes(tok))) return true;
+            }
+            return false;
+          }) || null;
+
+          if (supplierUser) break;
+        }
+      }
+
+      if (!supplierUser) {
+        supplierUser = await prisma.user.findFirst({ where: { role: 'PETANI' } });
+      }
+
+      // 3. Ambil info pembeli jika ada
       let buyerName = 'Pedagang Tumbasna';
       if (validBuyerUserId) {
         const buyer = await prisma.user.findUnique({ where: { id: validBuyerUserId } });
@@ -222,7 +301,7 @@ export async function POST(req: Request) {
         const formattedTotal = Number(totalAmount || 0).toLocaleString('id-ID');
 
         const msg = `📢 *TUMBASNA: PESANAN BARU MASUK* 🌾\n\n` +
-          `Halo Bpk/Ibu *${supplierUser.name}*,\n` +
+          `Halo Bpk/Ibu *${supplierUser.name || supplierUser.businessName || 'Supplier'}*,\n` +
           `Ada pesanan baru untuk komoditas Juragan!\n\n` +
           `• ID Pesanan: *${id}*\n` +
           `• Pembeli: *${buyerName}*\n` +
@@ -233,15 +312,39 @@ export async function POST(req: Request) {
           `Kami akan memberi tahu Juragan kembali begitu pembayaran dikonfirmasi oleh Escrow Tumbasna. ` +
           `Mohon jangan memproses barang sebelum ada notifikasi pembayaran lunas. 🤝`;
 
-        await fetch(`${waUrl}/api/send`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-secret-key': waApiKey },
-          body: JSON.stringify({ phone: supplierUser.phoneNumber, message: msg }),
-        });
-        console.log(`💬 [WA ORDER CREATED] Notifikasi terkirim ke supplier ${supplierUser.phoneNumber}`);
+        const botUrls = Array.from(new Set([
+          process.env.WHATSAPP_BOT_URL,
+          process.env.WA_BOT_URL,
+          'http://127.0.0.1:3002',
+          'http://localhost:3002',
+          'http://127.0.0.1:3001',
+          'http://localhost:3001',
+          'http://whatsapp-bot:3002'
+        ].filter(Boolean))) as string[];
+
+        const waApiKey = process.env.WHATSAPP_API_KEY || process.env.TUMBASNA_SECRET_KEY || 'tumbasna-rahasia-banget';
+
+        for (const botUrl of botUrls) {
+          try {
+            const res = await fetch(`${botUrl}/api/send`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'x-secret-key': waApiKey },
+              body: JSON.stringify({ phone: supplierUser.phoneNumber, message: msg }),
+              signal: AbortSignal.timeout(4000)
+            });
+            if (res.ok) {
+              console.log(`💬 [WA ORDER CREATED] Notifikasi terkirim via ${botUrl} ke ${supplierUser.phoneNumber}`);
+              break;
+            }
+          } catch (waErr: any) {
+            console.warn(`[WA ORDER WARN] Gagal via ${botUrl}:`, waErr.message);
+          }
+        }
+      } else {
+        console.warn(`⚠️ [WA ORDER NOTIF] Supplier tidak ditemukan atau tidak punya nomor telepon untuk "${supplierName}"`);
       }
     } catch (notifErr: any) {
-      console.warn(`⚠️ [WA ORDER NOTIF] Gagal kirim notifikasi pesanan baru:`, notifErr.message);
+      console.warn(`⚠️ [WA ORDER NOTIF ERROR] Gagal kirim notifikasi pesanan baru:`, notifErr.message);
     }
 
     return NextResponse.json({ success: true, data: order }, { status: 201 });
