@@ -457,7 +457,22 @@ export async function processIncomingMessage(
         'chat', 'inbox', 'lihat profil', 'lihat saldo', 'daftar listing', 'pesanan masuk',
         'cara jual', 'hubungi bantuan', 'edit profil', 'hapus akun & data saya', 'inbox chat'
     ];
-    // Pesan sistem relay dari Tumbasna — jangan diproses sebagai supplier reply
+    // Check if message is a commodity listing offer or menu command
+    const lowerText = text.toLowerCase();
+    const isCommodityListingMsg = lowerText.includes('jual') || 
+                                  lowerText.includes('panen') || 
+                                  lowerText.includes('beli') || 
+                                  lowerText.includes('tawar') || 
+                                  lowerText.includes('harga') || 
+                                  lowerText.includes(' kg') || 
+                                  lowerText.includes(' ton') || 
+                                  lowerText.includes('stok') || 
+                                  lowerText.includes('komoditas') ||
+                                  lowerText.includes('beras') ||
+                                  lowerText.includes('cabai') ||
+                                  lowerText.includes('cabe') ||
+                                  lowerText.includes('bawang');
+
     const isTumbasnaSystemMessage = text.includes('Pesan dari Pembeli Tumbasna') || text.includes('tumbasna-rahasia') || text.startsWith('✅ Pesan Anda telah terkirim');
 
     // Cek apakah supplier merespons (quote/reply) notifikasi pembeli dari WhatsApp UI
@@ -475,13 +490,15 @@ export async function processIncomingMessage(
                 const buyerPhone = lastChat.buyerPhone;
                 
                 const isExplicitMenuCommand = explicitMenuKeywords.includes(cleanText) || 
-                                              cleanText.startsWith('jual ') || 
+                                              isCommodityListingMsg ||
+                                              cleanText.startsWith('jual') || 
+                                              cleanText.startsWith('panen') ||
                                               cleanText.startsWith('ubah ') ||
                                               cleanText.startsWith('kirim ') ||
                                               cleanText.startsWith('hapus ') ||
                                               cleanText.startsWith('batal ');
 
-                // Jika supplier membalas pesan (quote notifikasi ATAU percakapan biasa) dan bukan command menu bot
+                // Jika supplier membalas pesan (quote notifikasi ATAU percakapan biasa) dan bukan command menu bot / listing komoditas
                 if (buyerPhone && text.trim().length > 0 && !isExplicitMenuCommand) {
                     console.log(`💬 [CHAT REPLY] Supplier ${phoneNumber} membalas buyer ${buyerPhone}: "${text.trim()}"`);
                     
