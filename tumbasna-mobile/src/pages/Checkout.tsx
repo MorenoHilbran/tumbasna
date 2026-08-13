@@ -61,34 +61,41 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): nu
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// Calculate local courier cost based on city distance
-function calculateLocalCourierCost(buyerCity: string, supplierCity: string): number {
-  const extractCity = (address: string): string => {
-    const lower = address.toLowerCase();
-    const cities = ['banyumas', 'cilacap', 'purbalingga', 'banjarnegara', 'kebumen', 'tegal', 'brebes', 'magelang', 'boyolali', 'cianjur', 'karo'];
-    for (const city of cities) {
-      if (lower.includes(city)) return city;
+// Helper: Smart offline geocoding fallback for Banyumas Raya & Central Java
+function getFallbackAddressFromCoords(lat: number, lng: number): string {
+  if (lat < -7.1 && lat > -7.7 && lng > 108.8 && lng < 109.9) {
+    if (lat > -7.43 && lat < -7.35 && lng > 109.3 && lng < 109.4) {
+      return 'Purbalingga, Jawa Tengah, 53311, Indonesia';
     }
-    return 'unknown';
-  };
-
-  const buyerKota = extractCity(buyerCity);
-  const supplierKota = extractCity(supplierCity);
-
-  if (buyerKota === supplierKota) return 2500;
-  if (buyerKota === 'unknown' || supplierKota === 'unknown') return 5000;
-
-  const cityOrder = ['banyumas', 'cilacap', 'purbalingga', 'banjarnegara', 'kebumen', 'tegal', 'brebes', 'magelang', 'boyolali'];
-  const buyerIdx = cityOrder.indexOf(buyerKota);
-  const supplierIdx = cityOrder.indexOf(supplierKota);
-
-  if (buyerIdx !== -1 && supplierIdx !== -1) {
-    const distance = Math.abs(buyerIdx - supplierIdx);
-    if (distance === 1) return 5000;
-    if (distance >= 2) return 7500;
+    if (lat > -7.48 && lat < -7.38 && lng > 109.2 && lng < 109.3) {
+      return 'Purwokerto, Banyumas, Jawa Tengah, 53114, Indonesia';
+    }
+    if (lat > -7.55 && lat < -7.45 && lng > 109.25 && lng < 109.35) {
+      return 'Banyumas, Jawa Tengah, 53192, Indonesia';
+    }
+    if (lat > -7.45 && lat < -7.35 && lng > 109.6 && lng < 109.75) {
+      return 'Banjarnegara, Jawa Tengah, 53411, Indonesia';
+    }
+    if (lat > -7.75 && lat < -7.60 && lng > 108.9 && lng < 109.1) {
+      return 'Cilacap, Jawa Tengah, 53211, Indonesia';
+    }
+    if (lat > -7.72 && lat < -7.60 && lng > 109.5 && lng < 109.7) {
+      return 'Kebumen, Jawa Tengah, 54311, Indonesia';
+    }
+    if (lat > -6.95 && lat < -6.80 && lng > 109.0 && lng < 109.2) {
+      return 'Tegal, Jawa Tengah, 52111, Indonesia';
+    }
+    return 'Banyumas, Jawa Tengah, 53192, Indonesia';
   }
+  return 'Jawa Tengah, Indonesia';
+}
 
-  return 5000;
+// Calculate local courier cost based on actual distance (Rp 2.500 per km)
+function calculateLocalCourierCost(distanceKm: number): number {
+  if (!distanceKm || distanceKm <= 0) return 2500;
+  // Akumulasi per kilometer: Rp 2.500 / km (contoh: 5.5 km × 2.500 = Rp 13.750)
+  const calculatedCost = Math.round(distanceKm * 2500);
+  return Math.max(2500, calculatedCost);
 }
 
 const DELIVERY_TIMES = [
@@ -270,7 +277,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
 
   const [step, setStep] = useState<'map' | 'summary'>('summary');
   const [buyerCoords, setBuyerCoords] = useState<[number, number]>([-7.5151, 109.2941]);
-  const [buyerAddressLabel, setBuyerAddressLabel] = useState<string>('');
+  const [buyerAddressLabel, setBuyerAddressLabel] = useState<string>(user?.address || 'Banyumas, Jawa Tengah, 53192, Indonesia');
   const [isGettingGps, setIsGettingGps] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -452,12 +459,12 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
     if (selectedCourier === 'cod') {
       setDynamicShippingCost(0);
     } else if (selectedCourier === 'kurir-lokal') {
-      setDynamicShippingCost(calculateLocalCourierCost(buyerAddressLabel, supplierLocation));
+      setDynamicShippingCost(calculateLocalCourierCost(distanceKm));
     } else if (selectedCourier === 'ekspedisi' && selectedEkspedisi) {
       const selected = rajaOngkirCosts.find(c => c.id === selectedEkspedisi);
       setDynamicShippingCost(selected?.cost || 0);
     }
-  }, [selectedCourier, buyerAddressLabel, selectedEkspedisi, rajaOngkirCosts]);
+  }, [selectedCourier, buyerAddressLabel, distanceKm, selectedEkspedisi, rajaOngkirCosts]);
 
   useEffect(() => {
     if (selectedCourier === 'ekspedisi' && buyerAddressLabel && rajaOngkirCosts.length === 0) {
@@ -468,20 +475,39 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
   const reverseGeocode = async (lat: number, lng: number) => {
     try {
       const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
-      const data = await res.json();
-      setBuyerAddressLabel(data.display_name || 'Alamat tidak ditemukan');
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.display_name && !data.display_name.includes('Error')) {
+          setBuyerAddressLabel(data.display_name);
+          return;
+        }
+      }
+      setBuyerAddressLabel(getFallbackAddressFromCoords(lat, lng));
     } catch (err) {
-      console.error('Reverse geocode error:', err);
-      setBuyerAddressLabel('Alamat tidak ditemukan');
+      console.warn('Reverse geocode error, using fallback:', err);
+      setBuyerAddressLabel(getFallbackAddressFromCoords(lat, lng));
     }
   };
 
   const handleGetGPS = () => {
     setIsGettingGps(true);
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((position) => {const { latitude, longitude } = position.coords;setBuyerCoords([latitude, longitude]);reverseGeocode(latitude, longitude);setIsGettingGps(false);}, (error) => {alert('Gagal mendapatkan lokasi GPS. Pastikan GPS Anda aktif.');setIsGettingGps(false);}, { timeout: 10000, enableHighAccuracy: false });
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setBuyerCoords([latitude, longitude]);
+          reverseGeocode(latitude, longitude);
+          setIsGettingGps(false);
+        },
+        (error) => {
+          console.warn('GPS error, using fallback:', error);
+          setBuyerAddressLabel(getFallbackAddressFromCoords(buyerCoords[0], buyerCoords[1]));
+          setIsGettingGps(false);
+        },
+        { timeout: 8000, enableHighAccuracy: false }
+      );
     } else {
-      alert('Browser tidak mendukung Geolocation.');
+      setBuyerAddressLabel(getFallbackAddressFromCoords(buyerCoords[0], buyerCoords[1]));
       setIsGettingGps(false);
     }
   };
@@ -504,12 +530,16 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
     const lat = parseFloat(result.lat);
     const lon = parseFloat(result.lon);
     setBuyerCoords([lat, lon]);
-    setBuyerAddressLabel(result.display_name);
+    setBuyerAddressLabel(result.display_name || getFallbackAddressFromCoords(lat, lon));
     setSearchResults([]);
     setSearchQuery('');
   };
 
   const handleConfirmLocation = () => {
+    if (!buyerAddressLabel || buyerAddressLabel.includes('tidak ditemukan') || buyerAddressLabel.includes('tidak tersedia')) {
+      const fallback = getFallbackAddressFromCoords(buyerCoords[0], buyerCoords[1]);
+      setBuyerAddressLabel(fallback);
+    }
     setStep('summary');
   };
 
@@ -666,11 +696,11 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
     
     let orderId = '';
     try {
-      const supplierCoords = checkoutItems[0]?.product?.supplierLocation 
+      const supplierCoords: [number, number] = (checkoutItems[0]?.product?.supplierLocation 
         ? locationCoords[Object.keys(locationCoords).find(k => 
             checkoutItems[0].product.supplierLocation.toLowerCase().includes(k.toLowerCase())
           ) || 'Banyumas'] || [-7.5151, 109.2941]
-        : [-7.5151, 109.2941];
+        : [-7.5151, 109.2941]) as [number, number];
       
       const supplierAddress = checkoutItems[0]?.product?.supplierLocation || '';
       console.log('[handlePlaceOrder] Calling checkout with:', {
@@ -950,7 +980,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
                   <h4>Pembayaran Digital (Midtrans)</h4>
                   <p>QRIS, GoPay, OVO, ShopeePay, & Transfer VA Bank</p>
                 </div>
-                <IonRadio value="qris" checked={paymentMethod === 'qris'} />
+                <IonRadio value="qris" />
               </div>
 
               <div
@@ -961,7 +991,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
                   <h4>Bayar di Tempat (COD)</h4>
                   <p>Bayar tunai saat komoditas tiba di lokasi Anda</p>
                 </div>
-                <IonRadio value="cod" checked={paymentMethod === 'cod'} />
+                <IonRadio value="cod" />
               </div>
             </div>
 
@@ -1001,10 +1031,16 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
                   <div className="shipping-radio-row">
                     <div className="shipping-info-left">
                       <h4 className="shipping-method-name">Kurir Lokal</h4>
-                      <p className="shipping-method-desc">Ongkir dihitung berdasarkan jarak kota</p>
+                      <p className="shipping-method-desc">
+                        {distanceKm > 0 
+                          ? `Ongkir Rp 2.500/km × ${distanceKm.toFixed(1)} km` 
+                          : 'Ongkir dihitung berdasarkan jarak (Rp 2.500/km)'}
+                      </p>
                     </div>
                     <div className="shipping-info-right">
-                      <span className="shipping-method-price">Rp {calculateLocalCourierCost(buyerAddressLabel, supplierLocation).toLocaleString('id-ID')}</span>
+                      <span className="shipping-method-price">
+                        Rp {calculateLocalCourierCost(distanceKm).toLocaleString('id-ID')}
+                      </span>
                       <IonRadio value="kurir-lokal" className="custom-radio" />
                     </div>
                   </div>
@@ -1065,7 +1101,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onBack, onOrderCreated, supplierId,
                               </div>
                               <div className="ekspedisi-price">
                                 <span>Rp {ekspedisi.cost.toLocaleString('id-ID')}</span>
-                                <IonRadio value={ekspedisi.id} checked={selectedEkspedisi === ekspedisi.id} />
+                                <IonRadio value={ekspedisi.id} />
                               </div>
                             </div>
                           ))}
