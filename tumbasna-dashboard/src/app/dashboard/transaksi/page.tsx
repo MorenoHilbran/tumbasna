@@ -84,20 +84,32 @@ export default function TransaksiPage() {
                         else if (rawSt.includes('PROSES') || rawSt.includes('KIRIM') || rawSt.includes('DIPROSES') || rawSt.includes('DIKIRIM')) statusUI = 'proses';
                         else if (rawSt.includes('BATAL') || rawSt.includes('DIBATALKAN')) statusUI = 'batal';
 
+                        const item0 = o.items?.[0] || {};
+                        const commName = item0.commodity || item0.productEntry?.commodity || item0.product?.name || 'Komoditas';
+                        const qtyVal = Number(item0.qty || item0.quantity || 10);
+                        const itemPrice = Number(item0.price || 0);
+                        const calcNilai = itemPrice > 0 ? (itemPrice * qtyVal) : Number(o.totalAmount || 0);
+
+                        let supplierDisplayName = o.supplierName || item0.productEntry?.user?.businessName || item0.productEntry?.user?.name || 'Supplier';
+                        if (supplierDisplayName.toLowerCase().includes('gacorian')) {
+                            supplierDisplayName = 'Gacorian.id';
+                        }
+
                         return {
                             id: o.id,
-                            buyer: o.buyerName || 'Pedagang Tumbasna',
-                            supplier: o.supplierName,
-                            produk: o.items?.[0]?.product?.name || 'Komoditas',
-                            qty: (o.items?.[0]?.quantity || 100) + ' kg',
-                            nilai: Number(o.totalAmount || 0),
+                            buyer: o.buyerName || o.buyer?.name || o.buyer?.businessName || 'Pedagang Tumbasna',
+                            supplier: supplierDisplayName,
+                            produk: commName,
+                            qty: qtyVal + ' kg',
+                            nilai: calcNilai > 0 ? calcNilai : Number(o.totalAmount || 0),
                             status: statusUI,
-                            tanggal: o.date,
-                            wilayah: (o.supplierLocation || 'Cilacap').split(',')[0].trim() || 'Cilacap',
+                            tanggal: o.date || (o.createdAt ? new Date(o.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '13 Agu 2026'),
+                            wilayah: (o.supplierLocation || 'Purbalingga').split(',')[0].trim() || 'Purbalingga',
                             metode: 'COD/QRIS',
                             dbStatus: o.rawStatus || o.dbStatus || o.status,
                             trackingTimeline: o.trackingTimeline || [],
                             rawNotes: o.notes || null,
+                            items: o.items || []
                         };
                     });
                     setTransaksiData(mapped);
@@ -112,7 +124,6 @@ export default function TransaksiPage() {
         try {
             const body: any = { status: newStatus };
             
-            // Jika admin klik "Kirim Barang", sertakan nomor resi dan update timeline
             if (newStatus === 'DIKIRIM' && selectedTrx) {
                 if (!waybillNumber.trim()) {
                     alert('Masukkan nomor resi ekspedisi terlebih dahulu!');
@@ -198,7 +209,9 @@ export default function TransaksiPage() {
         pendingCount: number;
         batalCount: number;
     }>, trx) => {
-        const name = trx.supplier || 'Supplier Umum';
+        let name = trx.supplier || 'Supplier Umum';
+        if (name.toLowerCase().includes('gacorian')) name = 'Gacorian.id';
+
         if (!acc[name]) {
             acc[name] = {
                 supplierName: name,
@@ -228,7 +241,10 @@ export default function TransaksiPage() {
          t.produk.toLowerCase().includes(search.toLowerCase())) &&
         (statusFilter === 'Semua' || t.status === statusFilter) &&
         (wilayahFilter === 'Semua' || t.wilayah === wilayahFilter) &&
-        (!selectedSupplier || t.supplier === selectedSupplier)
+        (!selectedSupplier ||
+         t.supplier.toLowerCase().includes(selectedSupplier.toLowerCase()) ||
+         selectedSupplier.toLowerCase().includes(t.supplier.toLowerCase())
+        )
     );
 
     const totalPages = Math.ceil(filtered.length / perPage);
