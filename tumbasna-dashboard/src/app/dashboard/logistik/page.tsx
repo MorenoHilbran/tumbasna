@@ -27,9 +27,18 @@ import {
 const LogistikMap = dynamic(() => import('@/components/LogistikMapLeaflet'), {
     ssr: false,
     loading: () => (
-        <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50">
-            <Activity className="w-6 h-6 animate-spin mb-3 text-emerald-600" />
-            <p className="text-xs font-semibold text-slate-400">Memuat peta pelacakan...</p>
+        <div className="w-full h-full min-h-[350px] relative bg-slate-100/70 rounded-2xl overflow-hidden animate-pulse flex flex-col items-center justify-center border border-slate-200/50">
+            <div className="absolute inset-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:16px_16px] opacity-60" />
+            <div className="absolute top-4 left-4 flex flex-col gap-1 z-10">
+                <div className="w-8 h-8 rounded-lg bg-slate-200/80 shadow-sm" />
+                <div className="w-8 h-8 rounded-lg bg-slate-200/80 shadow-sm" />
+            </div>
+            <div className="relative z-10 flex flex-col items-center gap-3">
+                <div className="relative flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full border-3 border-emerald-500/20 border-t-emerald-600 animate-spin" />
+                </div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Memuat Peta...</span>
+            </div>
         </div>
     ),
 });
@@ -487,12 +496,12 @@ export default function LogistikPage() {
                 <div>
                     <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Monitoring Logistik</h1>
                     <p className="text-sm text-slate-400 mt-0.5">
-                        Lacak posisi armada secara real-time, pantau rute pengiriman, dan optimasi backhaul
+                        Lacak posisi kurir secara real-time, pantau rute pengiriman, dan optimasi backhaul
                     </p>
                 </div>
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-600 border border-emerald-100/50 self-start md:self-auto">
                     <Navigation className="w-4 h-4" />
-                    {jalans} Armada Aktif
+                    {jalans} Kurir Aktif
                 </div>
             </div>
 
@@ -530,7 +539,7 @@ export default function LogistikPage() {
                             onChange={(e) => setFilterActiveOnly(e.target.checked)}
                             className="w-4 h-4 rounded text-emerald-600 border-slate-300 focus:ring-emerald-500 focus:ring-offset-0 cursor-pointer"
                         />
-                        <span className="text-xs font-bold text-slate-600">Hanya Tampilkan Armada Aktif (Sedang Dikirim)</span>
+                        <span className="text-xs font-bold text-slate-600">Hanya Tampilkan Kurir Aktif (Sedang Dikirim)</span>
                     </label>
                 </div>
             </div>
@@ -567,8 +576,8 @@ export default function LogistikPage() {
                     <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden flex flex-col">
                         <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
                             <div>
-                                <h2 className="text-sm font-extrabold text-slate-800 tracking-tight">Peta Pelacakan Armada Real-Time</h2>
-                                <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Lacak rute pengiriman dan posisi truk saat ini di peta</p>
+                                <h2 className="text-sm font-extrabold text-slate-800 tracking-tight">Peta Pelacakan Kurir Real-Time</h2>
+                                <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Lacak rute pengiriman dan posisi kurir saat ini di peta</p>
                             </div>
                             <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100/30">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
@@ -592,8 +601,8 @@ export default function LogistikPage() {
                     {/* Fleet Grid */}
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <h2 className="text-base font-bold text-slate-900 tracking-tight">Daftar Armada</h2>
-                            <p className="text-xs text-slate-400 font-medium">{combinedArmada.length} armada terdaftar</p>
+                            <h2 className="text-base font-bold text-slate-900 tracking-tight">Daftar Kurir</h2>
+                            <p className="text-xs text-slate-400 font-medium">{combinedArmada.length} kurir terdaftar</p>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -666,7 +675,7 @@ export default function LogistikPage() {
 
                     {/* Selected Armada Details */}
                     <div className="bg-white rounded-2xl p-6 border border-slate-200/60 shadow-sm">
-                        <h2 className="text-base font-bold text-slate-900 tracking-tight mb-4">Detail Armada</h2>
+                        <h2 className="text-base font-bold text-slate-900 tracking-tight mb-4">Detail Kurir</h2>
 
                         <div className="rounded-2xl p-5 mb-5 bg-slate-900 border border-slate-800 text-white">
                             <div className="flex items-center gap-3 mb-4">

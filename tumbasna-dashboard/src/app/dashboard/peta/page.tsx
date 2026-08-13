@@ -149,23 +149,41 @@ const baseWilayahData = [
 const LeafletPetaMap = dynamic(() => import('@/components/PetaMapLeaflet'), {
     ssr: false,
     loading: () => (
-        <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 border-r border-slate-200/65">
-            <Activity className="w-6 h-6 animate-spin mb-3 text-emerald-600" />
-            <p className="text-xs font-semibold text-slate-400">Memuat peta interaktif...</p>
+        <div className="w-full h-full min-h-[350px] relative bg-slate-100/70 rounded-2xl overflow-hidden animate-pulse flex flex-col items-center justify-center border border-slate-200/50">
+            <div className="absolute inset-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:16px_16px] opacity-60" />
+            <div className="absolute top-4 left-4 flex flex-col gap-1 z-10">
+                <div className="w-8 h-8 rounded-lg bg-slate-200/80 shadow-sm" />
+                <div className="w-8 h-8 rounded-lg bg-slate-200/80 shadow-sm" />
+            </div>
+            <div className="relative z-10 flex flex-col items-center gap-3">
+                <div className="relative flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full border-3 border-emerald-500/20 border-t-emerald-600 animate-spin" />
+                </div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Memuat Peta...</span>
+            </div>
         </div>
     ),
 });
 
 // --- Status Badge ----------------------------------------------------------
 function StatusBadge({ status }: { status: string }) {
+    const st = (status || '').toUpperCase().replace(/\s+/g, '_');
+    
+    let key = 'MENUNGGU';
+    if (st.includes('SELESAI') || st === 'SUCCESS') key = 'SELESAI';
+    else if (st.includes('PROSES') || st === 'DIPROSES') key = 'DIPROSES';
+    else if (st.includes('KIRIM') || st === 'DIKIRIM') key = 'DIKIRIM';
+    else if (st.includes('BATAL') || st === 'DIBATALKAN') key = 'DIBATALKAN';
+    else key = 'MENUNGGU';
+
     const map: Record<string, { bg: string; label: string; Icon: any }> = {
         SELESAI: { bg: 'bg-emerald-50 text-emerald-600 border-emerald-100/50', label: 'Selesai', Icon: CheckCircle2 },
-        DIPROSES: { bg: 'bg-teal-50 text-teal-600 border-teal-100/50', label: 'Diproses', Icon: Activity },
+        DIPROSES: { bg: 'bg-teal-50 text-teal-600 border-teal-100/50', label: 'Diproses (Escrow)', Icon: Activity },
         DIKIRIM: { bg: 'bg-blue-50 text-blue-600 border-blue-100/50', label: 'Dikirim', Icon: Package },
         MENUNGGU: { bg: 'bg-amber-50 text-amber-600 border-amber-100/50', label: 'Menunggu', Icon: Clock },
         DIBATALKAN: { bg: 'bg-rose-50 text-rose-600 border-rose-100/50', label: 'Batal', Icon: X },
     };
-    const s = map[status] ?? map.MENUNGGU;
+    const s = map[key];
     const Icon = s.Icon;
     return (
         <span className={`inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full border ${s.bg}`}>
@@ -322,7 +340,16 @@ function DetailPanel({ w, transactions, onClose }: { w: typeof baseWilayahData[0
                                 </div>
                                 <div className="flex items-center gap-1 text-[8px] text-slate-400 font-medium mt-1">
                                     <Clock className="w-2.5 h-2.5" />
-                                    <span>{new Date(trx.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                                    <span>{(() => {
+                                        const val = trx.tanggal;
+                                        if (!val) return 'Terbaru';
+                                        if (typeof val === 'string' && (val.includes('Jan') || val.includes('Feb') || val.includes('Mar') || val.includes('Apr') || val.includes('Mei') || val.includes('Jun') || val.includes('Jul') || val.includes('Agu') || val.includes('Sep') || val.includes('Okt') || val.includes('Nov') || val.includes('Des'))) {
+                                            return val;
+                                        }
+                                        const d = new Date(val);
+                                        if (isNaN(d.getTime())) return String(val);
+                                        return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                                    })()}</span>
                                 </div>
                             </div>
                         ))
@@ -387,14 +414,14 @@ export default function PetaPage() {
             if (ordersData.success) {
                 const mapped = ordersData.data.map((o: any) => ({
                     id: o.id,
-                    buyer: o.buyerName || 'Pedagang Tumbasna',
-                    supplier: o.supplierName,
-                    produk: o.items?.[0]?.product?.name || 'Komoditas',
-                    qty: (o.items?.[0]?.quantity || 100) + ' kg',
-                    nilai: o.totalAmount,
+                    buyer: o.buyerName || o.buyerAddress || 'Pedagang Tumbasna',
+                    supplier: o.supplierName || 'Petani Tumbasna',
+                    produk: o.items?.[0]?.product?.name || o.items?.[0]?.name || 'Komoditas Pangan',
+                    qty: (o.items?.[0]?.quantity || o.items?.[0]?.qty || 1) + ' kg',
+                    nilai: Number(o.totalAmount || 0),
                     dbStatus: o.status,
-                    tanggal: o.date,
-                    wilayah: o.supplierLocation?.split(',')[0]?.trim() || 'Banyumas',
+                    tanggal: o.createdAt || o.date,
+                    wilayah: o.supplierLocation || o.buyerAddress || 'Banyumas',
                 }));
                 setAllTransactions(mapped);
             }
@@ -406,12 +433,14 @@ export default function PetaPage() {
         });
     }, []);
 
-    // Filter transactions by selected region
+    // Filter transactions by selected region (or show all if no specific region selected)
     const filteredTransactions = selectedData 
-        ? allTransactions.filter(trx => 
-            trx.wilayah.toLowerCase().includes(selectedData.name.toLowerCase())
-        )
-        : [];
+        ? allTransactions.filter(trx => {
+            const wLower = (trx.wilayah || '').toLowerCase();
+            const sLower = selectedData.name.toLowerCase();
+            return wLower.includes(sLower) || sLower.includes(wLower);
+        })
+        : allTransactions;
 
     return (
         <div className="flex flex-col w-full h-full bg-[#F8FAFC]">

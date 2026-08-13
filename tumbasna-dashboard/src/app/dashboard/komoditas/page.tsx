@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Package,
     Search,
@@ -104,13 +104,35 @@ function StockStatus({ status }: { status: string }) {
 
 // ─── Main Komoditas Page ──────────────────────────────────────
 export default function KomoditasPage() {
+    const [commoditiesList, setCommoditiesList] = useState(commodities);
+    const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [kategoriFilter, setKategoriFilter] = useState('Semua');
-    const [selectedKomoditas, setSelectedKomoditas] = useState(commodities[2]);
+    const [selectedKomoditas, setSelectedKomoditas] = useState(commodities[0]);
     const [sortBy, setSortBy] = useState<'harga' | 'stok'>('harga');
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
-    const filtered = commodities
+    useEffect(() => {
+        const fetchCommodities = async () => {
+            try {
+                const res = await fetch('/api/commodities');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.data && Array.isArray(data.data) && data.data.length > 0) {
+                        setCommoditiesList(data.data);
+                        setSelectedKomoditas(data.data[0]);
+                    }
+                }
+            } catch (err) {
+                console.error('Error fetching dynamic commodities:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchCommodities();
+    }, []);
+
+    const filtered = commoditiesList
         .filter(c =>
             c.nama.toLowerCase().includes(search.toLowerCase()) &&
             (kategoriFilter === 'Semua' || c.kategori === kategoriFilter)
@@ -128,7 +150,7 @@ export default function KomoditasPage() {
                 <div>
                     <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Monitoring Komoditas</h1>
                     <p className="text-sm text-slate-400 mt-0.5">
-                        Tracking harga, stok, dan titik lokasi komoditas pangan
+                        Tracking harga, stok, dan titik lokasi komoditas pangan langsung dari Database Real-Time
                     </p>
                 </div>
                 <button
@@ -142,10 +164,10 @@ export default function KomoditasPage() {
             {/* Summary Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                    { label: 'Total Komoditas', value: commodities.length, color: 'text-emerald-600', bg: 'bg-emerald-50/70', icon: Package },
-                    { label: 'Status Kritis', value: commodities.filter(c => c.status === 'kritis').length, color: 'text-rose-600', bg: 'bg-rose-50/70', icon: AlertTriangle },
-                    { label: 'Harga Naik', value: commodities.filter(c => c.tren === 'naik').length, color: 'text-emerald-600', bg: 'bg-emerald-50/70', icon: TrendingUp },
-                    { label: 'Harga Turun', value: commodities.filter(c => c.tren === 'turun').length, color: 'text-emerald-500', bg: 'bg-emerald-50/70', icon: TrendingDown },
+                    { label: 'Total Komoditas', value: commoditiesList.length, color: 'text-emerald-600', bg: 'bg-emerald-50/70', icon: Package },
+                    { label: 'Status Kritis', value: commoditiesList.filter(c => c.status === 'kritis').length, color: 'text-rose-600', bg: 'bg-rose-50/70', icon: AlertTriangle },
+                    { label: 'Harga Naik', value: commoditiesList.filter(c => c.tren === 'naik').length, color: 'text-emerald-600', bg: 'bg-emerald-50/70', icon: TrendingUp },
+                    { label: 'Harga Turun', value: commoditiesList.filter(c => c.tren === 'turun').length, color: 'text-emerald-500', bg: 'bg-emerald-50/70', icon: TrendingDown },
                 ].map(s => (
                     <div key={s.label} className="bg-white rounded-2xl p-5 border border-slate-200/60 shadow-sm transition-all hover:shadow-md">
                         <div className="flex items-center gap-4">
@@ -180,19 +202,19 @@ export default function KomoditasPage() {
                         </div>
 
                         {/* Category filter */}
-                        <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1 flex items-center gap-1">
+                        <div className="flex items-center gap-1.5 overflow-x-auto">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1 flex items-center gap-1 flex-shrink-0">
                                 <Filter className="w-3.5 h-3.5 text-emerald-500" />
                                 Kategori:
                             </span>
-                            <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200/40">
-                                {['Semua', 'Pangan Pokok', 'Hortikultura'].map(k => {
+                            <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200/40 flex-nowrap">
+                                {['Semua', 'Pangan Pokok', 'Hortikultura', 'Buah-buahan', 'Perkebunan & Rempah'].map(k => {
                                     const isAct = kategoriFilter === k;
                                     return (
                                         <button
                                             key={k}
                                             onClick={() => setKategoriFilter(k)}
-                                            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${isAct
+                                            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all whitespace-nowrap ${isAct
                                                     ? 'bg-white text-slate-800 shadow-sm'
                                                     : 'text-slate-400 hover:text-slate-700'
                                                 }`}
@@ -295,7 +317,7 @@ export default function KomoditasPage() {
                     </div>
 
                     <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Menampilkan {filtered.length} dari {commodities.length} komoditas</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Menampilkan {filtered.length} dari {commoditiesList.length} komoditas</p>
                     </div>
                 </div>
 
@@ -365,15 +387,15 @@ export default function KomoditasPage() {
                     <div className="mt-6 pt-4 border-t border-slate-100">
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Persebaran Lokasi</p>
                         <div className="space-y-3">
-                            {['Banyumas', 'Cilacap', 'Purbalingga', 'Banjarnegara', 'Kebumen'].map((loc, i) => {
-                                const count = commodities.filter(c => c.lokasi === loc).length;
-                                const pct = (count / commodities.length) * 100;
-                                const barColor = ['bg-emerald-500', 'bg-emerald-600', 'bg-amber-500', 'bg-cyan-500', 'bg-purple-500'][i];
+                            {['Banyumas', 'Cilacap', 'Purbalingga', 'Banjarnegara', 'Kebumen', 'Tegal'].map((loc, i) => {
+                                const count = commoditiesList.filter(c => c.lokasi === loc).length;
+                                const pct = commoditiesList.length > 0 ? (count / commoditiesList.length) * 100 : 0;
+                                const barColor = ['bg-emerald-500', 'bg-emerald-600', 'bg-amber-500', 'bg-cyan-500', 'bg-purple-500', 'bg-blue-500'][i % 6];
                                 return (
                                     <div key={loc} className="flex items-center gap-3">
                                         <span className="text-[11px] font-bold text-slate-600 w-24 leading-none">{loc}</span>
                                         <div className="flex-1 h-2 rounded-full bg-slate-100 overflow-hidden">
-                                            <div className={`h-full rounded-full ${barColor}`} style={{ width: `${pct * 3.5}%` }} />
+                                            <div className={`h-full rounded-full ${barColor}`} style={{ width: `${Math.min(100, pct * 2.5)}%` }} />
                                         </div>
                                         <span className="text-[11px] font-extrabold text-slate-800 w-4 text-right leading-none">{count}</span>
                                     </div>

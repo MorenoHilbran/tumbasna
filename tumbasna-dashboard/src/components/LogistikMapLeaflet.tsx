@@ -4,6 +4,8 @@ import { useEffect, useState, memo } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { renderToString } from 'react-dom/server';
+import { Store, Sprout, Truck } from 'lucide-react';
 
 // ─── Coordinates Lookup ──────────────────────────────────────
 const coordsMap: Record<string, [number, number]> = {
@@ -62,63 +64,59 @@ interface LogistikMapLeafletProps {
     onSelect: (id: string) => void;
 }
 
-// ─── Custom HTML Leaflet Icons ───────────────────────────────
-// Supplier (Warehouse) Icon
+// ─── Custom HTML Leaflet 3D Icons ─────────────────────────────
+// Supplier (Produsen / Petani) 3D Isometric Icon
 const createSupplierIcon = () => {
     return L.divIcon({
         html: `
-            <div class="bg-emerald-500 text-white rounded-full border-2 border-white shadow-md flex items-center justify-center w-8 h-8">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M22 10v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V10"></path>
-                    <path d="M22 10 12 2 2 10"></path>
-                    <path d="M6 22V12h12v10"></path>
-                </svg>
+            <div style="background: transparent !important; border: none !important;" class="flex items-center justify-center cursor-pointer transition-transform hover:scale-125">
+                <img 
+                    src="/icons/3d-supplier.png" 
+                    alt="Supplier 3D" 
+                    style="width: 52px; height: 52px; object-fit: contain;"
+                />
             </div>
         `,
-        className: 'custom-leaflet-marker',
-        iconSize: [32, 32],
-        iconAnchor: [16, 16]
+        className: 'custom-leaflet-marker-clean',
+        iconSize: [52, 52],
+        iconAnchor: [26, 26]
     });
 };
 
-// UMKM (Store) Icon
+// UMKM (Pedagang / Demand) 3D Isometric Icon
 const createUmkmIcon = () => {
     return L.divIcon({
         html: `
-            <div class="bg-rose-500 text-white rounded-full border-2 border-white shadow-md flex items-center justify-center w-8 h-8">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M20 20a2 2 0 0 0 .6-1.4V8.4a2 2 0 0 0-1.2-1.8l-6.4-2.8a2 2 0 0 0-1.6 0L5 7a2 2 0 0 0-1.2 1.8v10.2A2 2 0 0 0 4.4 20"></path>
-                    <path d="M3 7h18"></path>
-                    <path d="M12 22V7"></path>
-                    <path d="M12 12H7"></path>
-                    <path d="M12 16h5"></path>
-                </svg>
+            <div style="background: transparent !important; border: none !important;" class="flex items-center justify-center cursor-pointer transition-transform hover:scale-125">
+                <img 
+                    src="/icons/3d-umkm.png" 
+                    alt="UMKM 3D" 
+                    style="width: 52px; height: 52px; object-fit: contain;"
+                />
             </div>
         `,
-        className: 'custom-leaflet-marker',
-        iconSize: [32, 32],
-        iconAnchor: [16, 16]
+        className: 'custom-leaflet-marker-clean',
+        iconSize: [52, 52],
+        iconAnchor: [26, 26]
     });
 };
 
-// Truck (Armada) Icon
+// Kurir (3D Delivery Box Truck) Icon
 const createTruckIcon = (color: string, isSelected: boolean) => {
-    const bg = color === '#10B981' ? 'bg-emerald-500' : color === '#EF4444' ? 'bg-rose-500' : 'bg-emerald-600';
-    const border = isSelected ? 'border-slate-900 border-3 scale-110 shadow-lg' : 'border-white border-2 shadow-md';
+    const size = isSelected ? 60 : 52;
     return L.divIcon({
         html: `
-            <div class="${bg} ${border} text-white rounded-full flex items-center justify-center w-9 h-9 transition-all duration-200">
-                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="1" y="3" width="15" height="13"></rect>
-                    <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
-                    <circle cx="5.5" cy="18.5" r="2.5"></circle>
-                    <circle cx="18.5" cy="18.5" r="2.5"></circle>
-                </svg>
+            <div style="background: transparent !important; border: none !important;" class="flex items-center justify-center cursor-pointer transition-transform ${isSelected ? 'scale-125 z-50' : 'hover:scale-125'}">
+                <img 
+                    src="/icons/3d-truck.png" 
+                    alt="Kurir 3D Truck" 
+                    style="width: ${size}px; height: ${size}px; object-fit: contain;"
+                />
             </div>
         `,
-        className: 'custom-leaflet-marker',
-        iconSize: [36, 36],
-        iconAnchor: [18, 18]
+        className: 'custom-leaflet-marker-clean',
+        iconSize: [size, size],
+        iconAnchor: [size / 2, size / 2]
     });
 };
 
@@ -343,8 +341,18 @@ export default memo(function LogistikMapLeaflet({ armadaData, selectedId, onSele
 
     if (!mounted) {
         return (
-            <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 border-r border-slate-200/65">
-                <p className="text-xs font-semibold text-slate-400">Memuat peta pelacakan...</p>
+            <div className="w-full h-full min-h-[350px] relative bg-slate-100/70 rounded-2xl overflow-hidden animate-pulse flex flex-col items-center justify-center border border-slate-200/50">
+                <div className="absolute inset-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:16px_16px] opacity-60" />
+                <div className="absolute top-4 left-4 flex flex-col gap-1 z-10">
+                    <div className="w-8 h-8 rounded-lg bg-slate-200/80 shadow-sm" />
+                    <div className="w-8 h-8 rounded-lg bg-slate-200/80 shadow-sm" />
+                </div>
+                <div className="relative z-10 flex flex-col items-center gap-3">
+                    <div className="relative flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-full border-3 border-emerald-500/20 border-t-emerald-600 animate-spin" />
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Memuat Peta...</span>
+                </div>
             </div>
         );
     }
@@ -362,8 +370,8 @@ export default memo(function LogistikMapLeaflet({ armadaData, selectedId, onSele
             zoomControl={true}
         >
             <TileLayer
-                attribution='&copy; <a href="https://maps.google.com">Google Maps</a> Satellite'
-                url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
+                attribution='&copy; <a href="https://maps.google.com">Google Maps</a>'
+                url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
                 maxZoom={20}
             />
 
@@ -405,7 +413,7 @@ export default memo(function LogistikMapLeaflet({ armadaData, selectedId, onSele
                         >
                             <Popup offset={[0, -10]}>
                                 <div style={{ fontFamily: 'Poppins, sans-serif' }}>
-                                    <p style={{ fontWeight: 800, margin: 0, fontSize: '11px', color: '#10B981' }}>Titik Pengirim (Supplier)</p>
+                                    <p style={{ fontWeight: 800, margin: 0, fontSize: '11px', color: '#F97316' }}>🌾 Titik Pengirim (Supplier / Petani)</p>
                                     <p style={{ fontSize: '10px', margin: '2px 0 0 0', color: '#334155' }}>Gudang/Petani di {a.supplierLocation || a.rute.dari}</p>
                                 </div>
                             </Popup>
@@ -418,19 +426,33 @@ export default memo(function LogistikMapLeaflet({ armadaData, selectedId, onSele
                         >
                             <Popup offset={[0, -10]}>
                                 <div style={{ fontFamily: 'Poppins, sans-serif' }}>
-                                    <p style={{ fontWeight: 800, margin: 0, fontSize: '11px', color: '#EF4444' }}>Titik Penerima (UMKM)</p>
+                                    <p style={{ fontWeight: 800, margin: 0, fontSize: '11px', color: '#3B82F6' }}>🏪 Titik Penerima (UMKM / Pedagang)</p>
                                     <p style={{ fontSize: '10px', margin: '2px 0 0 0', color: '#334155' }}>Pedagang/Pasar di {a.buyerAddress || a.rute.ke}</p>
                                 </div>
                             </Popup>
                         </Marker>
 
-                        {/* Route Line following actual road paths */}
+                        {/* Layer 1: Outer Casing / Contrast Outline (Gojek / Google Maps Navigation Style) */}
                         <Polyline
                             positions={hasRoadPath ? path : [origin, dest]}
                             pathOptions={{
-                                color: isSelected ? '#059669' : '#94A3B8',
-                                weight: isSelected ? 4 : 2,
-                                opacity: isSelected ? 0.95 : 0.45,
+                                color: isSelected ? '#064E3B' : '#1E3A8A',
+                                weight: isSelected ? 9 : 7,
+                                opacity: isSelected ? 0.95 : 0.5,
+                                lineCap: 'round',
+                                lineJoin: 'round',
+                            }}
+                        />
+
+                        {/* Layer 2: Inner Core Navigation Line */}
+                        <Polyline
+                            positions={hasRoadPath ? path : [origin, dest]}
+                            pathOptions={{
+                                color: isSelected ? '#10B981' : '#3B82F6',
+                                weight: isSelected ? 5 : 3.5,
+                                opacity: 1.0,
+                                lineCap: 'round',
+                                lineJoin: 'round',
                             }}
                         />
 

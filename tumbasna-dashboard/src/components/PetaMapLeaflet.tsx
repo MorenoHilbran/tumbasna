@@ -228,8 +228,18 @@ export default memo(function PetaMapLeaflet({ wilayahData, selected, onSelect, p
 
     if (!mounted) {
         return (
-            <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 border-r border-slate-200/65">
-                <p className="text-xs font-semibold text-slate-400">Memuat peta geografi administratif Jawa Tengah...</p>
+            <div className="w-full h-full min-h-[350px] relative bg-slate-100/70 rounded-2xl overflow-hidden animate-pulse flex flex-col items-center justify-center border border-slate-200/50">
+                <div className="absolute inset-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:16px_16px] opacity-60" />
+                <div className="absolute top-4 left-4 flex flex-col gap-1 z-10">
+                    <div className="w-8 h-8 rounded-lg bg-slate-200/80 shadow-sm" />
+                    <div className="w-8 h-8 rounded-lg bg-slate-200/80 shadow-sm" />
+                </div>
+                <div className="relative z-10 flex flex-col items-center gap-3">
+                    <div className="relative flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-full border-3 border-emerald-500/20 border-t-emerald-600 animate-spin" />
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Memuat Peta...</span>
+                </div>
             </div>
         );
     }
