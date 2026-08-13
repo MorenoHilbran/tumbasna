@@ -28,10 +28,11 @@ interface PesananProps {
 const Pesanan: React.FC<PesananProps> = ({ onSelectOrder, onNavigateToPayment }) => {
   const { orders } = useApp();
   const [activeSegment, setActiveSegment] = useState<
-    'Menunggu Pembayaran' | 'Diproses' | 'Dikirim' | 'Selesai' | 'Dibatalkan'
-  >('Menunggu Pembayaran');
+    'Semua' | 'Menunggu Pembayaran' | 'Diproses' | 'Dikirim' | 'Selesai' | 'Dibatalkan'
+  >('Semua');
 
-  const segments: ('Menunggu Pembayaran' | 'Diproses' | 'Dikirim' | 'Selesai' | 'Dibatalkan')[] = [
+  const segments: ('Semua' | 'Menunggu Pembayaran' | 'Diproses' | 'Dikirim' | 'Selesai' | 'Dibatalkan')[] = [
+    'Semua',
     'Menunggu Pembayaran',
     'Diproses',
     'Dikirim',
@@ -39,12 +40,14 @@ const Pesanan: React.FC<PesananProps> = ({ onSelectOrder, onNavigateToPayment })
     'Dibatalkan'
   ];
 
-  const filteredOrders = orders.filter((order) => order.status === activeSegment);
+  const filteredOrders = activeSegment === 'Semua'
+    ? orders
+    : orders.filter((order) => order.status === activeSegment);
 
   const getStatusColor = (status: Order['status']) => {
     switch (status) {
       case 'Menunggu Pembayaran':
-      return 'warning'; // Will be styled with custom CSS
+        return 'warning'; // Will be styled with custom CSS
       case 'Diproses':
         return 'info';
       case 'Dikirim':
@@ -86,7 +89,7 @@ const Pesanan: React.FC<PesananProps> = ({ onSelectOrder, onNavigateToPayment })
         
         <div className="orders-tabs-scroll">
           {segments.map((seg) => {
-            const count = orders.filter((o) => o.status === seg).length;
+            const count = seg === 'Semua' ? orders.length : orders.filter((o) => o.status === seg).length;
             const isActive = activeSegment === seg;
             return (
               <button
@@ -211,7 +214,11 @@ const Pesanan: React.FC<PesananProps> = ({ onSelectOrder, onNavigateToPayment })
                 <IonIcon icon={alertCircleOutline} />
               </div>
               <h3>Belum Ada Transaksi</h3>
-              <p>Tidak ada transaksi yang berstatus "{activeSegment}" untuk saat ini.</p>
+              <p>
+                {activeSegment === 'Semua'
+                  ? 'Anda belum memiliki riwayat transaksi saat ini.'
+                  : `Tidak ada transaksi yang berstatus "${activeSegment}" untuk saat ini.`}
+              </p>
             </div>
           )}
         </div>
