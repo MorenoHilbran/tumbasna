@@ -10,7 +10,8 @@ import {
   IonSelectOption,
   IonToast,
   IonLoading,
-  IonSpinner
+  IonSpinner,
+  IonButton
 } from '@ionic/react';
 import {
   arrowBackOutline,
@@ -45,24 +46,16 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-const MapController = ({ center, onMoveEnd }: { center: [number, number], onMoveEnd: (pos: [number, number]) => void }) => {
+function MapController({ onMoveEnd }: { center: [number, number]; onMoveEnd: (pos: [number, number]) => void }) {
   const map = useMapEvents({
-    moveend() {
+    dragend() {
       const c = map.getCenter();
       onMoveEnd([c.lat, c.lng]);
     }
   });
 
-  React.useEffect(() => {
-    const current = map.getCenter();
-    const dist = map.distance(current, center);
-    if (dist > 10) {
-      map.setView(center, 16, { animate: true });
-    }
-  }, [center, map]);
-
   return null;
-};
+}
 
 interface LoginRegisterProps {
   initialIsLogin?: boolean;
@@ -234,22 +227,23 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ initialIsLogin = true, on
           setShowToast(true);
         }
       } else {
-        if (!ownerName || !businessName || !phone || !email || !password || !address || !businessType || !bankName || !bankAccount) {
-          setToastMessage('Semua kolom pendaftaran wajib diisi.');
+        if (!ownerName.trim() || !phone.trim()) {
+          setToastMessage('Nama lengkap dan nomor WhatsApp wajib diisi.');
           setShowToast(true);
           setLoading(false);
           return;
         }
         const success = await register({
-          ownerName,
-          businessName,
-          phone,
-          email,
-          address,
-          businessType,
-          bankName,
-          bankAccount
-        });
+          ownerName: ownerName.trim(),
+          businessName: (businessName || ownerName).trim(),
+          phone: phone.trim(),
+          email: email?.trim() || `${phone.trim()}@tumbasna.id`,
+          address: address?.trim() || 'Purbalingga',
+          businessType: businessType || 'Pedagang Sembako',
+          bankName: bankName || 'Bank Rakyat Indonesia (BRI)',
+          bankAccount: bankAccount || '1234567890',
+          role: 'PEDAGANG'
+        } as any);
         if (success) {
           setToastMessage('Registrasi berhasil! Silakan masuk dengan akun Anda.');
           setShowToast(true);
@@ -607,7 +601,7 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ initialIsLogin = true, on
                     <div className="reg-input-wrapper">
                       <input
                         type="password"
-                        placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                        placeholder="••••••••••••"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required

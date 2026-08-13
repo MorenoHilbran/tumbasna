@@ -1,8 +1,18 @@
-﻿/**
+/**
  * API Utility dengan timeout, retry logic, dan error handling
  */
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://api.tumbasna.my.id';
+const getApiBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return 'http://localhost:3000';
+    }
+  }
+  return import.meta.env.VITE_API_URL || 'https://api.tumbasna.my.id';
+};
+
+const API_BASE = getApiBaseUrl();
 const DEFAULT_TIMEOUT = 8000; // 8 detik timeout default
 const RETRY_ATTEMPTS = 2; // Jumlah retry
 const RETRY_DELAY = 1000; // Delay antar retry (ms)

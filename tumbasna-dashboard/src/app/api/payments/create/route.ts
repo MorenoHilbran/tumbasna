@@ -48,20 +48,21 @@ export async function POST(req: Request) {
 
       itemDetails = [
         ...order.items.map((item) => ({
-          id: item.id,
+          id: item.id.slice(0, 50),
           price: Number(item.price),
           quantity: Number(item.qty),
-          name: item.commodity
+          name: (item.commodity || "Komoditas")
             .split(" ")
             .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-            .join(" "),
+            .join(" ")
+            .slice(0, 45),
         })),
         ...(Number(order.shippingCost) > 0
           ? [{
               id: "SHIPPING",
               price: Number(order.shippingCost),
               quantity: 1,
-              name: `Ongkos Kirim (${order.courier})`,
+              name: `Ongkos Kirim (${order.courier || 'Kurir'})`.slice(0, 45),
             }]
           : []),
         {
@@ -71,6 +72,12 @@ export async function POST(req: Request) {
           name: "Biaya Layanan Aplikasi",
         },
       ];
+
+      // Pastikan grossAmount SAMA PERSIS dengan total penjumlahan itemDetails (Midtrans Error 201/2603 fix)
+      const calculatedSum = itemDetails.reduce((sum, it) => sum + (Number(it.price) * Number(it.quantity)), 0);
+      if (calculatedSum > 0) {
+        grossAmount = calculatedSum;
+      }
 
       // Jika sudah ada payment aktif yang masih pending DAN punya snapToken, kembalikan snap token
       const existingPayment = await prisma.payment.findUnique({
@@ -88,28 +95,47 @@ export async function POST(req: Request) {
     } else {
       // Jika order belum ada di Prisma DB (misal baru dibuat di client)
       grossAmount = Number(amount || 36000);
-      itemDetails = items && items.length > 0 ? items : [{
-        id: orderId,
+      itemDetails = items && items.length > 0 ? items.map((it: any) => ({
+        id: (it.id || 'ITEM').slice(0, 50),
+        price: Number(it.price || grossAmount),
+        quantity: Number(it.quantity || 1),
+        name: (it.name || `Pesanan ${orderId}`).slice(0, 45)
+      })) : [{
+        id: orderId.slice(0, 50),
         price: grossAmount,
         quantity: 1,
-        name: `Pesanan ${orderId}`
+        name: `Pesanan ${orderId}`.slice(0, 45)
       }];
+
+      const calculatedSum = itemDetails.reduce((sum, it) => sum + (Number(it.price) * Number(it.quantity)), 0);
+      if (calculatedSum > 0) {
+        grossAmount = calculatedSum;
+      }
     }
 
     // Generate unique Midtrans order ID
     const midtransOrderId = `${orderId}-${Date.now()}`;
+
+    // Format phone & email agar valid di Midtrans Snap
+    const cleanPhone = buyerPhone ? (
+      buyerPhone.startsWith('+') ? buyerPhone :
+      (buyerPhone.startsWith('62') ? '+' + buyerPhone :
+      (buyerPhone.startsWith('0') ? '+62' + buyerPhone.slice(1) : '+62' + buyerPhone))
+    ) : '+6281234567890';
+
+    const cleanEmail = (buyerEmail && buyerEmail.includes('@')) ? buyerEmail : `buyer_${Date.now()}@tumbasna.id`;
 
     // Panggil Snap API Midtrans
     const MOBILE_URL = process.env.MIDTRANS_FINISH_URL || "https://app.tumbasna.my.id";
     const snapPayload = {
       transaction_details: {
         order_id: midtransOrderId,
-        gross_amount: grossAmount,
+        gross_amount: Math.round(grossAmount),
       },
       customer_details: {
         first_name: buyerName,
-        email: buyerEmail,
-        phone: buyerPhone,
+        email: cleanEmail,
+        phone: cleanPhone,
       },
       item_details: itemDetails,
       credit_card: {
